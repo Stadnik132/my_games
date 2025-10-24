@@ -1,97 +1,11 @@
 [gd_scene load_steps=2 format=3 uid="uid://xwn3a3o7sbw6"]
 
-[sub_resource type="GDScript" id="GDScript_4ta1a"]
-script/source = "# DialogUI.gd
-extends Control
-
-# ССылки на узлы сцены(Диалогове окно). Это подготовка переменых при полной подгрузке сцены.
-@onready var speaker_label: Label = $SpeakerLabel #Показывает имя гвоорящего
-@onready var dialog_label: Label = $DialogLabel #Показывает сам диалог
-@onready var options_container: VBoxContainer = $VBoxContainer #Окно диалога
-
-# Переменные для данных диалога
-var current_dialogue_data: Array #Хер пойми, но что-то типа списка с диалогом
-var current_line_id: int = 0 #id диалога, который начинается с 0
-
-func _ready(): #это специальная функция, которая автоматически выполняется когда объект появляется на сцене
-	# Прячем диалоговое окно при запуске
-	hide()
-	# Загружаем тестовый диалог (временно для проверки)
-	load_dialogue(\"res://test_dialogue.json\") #вызываем нашу функцию загрузки диалога и говорим ей: \"возьми файл test_dialogue.json из папки проекта\"
-
-# Функция загрузки диалога из JSON
-func load_dialogue(file_path: String): #Созадли функцию. # В этот момент file_path = \"res://test_dialogue.json\"
-	var file = FileAccess.open(file_path, FileAccess.READ) # FileAccess.READ - КОНСТАНТА, означающая \"открыть файл только для чтения\"  # Результат: переменная file теперь содержит ссылку на открытый файл
-	if file == null:
-		print(\"Ошибка загрузки диалога: \", file_path)
-		return # return - ВСТРОЕННАЯ команда \"прекрати выполнение этой функции\"
-	var json = JSON.new()  # JSON - это ВСТРОЕННЫЙ КЛАСС(это \"шаблон для создания одинаковых объектов\") Godot для работы с JSON форматом  # .new() - МЕТОД для создания нового экземпляра класса
-	var error = json.parse(file.get_as_text())  # .parse() - МЕТОД класса JSON для преобразования текста в данные # file.get_as_text() - МЕТОД класса FileAccess, читает весь текст из файла
-	 # Результат: error содержит код ошибки (0 если успешно)
-	if error == OK: # OK - это ВСТРОЕННАЯ КОНСТАНТА Godot, равная 0 (успех)
-		var data = json.data # .data - СВОЙСТВО класса JSON, содержит распарсенные данные
-		current_dialogue_data = data[\"lines\"]  # data[\"lines\"] - обращение к КЛЮЧУ \"lines\" в словаре data
-		show_line(0) # Начинаем с первой реплики.  # show_line() - это НАША функция, которую мы создали ниже   # (0) - передаем параметр 0, означающий \"показать первую реплику\"
-	else:
-		print(\"Ошибка парсинга JSON в строке \", json.get_error_line(), \": \", json.get_error_message())  # .get_error_line() и .get_error_message() - МЕТОДЫ класса JSON
-
-# Основная функция показа реплики
-func show_line(line_id: int): # (Эту функцию МЫ САМИ создали - она вызывается из load_dialogue) # line_id - ПАРАМЕТР, который передаем при вызове
-	current_line_id = line_id # [line_id] - обращение к элементу массива по индексу
-	var line = current_dialogue_data[line_id]
-
-	# Устанавливаем текст говорящего и реплики. Здесь переменные , созданные ранее, будут отображать на узлах говорящего и текст из json файла
-	speaker_label.text = line[\"speaker\"] # .text - СВОЙСТВО узла Label, отвечает за отображаемый текст
-	dialog_label.text = line[\"text\"]
-
-	# Очищаем старые варианты ответов
-	for child in options_container.get_children(): # .get_children() - МЕТОД, возвращает список ВСЕХ дочерних узлов
-		child.queue_free()  # .queue_free() - МЕТОД, помечает узел для удаления из памяти
-
-	# Создаем кнопки для новых вариантов ответа
-	for response in line[\"responses\"]: # line[\"responses\"] - получаем МАССИВ ответов из текущей реплики диалога
-			var button = Button.new()
-			button.text = response[\"text\"]
-			# Создаем локальную копию response для передачи в функцию
-			var response_data = response
-			button.pressed.connect(_on_option_selected.bind(response_data))
-			options_container.add_child(button)
-			
-			# Обработчик выбора варианта ответа
-func _on_option_selected(response: Dictionary): #Dictionary (словарь) - неупорядоченный набор \"ключ-значение\":
-	# ПРОВЕРЯЕМ ДОСТАТОЧНО ЛИ ДОВЕРИЯ ДЛЯ ЭТОГО ДЕЙСТВИЯ
-	var has_enough_trust = RelationshipManager.sync_level >= response.get(\"sync_required\", 0)
-	
-	# Если есть Воля Короля - принуждаем выполнить
-	if response.get(\"force_success\", false) and RelationshipManager.use_king_will(): # response.get(\"force_success\", false) - проверяем, есть ли у ответа принуждение  # RelationshipManager.use_king_will() - пытаемся потратить Волю Короля
-		has_enough_trust = true # Принудительно делаем доверие достаточным (СДЕЛАНО НЕ ПРАВИЛЬНО, ПОТОМУ ЧТО ПРИНУЖДЕНИЕ ДОЛЖНО ИДТИ ПОСЛЕ ВЫБОРА ОДНОГО ИЗ ВАРИАНТОВ И ЕСЛИ ПЕРСОНАЖ ОТКАЗЫВАЕТСЯ,ТО МОЖНО ПРИМЕНИТЬ ВОЛЮ КОРОЛЯ)
-	
-	var next_line_id = -1 # -1 означает \"конец диалога\"
-	
-	if has_enough_trust:
-		# Игрок выполняет приказ
-		if response.has(\"sync_change\"):
-			RelationshipManager.change_sync(response[\"sync_change\"])
-		print(\"Персонаж выполнил приказ: \", response[\"text\"])
-		next_line_id = response.get(\"success_line\", -1)
-	else:
-		# Игрок ОТКАЗЫВАЕТСЯ выполнять приказ
-		var refusal_penalty = response.get(\"refusal_penalty\", -15)
-		RelationshipManager.change_sync(refusal_penalty)
-		print(\"Персонаж отказался выполнять приказ! Доверие снижено.\")
-		next_line_id = response.get(\"failure_line\", -1)
-	
-	# Переходим к следующей реплике
-	if next_line_id == -1:
-		hide()
-	else:
-		show_line(next_line_id)
-"
+[ext_resource type="Script" uid="uid://c301l3cifiptk" path="res://Scripts/dialog/DialogUI.gd" id="1_qjaxh"]
 
 [node name="DialogUi" type="Control"]
 layout_mode = 3
 anchors_preset = 0
-script = SubResource("GDScript_4ta1a")
+script = ExtResource("1_qjaxh")
 
 [node name="ColorRect" type="ColorRect" parent="."]
 layout_mode = 0

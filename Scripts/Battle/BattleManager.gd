@@ -123,7 +123,7 @@ func setup_battle():
 	enemy_data.setup_unit("Страж", 80, 12, 3)  # Настраиваем параметры врага
 	
 	# Создаем ВИЗУАЛЬНУЮ сцену врага и передаем ей ДАННЫЕ
-	enemy_unit = load("res://Scenes/Units/Enemies/BaseEnemy.tscn").instantiate()
+	enemy_unit = load("res://Scenes/Units/Enemies/GuardEnemy.tscn").instantiate()
 	enemy_unit.setup_visual(enemy_data)  # Передаем данные в визуальное представление
 	
 	# Добавляем юнитов на сцену

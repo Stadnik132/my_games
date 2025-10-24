@@ -12,7 +12,7 @@ func _init():
 	refusal_penalty = -10 # Штраф за отказ пытаться убедить
 
 # Реализация логики убеждения (временная заглушка)
-func execute(caster: BattleUnitData, target: BattleUnitData) -> bool:
+func execute(caster: BattleUnitVisual, target: BattleUnitVisual) -> bool:
 	# ВРЕМЕННАЯ РЕАЛИЗАЦИЯ - позже добавим реальную механику убеждения
 	# (например, шанс завершить бой мирно или ослабить врага)
 	print(caster.unit_name + " пытается убедить противника!")

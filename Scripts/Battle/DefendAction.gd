@@ -12,7 +12,7 @@ func _init():
 	refusal_penalty = -5  # Небольшой штраф за отказ защищаться
 
 # Реализация логики защиты (временная заглушка)
-func execute(caster: BattleUnitData, target: BattleUnitData) -> bool:
+func execute(caster: BattleUnitVisual, target: BattleUnitVisual) -> bool:
 	# ВРЕМЕННАЯ РЕАЛИЗАЦИЯ - позже добавим реальную механику защиты
 	# (например, временное увеличение защиты или поглощение урона)
 	print(caster.unit_name + " защищается!")

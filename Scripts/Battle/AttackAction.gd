@@ -12,7 +12,7 @@ func _init():
 	refusal_penalty = -15 # Значительный штраф при отказе атаковать
 
 # Реализация логики атаки
-func execute(caster: BattleUnitData, target: BattleUnitData) -> bool:
+func execute(caster: BattleUnitVisual, target: BattleUnitVisual) -> bool:
 	# Расчет урона: атака атакующего минус защита цели
 	var damage = caster.attack_power - target.defense_power
 	damage = max(1, damage)  # Гарантируем минимальный урон = 1
