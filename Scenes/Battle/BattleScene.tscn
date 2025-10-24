@@ -3,37 +3,72 @@
 [ext_resource type="Script" uid="uid://dhvs8mpanuwhs" path="res://Scripts/Battle/BattleManager.gd" id="1_12f34"]
 
 [node name="BattleScene" type="Node2D"]
+texture_filter = 1
 script = ExtResource("1_12f34")
 
 [node name="UI" type="CanvasLayer" parent="."]
 
 [node name="Background" type="ColorRect" parent="UI"]
-offset_right = 40.0
-offset_bottom = 40.0
+texture_filter = 1
+offset_left = 18.0
+offset_top = 597.0
+offset_right = 612.0
+offset_bottom = 702.0
 color = Color(0.14, 0.14, 0.14, 0.698039)
 
 [node name="PlayerPanel" type="HBoxContainer" parent="UI"]
-offset_right = 40.0
-offset_bottom = 40.0
+texture_filter = 1
+offset_left = 29.0
+offset_top = 86.0
+offset_right = 133.0
+offset_bottom = 252.0
 
 [node name="PlayerPortrait" type="TextureRect" parent="UI/PlayerPanel"]
+texture_filter = 1
 layout_mode = 2
 
 [node name="PlayerStats" type="VBoxContainer" parent="UI/PlayerPanel"]
+texture_filter = 1
 layout_mode = 2
 tooltip_text = "Label"
 
 [node name="PlayerName" type="Label" parent="UI/PlayerPanel/PlayerStats"]
+texture_filter = 1
 layout_mode = 2
+text = "Алексей"
 
 [node name="PlayerHP" type="ProgressBar" parent="UI/PlayerPanel/PlayerStats"]
+texture_filter = 1
 layout_mode = 2
 
 [node name="PlayerSync" type="Label" parent="UI/PlayerPanel/PlayerStats"]
+texture_filter = 1
 layout_mode = 2
 
+[node name="PlayerTrustLabel" type="Label" parent="UI/PlayerPanel/PlayerStats"]
+texture_filter = 1
+layout_mode = 2
+text = "Доверие: 0"
+horizontal_alignment = 1
+
+[node name="PlayerTrustBar" type="ProgressBar" parent="UI/PlayerPanel/PlayerStats"]
+texture_filter = 1
+layout_mode = 2
+min_value = -100.0
+step = 1.0
+
+[node name="PlayerTrustStatus" type="Label" parent="UI/PlayerPanel/PlayerStats"]
+texture_filter = 1
+layout_mode = 2
+text = "Нейтрально"
+horizontal_alignment = 1
+
 [node name="EnemyPanel" type="HBoxContainer" parent="UI"]
-offset_bottom = 40.0
+visible = false
+offset_left = 318.0
+offset_top = 81.0
+offset_right = 326.0
+offset_bottom = 135.0
 
 [node name="EnemyPortrait" type="TextureRect" parent="UI/EnemyPanel"]
 layout_mode = 2
@@ -49,22 +84,33 @@ layout_mode = 2
 layout_mode = 2
 
 [node name="ActionsPanel" type="VBoxContainer" parent="UI"]
-offset_right = 40.0
-offset_bottom = 40.0
+texture_filter = 1
+anchors_preset = -1
+anchor_left = 0.045
+anchor_top = 0.83
+anchor_right = 0.115
+anchor_bottom = 0.83
+offset_right = -32.0
+size_flags_horizontal = 3
 
 [node name="AttackButton" type="Button" parent="UI/ActionsPanel"]
+texture_filter = 1
 layout_mode = 2
 text = "Атака"
 
 [node name="DefendButton" type="Button" parent="UI/ActionsPanel"]
+texture_filter = 1
 layout_mode = 2
 text = "Защита"
 
 [node name="PersuadeButton" type="Button" parent="UI/ActionsPanel"]
+texture_filter = 1
 layout_mode = 2
 text = "Убедить"
 
 [node name="ForceButton" type="Button" parent="UI/ActionsPanel"]
+texture_filter = 1
 layout_mode = 2
 
 [node name="Units" type="Node2D" parent="."]
+texture_filter = 1

@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3 uid="uid://b6uxebrv4kq3k"]
+
+[ext_resource type="Script" uid="uid://beibfd4ftm2s4" path="res://Scripts/Battle/BattleUnitVisual.gd" id="1_2yh0p"]
+
+[node name="BaseEnemy" type="Node2D"]
+script = ExtResource("1_2yh0p")
+
+[node name="GuardEnemy" type="Node2D" parent="."]
+
+[node name="Sprite" type="Sprite2D" parent="GuardEnemy"]
+
+[node name="ProgressBar" type="ProgressBar" parent="GuardEnemy"]
+offset_right = 4.0
+offset_bottom = 27.0

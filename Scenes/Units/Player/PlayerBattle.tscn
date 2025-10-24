@@ -1,0 +1,19 @@
+[gd_scene load_steps=3 format=3 uid="uid://bhgo8r7uv3bb7"]
+
+[ext_resource type="Script" uid="uid://dha531yc1sv70" path="res://Scripts/Unit/PlayerBattle.gd" id="1_n7515"]
+[ext_resource type="Texture2D" uid="uid://bkobl003i8paa" path="res://Assets/Sprites/PlayerUnit.png" id="2_1j1wy"]
+
+[node name="PlayerUnit" type="Node2D"]
+script = ExtResource("1_n7515")
+metadata/_custom_type_script = "uid://beibfd4ftm2s4"
+
+[node name="CharacterSprite" type="Sprite2D" parent="."]
+texture_filter = 1
+position = Vector2(-15, 52)
+texture = ExtResource("2_1j1wy")
+
+[node name="HPBar" type="ProgressBar" parent="."]
+offset_left = -40.0
+offset_right = 10.0
+offset_bottom = 27.0
+value = 100.0

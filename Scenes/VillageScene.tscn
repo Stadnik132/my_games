@@ -1,0 +1,52 @@
+[gd_scene load_steps=6 format=3 uid="uid://cfgm373k2hk21"]
+
+[ext_resource type="PackedScene" uid="uid://bix71u4kkivhe" path="res://Scenes/Units/Player/PlayerWorld.tscn" id="1_5f8xr"]
+[ext_resource type="Texture2D" uid="uid://d3e5muxaqg8sq" path="res://icon.svg" id="2_h6133"]
+[ext_resource type="Texture2D" uid="uid://c7ygqg6ek8gtq" path="res://Assets/Sprites/TestElder.png" id="2_ja2tq"]
+[ext_resource type="Script" uid="uid://btd31o4nwu4qa" path="res://Scripts/Unit/ElderNPC.gd" id="2_t2pof"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_ja2tq"]
+radius = 15.0
+height = 36.0
+
+[node name="VillageScene" type="Node2D"]
+
+[node name="PlayerWorld" parent="." instance=ExtResource("1_5f8xr")]
+position = Vector2(-40, 1)
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(143, -9)
+texture = ExtResource("2_h6133")
+
+[node name="ElderNPC" type="Node2D" parent="."]
+script = ExtResource("2_t2pof")
+
+[node name="Sprite2D" type="Sprite2D" parent="ElderNPC"]
+texture_filter = 1
+position = Vector2(36, 49)
+texture = ExtResource("2_ja2tq")
+
+[node name="Area2D" type="Area2D" parent="ElderNPC"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ElderNPC/Area2D"]
+position = Vector2(36, 56)
+shape = SubResource("CapsuleShape2D_ja2tq")
+
+[node name="GuardEnemy" type="Node2D" parent="."]
+script = ExtResource("2_t2pof")
+
+[node name="Sprite2D" type="Sprite2D" parent="GuardEnemy"]
+texture_filter = 1
+position = Vector2(36, 49)
+texture = ExtResource("2_ja2tq")
+
+[node name="Area2D" type="Area2D" parent="GuardEnemy"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GuardEnemy/Area2D"]
+position = Vector2(36, 56)
+shape = SubResource("CapsuleShape2D_ja2tq")
+
+[connection signal="body_entered" from="ElderNPC/Area2D" to="ElderNPC" method="_on_area_2d_body_entered"]
+[connection signal="body_exited" from="ElderNPC/Area2D" to="ElderNPC" method="_on_area_2d_body_exited"]
+[connection signal="body_entered" from="GuardEnemy/Area2D" to="GuardEnemy" method="_on_area_2d_body_entered"]
+[connection signal="body_exited" from="GuardEnemy/Area2D" to="GuardEnemy" method="_on_area_2d_body_exited"]

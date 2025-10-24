@@ -1,11 +1,20 @@
-# RelationshipManager.gd 
+# RelationshipManager.gd - глобальный скрипт
 extends Node
 # 1. Объявляем переменные для хранения данных sync_level(Уровень_синхронизации), Воля_Короля(King_will)
-var sync_level: int = 0
+var sync_level: int = 10
 var king_will: int = 3
+var player_data: BattleUnitData
 # 2. Объявляем сигналы.
 signal sync_level_changed(new_value)
 signal king_will_changed(new_value)
+
+func _ready():
+	# Создаем ЕДИНСТВЕННЫЙ экземпляр игрока
+	player_data = BattleUnitData.new()
+	player_data.setup_unit("Алексей", 100, 15, 5)
+	print("Данные игрока созданы в RelationshipManager")
+func get_player_unit() -> BattleUnitData:
+	return player_data
 # 3. Функция для изменения уровня синхронизации
 func change_sync(amount: int):
 	#Сначала рассчитываем новое значение

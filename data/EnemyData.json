@@ -1,0 +1,20 @@
+{
+  "GuardEnemy": {
+	"name": "Страж",
+	"hp": 80,
+	"attack": 12,
+	"defense": 3
+  },
+  "ArcherEnemy": {
+	"name": "Лучник", 
+	"hp": 60,
+	"attack": 18,
+	"defense": 2
+  },
+  "BossEnemy": {
+	"name": "Командир",
+	"hp": 150,
+	"attack": 20,
+	"defense": 8
+  }
+}

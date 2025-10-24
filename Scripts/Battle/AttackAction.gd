@@ -1,26 +1,24 @@
-# AttackAction.gd
-
-# Эта строка говорит что этот класс наследуется от BattleAction
+# AttackAction.gd - скрипт атаки в бою
 extends BattleAction
 class_name AttackAction
 
-# Функция _init() автоматически вызывается при создании объекта
-func _init():
-	# Устанавливаем свойства унаследованные от BattleAction
-	action_name = "Атака"
-	sync_required = 30
-	sync_change = -2
-	refusal_penalty = -15
+# Конкретная реализация действия "Атака"
 
-# Переопределяем функцию execute из родительского класса
-func execute(caster, target) -> bool:
-	# Вычисляем урон: сила атаки минус защита цели
+func _init():
+	# Устанавливаем параметры для атаки при создании объекта
+	action_name = "Атака"
+	sync_required = -10    # Требуется умеренный уровень доверия
+	sync_change = -10      # Небольшой штраф к доверию (агрессивное действие)
+	refusal_penalty = -15 # Значительный штраф при отказе атаковать
+
+# Реализация логики атаки
+func execute(caster: BattleUnitData, target: BattleUnitData) -> bool:
+	# Расчет урона: атака атакующего минус защита цели
 	var damage = caster.attack_power - target.defense_power
-	# Убеждаемся что урон не меньше 1
-	damage = max(1, damage)
-	# Наносим урон цели
+	damage = max(1, damage)  # Гарантируем минимальный урон = 1
+	
+	# Применяем урон к цели
 	target.take_damage(damage)
-	# Выводим сообщение в консоль
+	
 	print(caster.unit_name + " атакует " + target.unit_name + " на " + str(damage) + " урона!")
-	# Возвращаем true - действие выполнено успешно
 	return true

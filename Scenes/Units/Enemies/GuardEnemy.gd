@@ -1,4 +1,7 @@
-extends "res://Scripts/Battle/BattleUnit.gd"
+#GuardEnemy.gd - Скрипт стража в бою
+
+extends "res://Scripts/Battle/BattleUnitVisual.gd"  # ← Наследуем от Visual
 
 func _ready():
-	setup_unit("Страж", 80, 12, 3)
+	# Больше не настраиваем данные здесь - они придут из BattleManager
+	pass  # Ничего не делаем!
