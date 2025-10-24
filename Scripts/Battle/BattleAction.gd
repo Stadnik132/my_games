@@ -12,6 +12,8 @@ var sync_change: int = 0       # Изменение доверия после в
 var refusal_penalty: int = -10 # Штраф к доверию при отказе выполнить действие
 
 # Базовая функция выполнения действия (переопределяется в дочерних классах)
-func execute(caster: BattleUnitData, target: BattleUnitData) -> bool:
+func execute(caster: BattleUnitVisual, target: BattleUnitVisual) -> bool:
+	var damage = caster.unit_data.attack_power - target.unit_data.defense_power
+	target.unit_data.take_damage(damage)
 	print("Выполняется действие: " + action_name)
 	return true  # Возвращает true если действие выполнено успешно
