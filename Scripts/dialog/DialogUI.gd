@@ -11,6 +11,7 @@ extends Control
 var current_dialogue_data: Array   # Массив всех реплик диалога из JSON файла
 var current_line_id: int = 0       # ID текущей реплики (начинается с 0)
 
+
 func _ready():
 	# Прячем диалоговое окно при запуске - оно покажется когда нужно
 	hide()
@@ -104,21 +105,36 @@ func _on_option_selected(response: Dictionary):
 		show_line(next_line_id)
 
 # Функция обработки действий после завершения диалога
+# В DialogUI.gd изменяем handle_post_dialogue_action():
 func handle_post_dialogue_action(action: String):
 	print("Выполняем действие после диалога: ", action)
 	
-	# Сигнализируем о завершении диалога через GameStateManager
 	GameStateManager.end_dialogue()
-	# Выбираем что делать в зависимости от указанного действия
-	match action:
-		"start_battle":
-			print("→ Запускаем бой")
-			start_battle()
-		"none":
-			print("→ Диалог завершён без дополнительных действий")
-			# Ничего не делаем, просто закрываем диалог
-		_:
-			print("→ Неизвестное действие: ", action)
+	hide()
+	
+	if action == "start_battle":
+		print("→ Запускаем бой")
+		# НУЖНО ПЕРЕДАТЬ ТЕКУЩЕГО NPC!
+		var current_npc = get_current_interacted_npc()
+		if current_npc:
+			start_battle_with_npc(current_npc)
+		else:
+			print("ОШИБКА: Не найден NPC для боя!")
+
+# Добавляем функцию поиска NPC:
+func get_current_interacted_npc():
+	# Ищем игрока и его nearby_npc
+	var player = get_tree().current_scene.get_node("PlayerWorld")
+	if player and player.nearby_npc:
+		return player.nearby_npc
+	return null
+
+# Обновляем start_battle():
+func start_battle_with_npc(npc: Node):
+	print("Запускаем бой с NPC: ", npc.npc_name)
+	var battle_scene = load("res://Scenes/Battle/BattleScene.tscn").instantiate()
+	battle_scene.setup_battle_with_enemy(npc)
+	get_tree().current_scene.add_child(battle_scene)
 
 # Функция перехода в боевую сцену
 func start_battle():

@@ -1,7 +1,7 @@
-#PlayerBattle.GD - скрипт игрока в битве
-
-extends "res://Scripts/Battle/BattleUnitVisual.gd"
+# PlayerBattle.gd  
+extends BattleUnitVisual  # ← НАСЛЕДУЕМ!
 
 func _ready():
-	# Больше не настраиваем данные здесь - они придут из RelationshipManager
-	pass  # Ничего не делаем!
+	var player_data = RelationshipManager.player_data
+	# setup_visual уже доступен через наследование
+	setup_visual(player_data, $Sprite2D)

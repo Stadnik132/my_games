@@ -1,9 +1,10 @@
-[gd_scene load_steps=6 format=3 uid="uid://cfgm373k2hk21"]
+[gd_scene load_steps=7 format=3 uid="uid://cfgm373k2hk21"]
 
 [ext_resource type="PackedScene" uid="uid://bix71u4kkivhe" path="res://Scenes/Units/Player/PlayerWorld.tscn" id="1_5f8xr"]
 [ext_resource type="Texture2D" uid="uid://d3e5muxaqg8sq" path="res://icon.svg" id="2_h6133"]
 [ext_resource type="Texture2D" uid="uid://c7ygqg6ek8gtq" path="res://Assets/Sprites/TestElder.png" id="2_ja2tq"]
 [ext_resource type="Script" uid="uid://btd31o4nwu4qa" path="res://Scripts/Unit/ElderNPC.gd" id="2_t2pof"]
+[ext_resource type="Texture2D" uid="uid://dawvstfjjdwkk" path="res://Assets/Sprites/bload Knight.png" id="5_jw2rq"]
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_ja2tq"]
 radius = 15.0
@@ -37,8 +38,8 @@ script = ExtResource("2_t2pof")
 
 [node name="Sprite2D" type="Sprite2D" parent="GuardEnemy"]
 texture_filter = 1
-position = Vector2(36, 49)
-texture = ExtResource("2_ja2tq")
+position = Vector2(-135, 62)
+texture = ExtResource("5_jw2rq")
 
 [node name="Area2D" type="Area2D" parent="GuardEnemy"]
 

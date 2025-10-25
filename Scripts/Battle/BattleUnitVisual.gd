@@ -1,49 +1,33 @@
 # BattleUnitVisual.gd
-# Этот скрипт теперь отвечает ТОЛЬКО за ОТОБРАЖЕНИЕ юнита в бою
-# Он получает данные из BattleUnitData и показывает их на экране
-
-extends Node2D
-
-# Объявляем класс для работы с данными
 class_name BattleUnitVisual
+extends Node2D  # ← НАСЛЕДУЕМ ОТ Node2D!
 
-# Ссылка на ProgressBar для отображения HP
-@onready var hp_bar: ProgressBar = $HPBar
-
-# Ссылка на ДАННЫЕ юнита (теперь отдельный объект)
 var unit_data: BattleUnitData
+var sprite: Sprite2D
 
-# Функция инициализации при создании юнита
-func _ready():
-	print("BattleUnitVisual готов! HP бар: ", hp_bar)
+var world_texture: Texture2D
+var battle_texture: Texture2D
 
-# Настройка визуального представления на основе данных
-func setup_visual(data: BattleUnitData):
-	unit_data = data  # Сохраняем ссылку на данные
-	
-	# Инициализируем HP бар если он существует в сцене
-	if hp_bar:
-		hp_bar.max_value = unit_data.max_hp    # Устанавливаем максимальное значение
-		hp_bar.value = unit_data.current_hp    # Устанавливаем текущее значение
-		print("HP бар инициализирован для: " + unit_data.unit_name)
+func setup_visual(data: BattleUnitData, target_sprite: Sprite2D):
+	unit_data = data
+	sprite = target_sprite
 
-# Обработка получения урона (теперь работает с данными)
-func take_damage(damage: int):
-	# Передаём урон в ДАННЫЕ
-	unit_data.take_damage(damage)
-	
-	# Обновляем отображение HP бара
-	if hp_bar:
-		hp_bar.value = unit_data.current_hp  # Синхронизируем с данными
-	
-	print(unit_data.unit_name + " получает урон: " + str(damage) + ". Осталось HP: " + str(unit_data.current_hp))
+func set_world_appearance():
+	if sprite and world_texture:
+		sprite.texture = world_texture
+		sprite.scale = Vector2(1, 1)
 
-# Проверка жив ли юнит (через данные)
-func is_alive() -> bool:
-	return unit_data.is_alive()
+func set_battle_appearance():
+	if sprite and battle_texture:
+		sprite.texture = battle_texture
+		sprite.scale = Vector2(2, 2)
 
-# Обновление визуального отображения (HP бар)
-func update_display():
-	if hp_bar and unit_data:
-		hp_bar.max_value = unit_data.max_hp      # Обновляем максимум
-		hp_bar.value = unit_data.current_hp      # Обновляем текущее значение
+func set_textures(world_tex: Texture2D, battle_tex: Texture2D):
+	world_texture = world_tex
+	battle_texture = battle_tex
+
+func show_damage_effect():
+	if sprite:
+		sprite.modulate = Color.RED
+		await get_tree().create_timer(0.2).timeout
+		sprite.modulate = Color.WHITE

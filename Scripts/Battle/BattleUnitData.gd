@@ -31,3 +31,7 @@ func take_damage(damage: int):
 # Функция проверки жив ли юнит
 func is_alive() -> bool:
 	return current_hp > 0  # Возвращает true если HP больше 0
+
+#Что за функция?
+func get_hp_percent() -> float:
+	return float(current_hp) / float(max_hp)
