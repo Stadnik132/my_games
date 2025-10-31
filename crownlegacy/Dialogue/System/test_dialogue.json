@@ -1,0 +1,18 @@
+{
+	"character_name": "Тестовый NPC",
+	"lines": {
+		"start": {
+			"text": "Привет, Клаус! Как твои дела?",
+			"options": [
+				{
+					"text": "Хорошо, спасибо!",
+					"next_line": "positive_response",
+					"trust_effect": 5,
+					"tag": "friendly"
+				},
+				{
+					"text": "Не твое дело!",
+					"next_line": "negative_response",
+					"trust_effect": -10,
+					"tag": "rude",
+					"min_trust": -20

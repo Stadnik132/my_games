@@ -1,0 +1,76 @@
+[gd_scene load_steps=8 format=3 uid="uid://7mmqvyu3w4sf"]
+
+[ext_resource type="Script" uid="uid://bujm33gtr6jm4" path="res://Scripts/PlayerWorld.gd" id="1_h8d2d"]
+[ext_resource type="Texture2D" uid="uid://d05bhyd1fvi5h" path="res://Assets/Sprites/PlayerUnit.png" id="2_qrghs"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_cg3j6"]
+
+[sub_resource type="Animation" id="Animation_dno81"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [0]
+}
+
+[sub_resource type="Animation" id="Animation_7w4oq"]
+resource_name = "idle"
+length = 0.5
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [0]
+}
+
+[sub_resource type="Animation" id="Animation_p0ylh"]
+resource_name = "walk"
+length = 0.5
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [0]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_odcen"]
+_data = {
+&"RESET": SubResource("Animation_dno81"),
+&"idle": SubResource("Animation_7w4oq"),
+&"walk": SubResource("Animation_p0ylh")
+}
+
+[node name="PlayerWorld" type="CharacterBody2D"]
+script = ExtResource("1_h8d2d")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture_filter = 1
+texture = ExtResource("2_qrghs")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 6)
+shape = SubResource("CapsuleShape2D_cg3j6")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("AnimationLibrary_odcen")
+}
