@@ -2,17 +2,47 @@
 	"character_name": "Тестовый NPC",
 	"lines": {
 		"start": {
-			"text": "Привет, Клаус! Как твои дела?",
+			"text": "Мы должны допросить этого пленного. Как поступим?",
 			"options": [
 				{
-					"text": "Хорошо, спасибо!",
-					"next_line": "positive_response",
-					"trust_effect": 5,
-					"tag": "friendly"
+					"text": "Применить пытки - он всё расскажет",
+					"next_line": "torture_accepted",
+					"min_trust": 30,
+					"trust_effect": -20,
+					"on_refuse": "torture_refused"
 				},
 				{
-					"text": "Не твое дело!",
-					"next_line": "negative_response",
-					"trust_effect": -10,
-					"tag": "rude",
-					"min_trust": -20
+					"text": "Предложить сделку - свободу за информацию",
+					"next_line": "deal_proposed", 
+					"trust_effect": 5
+				}
+			]
+		},
+		"torture_refused": {
+			"text": "Клаус: 'Я не могу мучить человека! Это бесчеловечно!'",
+			"options": [
+				{
+					"text": "[ПРИНУДИТЬ ВОЛЕЙ КОРОЛЯ] Заставить Клауса сделать это",
+					"next_line": "torture_forced",
+					"requires_will": true
+				},
+				{
+					"text": "Не принуждать, выбрать другой вариант",
+					"next_line": "start"
+				}
+			]
+		},
+		"torture_forced": {
+			"text": "Клаус с отвращением выполняет приказ... Вы чувствуете, как доверие между вами рушится.",
+			"options": []
+		},
+		"torture_accepted": {
+			"text": "Пленный рассказал всё что знал... но какой ценой?",
+			"options": []
+		},
+		"deal_proposed": {
+			"text": "Пленный соглашается на сделку и рассказывает ценную информацию.",
+			"options": []
+		}
+	}
+} 

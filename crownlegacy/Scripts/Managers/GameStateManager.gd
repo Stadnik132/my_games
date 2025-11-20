@@ -1,43 +1,53 @@
-# GameStatemanager.gd
+# GameStateManager.gd
 extends Node
 
-# Управление состоянием игры (Диалог, бой, меню и т.д)
-signal state_changed(new_state) # Сигнал при смене состояния
+# Сигнал изменения состояния игры
+signal state_changed(new_state)
 
-# Перечисление всех возвожных состояний в массиве
+# Возможные глобальные состояния игры
 enum GameState {
-	WORLD, # Свободное перемещение
-	DIALOGUE, # Диалог с NPC
-	MENU, # Открытое меню
-	BATTLE, # Бой (Добавить позже)
-	CUTSCENE, # Сценарные сцены
-	DEAD # Смерть	
+	WORLD,      # Свободное перемещение по миру
+	DIALOGUE,   # Ведутся переговоры с NPC
+	MENU,       # Открыто меню (инвентарь, настройки)
+	BATTLE,     # Активен бой
+	CUTSCENE,   # Идет сценарная сцена
+	DEAD        # Смерть/проигрыш
 }
 
-# Текущее состояние игры (current_state - текущее состояние)
+# Текущее активное состояние игры
 var current_state: int = GameState.WORLD
 
-# Функция для смены состояния (change_state - изменение состояния)
-func change_state (new_state: int) -> void:
-	# Меняему текущее состояние
-	current_state = new_state
-	# Сообщаем всем подписчикам об изменении состоянии
-	emit_signal("state_changed", new_state)
-	# Выводим в консоль для отладки
-	print("Состояние игры изменено на: ", get_state_name(new_state))
-	
-# Функция для получения имени состояния (get_state_name - получить имя состояния)
+# Меняет текущее состояние игры на новое
+func change_state(new_state: int) -> void:
+	var old_state = current_state
+	current_state = new_state  # Обновляем текущее состояние
+	emit_signal("state_changed", new_state)  # Сообщаем подписчикам об изменении
+	print("Состояние игры изменено на: ", get_state_name(new_state))  # Отладочная информация
+
+# Возвращает текстовое название состояния для отладки
 func get_state_name(state: int) -> String:
 	match state:
-		GameState.WORLD: return "WORLD"
-		GameState.DIALOGUE: return "DIALOGUE"
-		GameState.MENU: return "MENU"
-		GameState.BATTLE: return "BATTLE"
-		GameState.CUTSCENE: return "CUTSCENE"
-		GameState.DEAD: return "DEAD"
-		_: return "UNKNOWN"
+		GameState.WORLD:
+			return "WORLD"      # Свободное перемещение
+		GameState.DIALOGUE:
+			return "DIALOGUE"   # Диалог с персонажами
+		GameState.MENU:
+			return "MENU"       # Открыто меню
+		GameState.BATTLE:
+			return "BATTLE"     # Активен бой
+		GameState.CUTSCENE:
+			return "CUTSCENE"   # Сценарная сцена
+		GameState.DEAD:
+			return "DEAD"       # Игрок умер
+		_:
+			return "UNKNOWN"    # Неизвестное состояние
 
-# Функция првоерки может ли игрок двигаться (can_player_move - может ли игрок двигаться?)
+# Проверяет может ли игрок в данный момент двигаться
 func can_player_move() -> bool:
-	# Возвращаем true, только если в состоянии WORLD
 	return current_state == GameState.WORLD
+
+func is_dialogue_active() -> bool:
+	return current_state == GameState.DIALOGUE
+
+func is_battle_active() -> bool:
+	return current_state == GameState.BATTLE

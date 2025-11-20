@@ -1,175 +1,183 @@
-# Dialoguemanager.gd
+# DialogueManager.gd
 extends Node
 
-# Автоагружаемый менеджер диалогов - загружает JSON и управляет диалогами
-
 # Сигналы для связи с UI и другими системами
-signal dialogue_started(character_name) # Диалог начался
-signal dialogue_ended() # Диалог закончился
-signal line_changed(new_line) # Изменилась реплика
-signal otions_changed(option_list) # Изменились варианты ответа
-signal option_refused(option_data, required_trust) # Клаус отказался от варирианта (refused- отказ)
-signal will_power_check_requider(option_data) # Требуется проверка Воли
+signal dialogue_started(character_name)  # Начало диалога
+signal dialogue_ended()                  # Завершение диалога  
+signal line_changed(new_line)            # Смена реплики
+signal options_changed(option_list)      # Смена вариантов ответа
 
-# Переменные текущего диалога
-var current_dialogue: Dictionary = {} # Текущий загруженный диалог (Dictionary - словарь)
-var current_line_id: String = "" # ID текущей реплики
-var is_dialogue_active: bool = false # Активен ли диалог
-var refused_option: Dictionary = {} # Варант, от коготоро отказался Клаус
-var current_trust_check: int = 0 # Требуемый уровень доверия
+# Переменные управления текущим диалогом
+var current_dialogue: Dictionary = {}     # Данные текущего диалога из JSON
+var current_line_id: String = ""          # ID текущей активной реплики
+var is_dialogue_active: bool = false      # Флаг активности диалога
+var completed_dialogues: Dictionary = {}  # Словарь завершенных диалогов
 
-# Функция загрузки диалога из JSON файла
+func _ready() -> void:
+	print("DialogueManager загружен")
+
+# Загружает диалог из JSON файла
 func load_dialogue(dialogue_file: String) -> bool:
-	# Создаем  объект для работы с файлами
-	var file = FileAccess.open(dialogue_file, FileAccess.READ) # FileAccess — встроенный класс Godot для работы с файлами. .open() — статический метод (вызывается напрямую от класса)
-	
-	# Проверяет успешно ли открылся файл
-	if file == null:
+	var file = FileAccess.open(dialogue_file, FileAccess.READ)  # Открываем файл для чтения
+	if file == null:  # Проверяем успешность открытия
 		print("Ошибка: не могу открыть файл диалога ", dialogue_file)
 		return false
 		
-	# Читаем весь текст из файла
-	var json_text = file.get_as_text() # .get_as_text() — метод, который читает ВЕСЬ файл и возвращает как строку
-	# Закрываем файл
-	file.close()
+	var json_text = file.get_as_text()  # Читаем весь текст файла
+	file.close()  # Закрываем файл
 	
-	# Создаем парсер JSON
-	var json = JSON.new()
-	# Пытаемся распарсить JSON текст
-	var parse_result = json.parse(json_text)
+	var json = JSON.new()  # Создаем парсер JSON
+	var parse_result = json.parse(json_text)  # Парсим JSON текст
 	
-	# Проверяем если ошибка парсинга
-	if parse_result != OK:
+	if parse_result != OK:  # Проверяем ошибки парсинга
 		print("Ошибка парсинга JSON: ", json.get_error_message())
-		return true
+		return false
 		
-	# Сохраняем распарсенный диалог
-	current_dialogue = json.data
+	current_dialogue = json.data  # Сохраняем распарсенные данные
 	print("Диалог загружен: ", dialogue_file)
-	return true
-	
-# Функция начала диалога
+	return true  # Успешная загрузка
+
+# Начинает диалог с указанной начальной реплики
 func start_dialogue(start_line_id: String = "start") -> void:
-	# Устанавливанием текущую реплику
-	current_line_id = start_line_id
-	# Активируем диалог
-	is_dialogue_active = true
-	# Сообщаем о начале диалога
-	emit_signal("dialogue_started", current_dialogue.get("character_name", "NPC"))
-	# Показываем первую реплику
-	show_line(current_line_id)
+	GameStateManager.change_state(GameStateManager.GameState.DIALOGUE)
+	current_line_id = start_line_id  # Устанавливаем начальную реплику
+	is_dialogue_active = true  # Устанавливаем флаг активности
 	
-# Функция показа реплики по ID
+	emit_signal("dialogue_started", current_dialogue.get("character_name", "NPC"))  # Сигнал начала
+	show_line(current_line_id)  # Показываем первую реплику
+
+# Показывает реплику по указанному ID
 func show_line(line_id: String) -> void:
-	# Проверяем существует ли такая реплика в диалоге
+	# Проверяем существование реплики
 	if not current_dialogue.has("lines") or not current_dialogue["lines"].has(line_id):
-		print("Ошбика: реплика с ID '", line_id, "' не найдена")
-		end_dialogue()
+		print("Ошибка: реплика с ID '", line_id, "' не найдена")
+		end_dialogue()  # Завершаем диалог при ошибке
 		return
 		
-	var line_data = current_dialogue["lines"][line_id]
-	# Сообщаем об изменении реплики
-	emit_signal("line_changed", line_data)
-
-# Функция филтрации вариантов ответа по условиям
-func filter_optoins(options: Array) -> Array:
-	var available_options = [] # доступные варианты
+	var line_data = current_dialogue["lines"][line_id]  # Получаем данные реплики
 	
-	# Проходим по всем вариантам
-	for option in options:
-		var can_show = true
+	# Проверяем триггер боя
+	if line_data.has("trigger_battle") and line_data["trigger_battle"]:
+		var initiator = line_data.get("battle_initiator", "player")  # Получаем инициатора
+		print("Диалог запускает бой! Инициатор: ", initiator)
+		trigger_battle_from_dialogue(initiator)  # Запускаем бой
+		return  # Завершаем диалог
+	
+	emit_signal("line_changed", line_data)  # Сигнал смены реплики
+	
+	# Обрабатываем варианты ответа
+	if line_data.has("options") and line_data["options"].size() > 0:
+		var available_options = filter_options(line_data["options"])  # Фильтруем варианты
+		emit_signal("options_changed", available_options)  # Показываем доступные варианты
+	else:
+		emit_signal("options_changed", [])  # Нет вариантов - кнопка "Продолжить"
+
+# Фильтрует варианты ответа по условиям
+func filter_options(options: Array) -> Array:
+	var available_options = []  # Массив доступных вариантов
+	
+	for option in options:  # Проходим по всем вариантам
+		var can_show = true  # Флаг доступности варианта
 		
-				# Проверяем флаги сюжета, если есть
-		if option.has("required_flag") and can_show:
+		# Проверка требуемого флага сюжета
+		if option.has("required_flag"):
 			var flag_name = option["required_flag"]
 			if not PlayerData.story_flags.get(flag_name, false):
-				can_show = false
+				can_show = false  # Флаг не установлен - вариант недоступен
 				
-		# Если вариант доступен - доболяем в список
-		if can_show:
-			available_options.append(option)
+		# Проверка требования Воли Короля
+		if option.has("requires_will") and can_show:
+			if not RelationshipManager.can_force_action():
+				can_show = false  # Воли нет - вариант недоступен
+				
+		if can_show:  # Если вариант прошел проверки
+			available_options.append(option)  # Добавляем в доступные
 	
 	return available_options
 
-# Функция выбора вариантов ответа
+# Обрабатывает выбор варианта ответа игроком
 func select_option(option_index: int) -> void:
-	# Поулчаем текущую реплику
-	var current_line = current_dialogue["lines"][current_line_id]
-	var selected_option = current_line["options"][option_index]
+	var current_line = current_dialogue["lines"][current_line_id]  # Текущая реплика
+	var selected_option = current_line["options"][option_index]  # Выбранный вариант
 	
-	# ПРОВЕРКА ДОВЕРИЯ: Если вариант требует минимального доверия
+	# Проверка требования Воли Короля
+	if selected_option.has("requires_will"):
+		if RelationshipManager.force_action():  # Пытаемся использовать Волю
+			apply_option_effects(selected_option)  # Применяем эффекты варианта
+			move_to_next_line(selected_option)  # Переходим к следующей реплике
+		else:
+			show_line(current_line_id)  # Остаемся на текущей реплике
+		return
+	
+	# Проверка минимального доверия
 	if selected_option.has("min_trust"):
 		var player_trust = RelationshipManager.sync_level
 		var required_trust = selected_option["min_trust"]
 		
-		if player_trust < required_trust:
-			# Клаус отказывается
-			handle_refusal(selected_option, required_trust)
-			return # Не продолжаем обычную обработку
-		
-	#Если доверия хватает - применяем вариант нормально
-	# Применяем эффекты выбора (изменение доверия, флаги)
+		if player_trust < required_trust:  # Доверия недостаточно
+			if selected_option.has("on_refuse"):
+				current_line_id = selected_option["on_refuse"]  # Переходим к реплике отказа
+				show_line(current_line_id)
+			else:
+				show_line(current_line_id)  # Остаемся на текущей реплике
+			return
+	
+	# Нормальное выполнение варианта
 	apply_option_effects(selected_option)
 	move_to_next_line(selected_option)
 
-# Функция обработки отказа
+# Переходит к следующей реплике на основе выбранного варианта
+func move_to_next_line(option: Dictionary) -> void:
+	if option.has("next_line"):  # Если есть указание на следующую реплику
+		current_line_id = option["next_line"]  # Устанавливаем следующую реплику
+		show_line(current_line_id)  # Показываем следующую реплику
+	else:
+		end_dialogue()  # Завершаем диалог
 
-			
-# Функция принуждения волей
-func forcce_option_with_will() -> bool:
-	# Проверяем можно ли использовать волю
-	if RelationshipManager.can_force_action():
-		# используем волю короля
-		RelationshipManager.force_battle_action()
-		# Применяем вариант, несмотря на отказ
-		apply_option_effects(refused_option)
-		move_to_next_line(refused_option)
-		return true
-	else:
-		print("Недостаточно Воли короля!")
-		return false
-		
-# Функция для выбора альтернативного варианта при отказе
-func choose_alternative_option() -> void:
-	# Ищем альтернативные вариант в данных отказа
-	if refused_option.has("onrefuse"):
-		var alternative_line_id = refused_option["on_refuse"]
-		# Переходим к альтернативной реплике
-		current_line_id = alternative_line_id
-		show_line(current_line_id)
-	else:
-		# Если альтернативы нет - остаемся на текущей реплике
-		show_line(current_line_id)
-		print("Нет альтернативной реплики")
-		
-	# Сбрасываем информацию об отказе
-	refused_option = {}
-	current_trust_check = 0
-	
-# Функция перехода к следующей реплике
-func move_to_text_line(option: Dictionary) -> void:
-	if option.has("next_line"):
-		current_line_id = option["next_line"]
-		show_line(current_line_id)
-	else:
-		end_dialogue()
-		
-# Функция применения эффектов выбора
+# Применяет эффекты выбранного варианта
 func apply_option_effects(option: Dictionary) -> void:
-	# Изменяем доверие, если указано
+	# Изменение доверия
 	if option.has("trust_effect"):
-		RelationshipManager.set_story_flag(option["set_flag"], true)
-		
-# Функция завершения диалога
+		RelationshipManager.change_trust(option["trust_effect"])
+	
+	# Установка флагов сюжета
+	if option.has("set_flag"):
+		PlayerData.set_story_flag(option["set_flag"], true)
+
+# Завершает текущий диалог
 func end_dialogue() -> void:
-	# Деактивируем диалог
-	is_dialogue_active = false
-	# Очищаем текущий диалог
+	GameStateManager.change_state(GameStateManager.GameState.WORLD)
+	is_dialogue_active = false  # Сбрасываем флаг активности
+	
+	# Помечаем диалог как завершенный
+	var dialogue_key = current_dialogue.get("character_name", "unknown")
+	completed_dialogues[dialogue_key] = true
+	
+	# Очищаем данные текущего диалога
 	current_dialogue = {}
 	current_line_id = ""
-	# Сообщаем о завершении диалога
-	emit_signal("dialogue_ended")
-	print("Диалог завершен")
 	
-func firce_end_dialogue() -> void:
-	end_dialogue()
+	emit_signal("dialogue_ended")  # Сигнал завершения
+	print("Диалог завершен")
+
+# Запускает бой когда в диалоге срабатывает триггер
+func trigger_battle_from_dialogue(initiator: String) -> void:
+	print("Запуск боя из диалога. Инициатор: ", initiator)
+	
+	end_dialogue()  # Завершаем текущий диалог
+	
+	var current_npc = find_active_npc_for_battle()  # Ищем активного NPC
+	if current_npc:
+		if current_npc.has_method("start_battle"):
+			current_npc.start_battle(initiator)  # Запускаем бой через NPC
+		else:
+			print("Ошибка: NPC не имеет метода start_battle")
+	else:
+		print("Ошибка: NPC для боя не найден!")
+
+# Вспомогательная функция для поиска активного NPC
+func find_active_npc_for_battle() -> Node:
+	var npc = get_tree().get_first_node_in_group("npc_dialogue_active")  # Ищем в группе диалога
+	if not npc:
+		npc = get_tree().get_first_node_in_group("enemy")  # Альтернативный поиск в группе врагов
+	return npc

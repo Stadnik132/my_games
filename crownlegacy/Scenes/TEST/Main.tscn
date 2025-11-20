@@ -1,0 +1,16 @@
+[gd_scene load_steps=4 format=3 uid="uid://bwvwqm4yo0x78"]
+
+[ext_resource type="PackedScene" uid="uid://cwx1m2k1x5x7h" path="res://Scenes/UI/DialogueUi.tscn" id="1_idj7w"]
+[ext_resource type="PackedScene" uid="uid://7mmqvyu3w4sf" path="res://Scenes/PlayerWorld.tscn" id="1_r150o"]
+[ext_resource type="PackedScene" uid="uid://bsbixf0p0h8oh" path="res://Scenes/NPC/NPC.tscn" id="3_kln2b"]
+
+[node name="Main" type="Node2D"]
+
+[node name="DialogueUi" parent="." instance=ExtResource("1_idj7w")]
+
+[node name="PlayerWorld" parent="." instance=ExtResource("1_r150o")]
+position = Vector2(840, 348)
+
+[node name="Npc" parent="." instance=ExtResource("3_kln2b")]
+position = Vector2(1003, 539)
+attack_power = 5

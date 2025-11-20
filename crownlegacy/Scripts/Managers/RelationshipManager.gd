@@ -1,84 +1,86 @@
-#RelationshipManager.gd
-extends Node #Наследуем от базового объекта Godot - Node
+# RelationshipManager.gd
+extends Node
 
-# Сигналы - Это способ общения между скриптами
-# Когда доверие меняется, мы сообщаем всем, кто подписан на сигнал.
-signal trust_changed(new_value) # Сигнал при изменении доверя (trust_changed - доверие изменено) (new_value - новое значение)
-signal will_power_changed(new_value) # Сигнал при изменении воли (will_power_changed - изменится ли сила воли)
+# Сигналы для связи с UI и другими системами
+signal trust_changed(new_value)        # Изменение уровня доверия
+signal will_power_changed(new_value)   # Изменение количества Воли Короля
 
-#Переменные для хранения основных данных
-var sync_level: int = 0 # Уровень доверия между духом и Клаусом (от -100 до 100) (sync_level - уровень синхронизации)
-var will_power: int = 3 # Текущее количество Воли Короля (Стартовое значени) (will_power - сила воли)
+# Диапазоны уровней доверия для текстовых статусов
+const TRUST_RANGES = {
+	"НЕНАВИСТЬ": -100,
+	"НЕПРИЯЗНЬ": -50, 
+	"СКЕПТИЦИЗМ": -20,
+	"НЕЙТРАЛЬНО": 20,
+	"ДОВЕРИЕ": 50,
+	"ПОДЧИНЕНИЕ": 80
+}
 
-# Функция _ready() вызывается автоматически, когда этот объект появляется в игре.
+# Основные параметры системы отношений
+var sync_level: int = 100              # Уровень синхронизации (-100 до +100)
+var will_power: int = 3                # Текущее количество Воли Короля
+
 func _ready() -> void:
-	# Выводим сообщение в консоль для проверки ,что скрипт работает
-	print("RelationshopManager Загружен! Довери: ", sync_level, " Воля Короля: ", will_power)
+	# Вывод информации о загрузке для отладки
+	print("RelationshipManager загружен! Доверие: ", sync_level, " Воля Короля: ", will_power)
 
-# Функция дял проверки можно ли принудить (Есть ли воля)
+# Проверяет можно ли использовать принуждение
 func can_force_action() -> bool:
-	# Просто проверяем есть ли хотя бы 1 единица воли
-	return will_power > 0
-	
-# Функция для принуждения с использованием Воли (в диалогах и бою)
+	return will_power > 0  # Возвращает true если есть хотя бы 1 единица Воли
+
+# Основная функция использования Воли Короля
+func use_will() -> bool:
+	if will_power > 0:  # Проверяем есть ли Воля для использования
+		will_power -= 1  # Уменьшаем количество Воли на 1
+		emit_signal("will_power_changed", will_power)  # Сообщаем об изменении
+		print("Воля использована. Осталось: ", will_power)
+		return true  # Успешно использовали
+	else:
+		print("Нет Воли для использования!")
+		return false  # Не удалось использовать
+
+# Выполняет принуждение с использованием Воли Короля
 func force_action() -> bool:
-	# Используем существующую функцию use_will()
-	if use_will():
-		# Дополнительно уменьшаем доверие за принуждение
-		change_trust(-25)
-		print("Принуждение волей! Доверие уменьшилось")
+	if use_will():  # Пытаемся использовать Волю
+		change_trust(-25)  # При успешном принуждении уменьшаем доверие
+		print("Принуждение Волей! Доверие уменьшено.")
 		return true
 	else:
-		return false
-		
-# Функция для изменения уровня доверия (change_trust - изменение доверия) (amount - сумма)
-func change_trust(amount: int) -> void:
-	# Складываем текущее доверие с переданным значением
-	sync_level += amount
-	# Ограничиваем значение между -100 и 100 с помощью clamp(Чтобы не ушло за пределы)
-	sync_level = clamp(sync_level, -100, 100)
-	# Сигналим все, кто подписан на trust_changed.
-	emit_signal("trust_changed", sync_level)
-	# выводим в консоль отладку
-	print("Доверие изменено на: ", amount, ". Текущее: ", sync_level)
-	
-# Функция для использования Воли Короля (use_will - использовать волю)
-func use_will() -> bool:
-	# Проверяем есть ли ещё воля для использования
-	if will_power > 0:
-		# Уменьшам количество воли на 1
-		will_power -= 1
-		 # Сообщаем об этом изменении воли через сигнал
-		emit_signal("will_power_changed", will_power)
-		# Выводим отладку
-		print("Воля использована. Осталось: ", will_power)
-		return true # Возвращаем true - действите успешно выполнено
-	else:
-		# Если воли нот, выводим сообщение и возвращаем false
-		print("Нет воли для использования!")
-		return false
-		
-# Функция для добавления воли (Сделаем позже)
+		return false  # Принуждение невозможно
+
+# Добавляет указанное количество Воли Короля
 func add_will(amount: int) -> void:
-	# Увеливичиваем кол-во воли
-	will_power += amount
-	# Сообщаем о изменении
-	emit_signal("will_power_changed", will_power)
-	# Выводим отладку
-	print("Воля добавлена", amount, "Теперь: ", will_power)
-	
-# Функция для получения текстового статуса отношений (get_trust_status - получить доверительный статус)
+	will_power += amount  # Увеличиваем количество Воли
+	emit_signal("will_power_changed", will_power)  # Сообщаем об изменении
+	print("Воля добавлена: ", amount, ". Теперь: ", will_power)
+
+# Изменяет уровень доверия на указанное количество
+func change_trust(amount: int) -> void:
+	sync_level += amount  # Изменяем текущее значение доверия
+	sync_level = clamp(sync_level, -100, 100)  # Ограничиваем значение в диапазоне
+	emit_signal("trust_changed", sync_level)  # Сообщаем об изменении
+	print("Доверие изменено на: ", amount, ". Текущее: ", sync_level)
+
+# Возвращает текстовое описание текущего уровня доверия
 func get_trust_status() -> String:
-	# Проверяем уровень доверия и возвращаем соответсвующий текст
-	if sync_level <= -50:
+	if sync_level <= TRUST_RANGES["НЕНАВИСТЬ"]:
 		return "Ненависть"
-	elif sync_level <= -20:
-		return "Неприязнь"
-	elif sync_level < 20:
+	elif sync_level <= TRUST_RANGES["НЕПРИЯЗНЬ"]:
+		return "Неприязнь" 
+	elif sync_level < TRUST_RANGES["НЕЙТРАЛЬНО"]:
 		return "Скептицизм"
-	elif sync_level < 50:
+	elif sync_level < TRUST_RANGES["ДОВЕРИЕ"]:
 		return "Нейтрально"
-	elif sync_level <= 80:
+	elif sync_level <= TRUST_RANGES["ПОДЧИНЕНИЕ"]:
 		return "Доверие"
 	else:
 		return "Подчинение"
+
+# Вспомогательные функции для внешних систем
+func get_trust_level() -> int:
+	return sync_level  # Возвращает текущий уровень доверия
+
+func get_will_power() -> int:
+	return will_power  # Возвращает текущее количество Воли Короля
+
+func has_enough_trust(required_trust: int) -> bool:
+	return sync_level >= required_trust  # Проверяет достаточно ли доверия для действия

@@ -1,0 +1,45 @@
+[gd_scene load_steps=2 format=3 uid="uid://cwx1m2k1x5x7h"]
+
+[ext_resource type="Script" uid="uid://b4ki70avmc2o" path="res://Scripts/UI/DialogueUI.gd" id="1_xb8ew"]
+
+[node name="DialogueUi" type="CanvasLayer"]
+script = ExtResource("1_xb8ew")
+
+[node name="ColorRect" type="ColorRect" parent="."]
+offset_left = 100.0
+offset_top = 300.0
+offset_right = 700.0
+offset_bottom = 500.0
+color = Color(0, 0, 0, 0.247059)
+
+[node name="CharacterName" type="Label" parent="ColorRect"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="DialogueText" type="Label" parent="ColorRect"]
+layout_mode = 0
+offset_top = 27.0
+offset_right = 40.0
+offset_bottom = 50.0
+
+[node name="OptionsContainer" type="VBoxContainer" parent="ColorRect"]
+layout_mode = 0
+offset_top = 55.0
+offset_right = 40.0
+offset_bottom = 95.0
+
+[node name="optionButton1" type="Button" parent="ColorRect/OptionsContainer"]
+visible = false
+layout_mode = 2
+
+[node name="optionButton2" type="Button" parent="ColorRect/OptionsContainer"]
+visible = false
+layout_mode = 2
+
+[node name="optionButton3" type="Button" parent="ColorRect/OptionsContainer"]
+visible = false
+layout_mode = 2
+
+[node name="TypeTimer" type="Timer" parent="."]
+wait_time = 0.5
