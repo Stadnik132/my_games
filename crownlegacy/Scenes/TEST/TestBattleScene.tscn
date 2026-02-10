@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3 uid="uid://bxu2qmkif5f24"]
-
-[ext_resource type="Script" uid="uid://bipvjubdeb2av" path="res://Scripts/TEST/TestBattleScene.gd" id="1_gbldf"]
-
-[node name="BattleMain" type="Node2D" groups=["enemy", "player"]]
-script = ExtResource("1_gbldf")

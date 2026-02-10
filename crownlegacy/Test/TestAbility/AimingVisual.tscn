@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=3 uid="uid://bv2o8uhwy13ej"]
+
+[ext_resource type="Script" uid="uid://djkq8dw20dejg" path="res://Test/TestAbility/AimingVisual.gd" id="1_32t2n"]
+
+[sub_resource type="ExternalTexture" id="ExternalTexture_32t2n"]
+size = Vector2(9, 9)
+
+[node name="AimingVisual" type="Node2D"]
+script = ExtResource("1_32t2n")
+
+[node name="AimingLine" type="Line2D" parent="."]
+points = PackedVector2Array(0, 0)
+width = 3.0
+default_color = Color(0.6386686, 0.368084, 0, 1)
+
+[node name="AimingCircle" type="Sprite2D" parent="."]
+scale = Vector2(42.5, 39)
+texture = SubResource("ExternalTexture_32t2n")

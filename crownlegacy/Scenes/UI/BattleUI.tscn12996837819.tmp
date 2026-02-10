@@ -1,0 +1,106 @@
+[gd_scene load_steps=2 format=3 uid="uid://c6jncvfcllb34"]
+
+[ext_resource type="Script" uid="uid://duwlcmo4fg6wv" path="res://Scripts/UI/BattleUI.gd" id="1_o21vf"]
+
+[node name="BattleUi" type="CanvasLayer"]
+script = ExtResource("1_o21vf")
+
+[node name="Background" type="ColorRect" parent="."]
+clip_contents = true
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.00392157)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+alignment = 2
+
+[node name="TopPanel" type="HBoxContainer" parent="VBoxContainer"]
+layout_mode = 2
+
+[node name="PlayerHealth" type="VBoxContainer" parent="VBoxContainer/TopPanel"]
+layout_mode = 2
+
+[node name="HealthLabel" type="Label" parent="VBoxContainer/TopPanel/PlayerHealth"]
+layout_mode = 2
+text = "Игрок"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HealthBar" type="ProgressBar" parent="VBoxContainer/TopPanel/PlayerHealth"]
+custom_minimum_size = Vector2(200, 20)
+layout_mode = 2
+value = 100.0
+
+[node name="EnemyHealth" type="VBoxContainer" parent="VBoxContainer/TopPanel"]
+layout_mode = 2
+
+[node name="HealthLabel" type="Label" parent="VBoxContainer/TopPanel/EnemyHealth"]
+layout_mode = 2
+text = "Враг"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ProgressBar" type="ProgressBar" parent="VBoxContainer/TopPanel/EnemyHealth"]
+custom_minimum_size = Vector2(200, 20)
+layout_mode = 2
+value = 100.0
+
+[node name="ATBProgressBar" type="ProgressBar" parent="VBoxContainer"]
+custom_minimum_size = Vector2(400, 30)
+layout_mode = 2
+max_value = 3.0
+
+[node name="ActionButtons" type="GridContainer" parent="VBoxContainer"]
+layout_mode = 2
+columns = 4
+
+[node name="AttackButton" type="Button" parent="VBoxContainer/ActionButtons"]
+custom_minimum_size = Vector2(100, 50)
+layout_mode = 2
+text = "Атака"
+
+[node name="DefenderButton" type="Button" parent="VBoxContainer/ActionButtons"]
+custom_minimum_size = Vector2(100, 50)
+layout_mode = 2
+text = "Защита"
+
+[node name="AbilitiesButton" type="Button" parent="VBoxContainer/ActionButtons"]
+layout_mode = 2
+text = "Умения"
+
+[node name="DodgeButton" type="Button" parent="VBoxContainer/ActionButtons"]
+layout_mode = 2
+text = "Уворот"
+
+[node name="PersuadeButton" type="Button" parent="VBoxContainer/ActionButtons"]
+custom_minimum_size = Vector2(100, 50)
+layout_mode = 2
+text = "Убедить"
+
+[node name="ItemButton" type="Button" parent="VBoxContainer/ActionButtons"]
+custom_minimum_size = Vector2(100, 50)
+layout_mode = 2
+text = "Предметы"
+
+[node name="BattleLog" type="TextEdit" parent="VBoxContainer"]
+visible = false
+custom_minimum_size = Vector2(600, 150)
+layout_mode = 2
+text = "\"Лог боя:\\n\""
+editable = false
+
+[node name="AbilitiesScrollContainer" type="ScrollContainer" parent="VBoxContainer"]
+clip_contents = false
+custom_minimum_size = Vector2(400, 100)
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="AbilitiesVBox" type="VBoxContainer" parent="VBoxContainer/AbilitiesScrollContainer"]
+custom_minimum_size = Vector2(580, 100)
+layout_mode = 2

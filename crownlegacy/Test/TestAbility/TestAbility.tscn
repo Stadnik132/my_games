@@ -1,0 +1,20 @@
+[gd_scene load_steps=5 format=3 uid="uid://b1ywbxegfr734"]
+
+[ext_resource type="Script" uid="uid://c8afthe20dodr" path="res://Test/TestAbility/TestAbilityLoad.gd" id="1_2fjqh"]
+[ext_resource type="Script" uid="uid://drqe4kdqeyr1k" path="res://Scripts/core/battle/Ability/AbilityComponent.gd" id="2_ecbj0"]
+[ext_resource type="Script" uid="uid://cdkfkfjl5u06d" path="res://Scripts/Player/PlayerCombatComponent.gd" id="3_snufx"]
+[ext_resource type="Script" uid="uid://5eeu4gsqvgal" path="res://Test/TestAbility/TestAbilityComponent.gd" id="3_t25l3"]
+
+[node name="TestAbility" type="Node2D"]
+script = ExtResource("1_2fjqh")
+
+[node name="Player" type="CharacterBody2D" parent="."]
+
+[node name="AbilityComponent" type="Node" parent="Player"]
+script = ExtResource("2_ecbj0")
+
+[node name="PlayerCombatComponent" type="Node" parent="Player"]
+script = ExtResource("3_snufx")
+
+[node name="TestAbilityComponent" type="Node" parent="."]
+script = ExtResource("3_t25l3")

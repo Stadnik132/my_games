@@ -1,0 +1,96 @@
+{
+  "abilities": [
+	{
+	  "id": "basic_slash",
+	  "name": "Резкий удар",
+	  "description": "Быстрая атака оружием с дополнительным уроном.",
+	  "icon_path": "",
+	  "type": 0,
+	  "unlock_level": 1,
+	  "mana_cost": 0,
+	  "stamina_cost": 15,
+	  "health_cost": 0,
+	  "cast_time": 0.5,
+	  "cooldown": 3.0,
+	  "channeled": false,
+	  "damage_data": {
+		"damage_type": 0,
+		"amount": 25,
+		"penetration": 0.1,
+		"can_crit": true,
+		"crit_multiplier": 1.5
+	  },
+	  "cast_animation": "attack_special",
+	  "effect_scene": "",
+	  "sound_effect": ""
+	},
+	{
+	  "id": "fireball",
+	  "name": "Огненный шар",
+	  "description": "Бросает огненный шар, наносящий урон по области.",
+	  "icon_path": "",
+	  "type": 1,
+	  "unlock_level": 3,
+	  "mana_cost": 15,
+	  "stamina_cost": 0,
+	  "health_cost": 0,
+	  "cast_time": 1.5,
+	  "cooldown": 8.0,
+	  "channeled": false,
+	  "damage_data": {
+		"damage_type": 1,
+		"amount": 30,
+		"penetration": 0.2,
+		"can_crit": true,
+		"crit_multiplier": 1.8
+	  },
+	  "projectile_speed": 300.0,
+	  "cast_animation": "cast_fire",
+	  "effect_scene": "",
+	  "sound_effect": ""
+	},
+	{
+	  "id": "frost_nova",
+	  "name": "Ледяная буря",
+	  "description": "Замораживает всех врагов в области, нанося урон и замедляя.",
+	  "icon_path": "",
+	  "type": 2,
+	  "unlock_level": 5,
+	  "mana_cost": 25,
+	  "stamina_cost": 10,
+	  "health_cost": 0,
+	  "cast_time": 2.0,
+	  "cooldown": 12.0,
+	  "channeled": false,
+	  "damage_data": {
+		"damage_type": 1,
+		"amount": 20,
+		"penetration": 0.3,
+		"can_crit": false,
+		"crit_multiplier": 1.0
+	  },
+	  "effect_radius": 200.0,
+	  "cast_animation": "cast_ice",
+	  "effect_scene": "",
+	  "sound_effect": ""
+	},
+	{
+	  "id": "berserk",
+	  "name": "Берсерк",
+	  "description": "Увеличивает силу атаки и скорость на короткое время.",
+	  "icon_path": "",
+	  "type": 3,
+	  "unlock_level": 2,
+	  "mana_cost": 10,
+	  "stamina_cost": 20,
+	  "health_cost": 5,
+	  "cast_time": 1.0,
+	  "cooldown": 20.0,
+	  "channeled": false,
+	  "buff_duration": 10.0,
+	  "cast_animation": "cast_buff",
+	  "effect_scene": "",
+	  "sound_effect": ""
+	}
+  ]
+}

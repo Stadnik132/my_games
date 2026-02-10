@@ -1,0 +1,47 @@
+[gd_scene load_steps=8 format=3 uid="uid://c13138o3lbiu"]
+
+[ext_resource type="Script" uid="uid://giukr7p5o2e8" path="res://Actors/Actor.gd" id="1_vpcky"]
+[ext_resource type="Texture2D" uid="uid://ni25by4uqho3" path="res://Assets/Sprites/TestElder.png" id="2_46bny"]
+[ext_resource type="Script" uid="uid://cprrclxegvl7f" path="res://Actors/Components/ActorInteractionComponent.gd" id="2_tm1wl"]
+[ext_resource type="Texture2D" uid="uid://5qqbbsii4eij" path="res://Assets/UI/Exclamation mark.png" id="4_okbp1"]
+[ext_resource type="Script" uid="uid://baarqgcghdftt" path="res://Actors/Components/ActorCombatComponent.gd" id="5_okbp1"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_okbp1"]
+radius = 15.0
+height = 34.0
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_46bny"]
+radius = 33.0
+
+[node name="Actor" type="CharacterBody2D"]
+disable_mode = 1
+collision_layer = 3
+collision_mask = 3
+script = ExtResource("1_vpcky")
+display_name = "Страж"
+dialogue_timeline = "guard_encounter"
+interaction_component_path = NodePath("ActorInteractionComponent")
+combat_component_path = NodePath("CombatComponent")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(0, 33)
+texture = ExtResource("2_46bny")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(0, 36)
+shape = SubResource("CapsuleShape2D_okbp1")
+
+[node name="ActorInteractionComponent" type="Area2D" parent="."]
+collision_layer = 3
+collision_mask = 3
+script = ExtResource("2_tm1wl")
+
+[node name="InteractionIcon" type="Sprite2D" parent="ActorInteractionComponent"]
+texture = ExtResource("4_okbp1")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ActorInteractionComponent"]
+position = Vector2(0, 36)
+shape = SubResource("CircleShape2D_46bny")
+
+[node name="CombatComponent" type="Node" parent="."]
+script = ExtResource("5_okbp1")

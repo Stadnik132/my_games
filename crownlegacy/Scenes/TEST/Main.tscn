@@ -1,16 +1,19 @@
 [gd_scene load_steps=4 format=3 uid="uid://bwvwqm4yo0x78"]
 
-[ext_resource type="PackedScene" uid="uid://cwx1m2k1x5x7h" path="res://Scenes/UI/DialogueUi.tscn" id="1_idj7w"]
-[ext_resource type="PackedScene" uid="uid://7mmqvyu3w4sf" path="res://Scenes/PlayerWorld.tscn" id="1_r150o"]
-[ext_resource type="PackedScene" uid="uid://bsbixf0p0h8oh" path="res://Scenes/NPC/NPC.tscn" id="3_kln2b"]
+[ext_resource type="Texture2D" uid="uid://cabygo0kafipr" path="res://icon.svg" id="1_ej3ka"]
+[ext_resource type="PackedScene" uid="uid://c13138o3lbiu" path="res://Actors/Actor.tscn" id="3_ej3ka"]
+[ext_resource type="PackedScene" uid="uid://c3gn1gu8g8qaw" path="res://Scenes/player/Player.tscn" id="3_iavhu"]
 
 [node name="Main" type="Node2D"]
+position = Vector2(168, 15)
 
-[node name="DialogueUi" parent="." instance=ExtResource("1_idj7w")]
+[node name="Icon" type="Sprite2D" parent="."]
+position = Vector2(-20.999998, 68.99999)
+scale = Vector2(6.36719, 5.05469)
+texture = ExtResource("1_ej3ka")
 
-[node name="PlayerWorld" parent="." instance=ExtResource("1_r150o")]
-position = Vector2(840, 348)
+[node name="Klous" parent="." instance=ExtResource("3_iavhu")]
 
-[node name="Npc" parent="." instance=ExtResource("3_kln2b")]
-position = Vector2(1003, 539)
-attack_power = 5
+[node name="Actor" parent="." instance=ExtResource("3_ej3ka")]
+position = Vector2(134, -39)
+actor_id = "guard_01"

@@ -1,0 +1,46 @@
+[gd_resource type="Resource" script_class="DialogicStyle" load_steps=12 format=3 uid="uid://dctaiqrynrv78"]
+
+[ext_resource type="Resource" uid="uid://dli17dq28l8oc" path="res://def_style.tres" id="1_hvsiq"]
+[ext_resource type="Script" uid="uid://bwg6yncmh2cml" path="res://addons/dialogic/Resources/dialogic_style_layer.gd" id="2_70qfb"]
+[ext_resource type="Script" uid="uid://dv08k6ljua6fm" path="res://addons/dialogic/Resources/dialogic_style.gd" id="3_23a2h"]
+
+[sub_resource type="Resource" id="Resource_mbyx3"]
+script = ExtResource("2_70qfb")
+
+[sub_resource type="Resource" id="Resource_5c0il"]
+script = ExtResource("2_70qfb")
+
+[sub_resource type="Resource" id="Resource_dd6um"]
+script = ExtResource("2_70qfb")
+
+[sub_resource type="Resource" id="Resource_034je"]
+script = ExtResource("2_70qfb")
+
+[sub_resource type="Resource" id="Resource_uvenq"]
+script = ExtResource("2_70qfb")
+
+[sub_resource type="Resource" id="Resource_osq4n"]
+script = ExtResource("2_70qfb")
+
+[sub_resource type="Resource" id="Resource_66oua"]
+script = ExtResource("2_70qfb")
+
+[sub_resource type="Resource" id="Resource_png2y"]
+script = ExtResource("2_70qfb")
+
+[resource]
+script = ExtResource("3_23a2h")
+name = "New_File"
+inherits = ExtResource("1_hvsiq")
+layer_list = Array[String](["10", "11", "12", "13", "14", "15", "16"])
+layer_info = {
+"": SubResource("Resource_mbyx3"),
+"10": SubResource("Resource_5c0il"),
+"11": SubResource("Resource_dd6um"),
+"12": SubResource("Resource_034je"),
+"13": SubResource("Resource_uvenq"),
+"14": SubResource("Resource_osq4n"),
+"15": SubResource("Resource_66oua"),
+"16": SubResource("Resource_png2y")
+}
+metadata/_latest_layer = ""

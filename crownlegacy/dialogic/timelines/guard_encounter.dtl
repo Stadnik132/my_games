@@ -1,0 +1,19 @@
+join Guard center
+Guard: Стой, ё-маё
+- Атакуй, епта | [else="hide"]
+	if DialogicBridge.get_trust_level() >= 25:
+		Klous: Окэ, мачу
+		[signal arg="trust-10"]
+		Klous: Тестик
+		[signal arg="start_battle:guard_01"]
+	else:
+		Klous: Не, не буду
+		if DialogicBridge.can_afford_will(1):
+			- Воля короля
+				[signal arg="use_will:1"]
+				Klous: Блииин... Ну ладно, Ты ж использовал волю короля. Атакую
+				[clear time="0.0"]
+			- Продолжить...
+				[clear time="0.0"]
+- Не нажимай
+	[signal arg="end_dialogue"]
