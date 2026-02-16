@@ -44,8 +44,7 @@ func _setup_event_bus_connections() -> void:
 	eb.Player.equipment_changed.connect(_on_player_equipment_changed)
 	
 	# === Диалоги ===
-	eb.Dialogue.requested.connect(_on_dialogue_requested)
-	eb.Game.transition_to_dialogue_requested.connect(_on_transition_to_dialogue_requested)
+	eb.Game.dialogue_requested.connect(_on_transition_to_dialogue_requested)
 
 	
 	if debug_mode:
@@ -168,35 +167,34 @@ func _on_dialogic_signal(argument: String) -> void:
 	
 	match signal_type:
 		"start_battle":
-			# Начать бой
-			EventBus.Dialogue.start_battle.emit(signal_value if signal_value else "default_battle")
+			var npc_id = signal_value
+			if not npc_id.is_empty():
+				EventBus.Dialogue.start_battle.emit(npc_id)
 		
 		"to_combat":
-			# Вернуться в бой после точки решения (продолжить бой)
 			if debug_mode:
 				print_debug("DialogicBridge: запрос продолжения боя")
-			EventBus.Game.transition_to_battle_requested.emit()
 			EventBus.Combat.dialogic_decision_made.emit("to_combat")
 		
 		"to_world":
 			# Вернуться в мир после боя/диалога
 			if debug_mode:
 				print_debug("DialogicBridge: запрос перехода в WORLD")
-			EventBus.Game.transition_to_battle_requested.emit()
+			EventBus.Game.world_requested.emit()
 			EventBus.Combat.dialogic_decision_made.emit("to_world")
 		
 		"end_dialogue":
 			# Вернуться в мир после диалога
 			if debug_mode:
 				print_debug("DialogicBridge: запрос окончания диалога")
-			EventBus.Game.transition_to_world_requested.emit()
+			EventBus.Game.world_requested.emit()
 		
 		
 		"game_over":
 			# Конец игры
 			if debug_mode:
 				print_debug("DialogicBridge: запрос GAME_OVER")
-			EventBus.Game.transition_to_game_over_requested.emit()
+			EventBus.Game.game_over_requested.emit()
 		
 		"use_will":
 			# Использовать Волю

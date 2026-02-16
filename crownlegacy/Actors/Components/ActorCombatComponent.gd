@@ -1,4 +1,3 @@
-# ActorCombatComponent.gd
 extends Node
 class_name CombatComponent
 
@@ -34,7 +33,16 @@ func setup(actor: Actor) -> void:
 	_actor = actor
 	current_health = max_health
 	set_active(false)
+	
+	if not EventBus.Player.damage_taken.is_connected(_on_enemy_attack_requested):
+		EventBus.Player.damage_taken.connect(_on_enemy_attack_requested)
+	
 	print_debug("CombatComponent настроен для: ", actor.display_name)
+
+func _exit_tree() -> void:
+	"""Отписка от сигналов при удалении"""
+	if EventBus.Player.damage_taken.is_connected(_on_enemy_attack_requested):
+		EventBus.Player.damage_taken.disconnect(_on_enemy_attack_requested)
 
 func setup_combat(combat_manager: Node) -> void:
 	"""Настройка для участия в бою"""
@@ -51,17 +59,61 @@ func set_active(value: bool) -> void:
 	_is_active = value
 	
 	if value:
-		# Активация боя
 		_combat_start_time = Time.get_ticks_msec() / 1000.0
 		_used_triggers.clear()
 		print_debug("CombatComponent активирован")
 		combat_activated.emit()
 	else:
-		# Деактивация
 		print_debug("CombatComponent деактивирован")
 
 func is_active() -> bool:
 	return _is_active
+
+# ==================== НАНЕСЕНИЕ УРОНА ====================
+func _on_enemy_attack_requested(amount: int, damage_type: String, source: Node, was_blocked: bool, is_critical: bool) -> void:
+	"""Обработчик: враг хочет атаковать (подписан на Player.damage_taken)"""
+	# Проверяем, что источник атаки — этот актёр
+	if source != _actor:
+		return
+	
+	if not _is_active:
+		return
+	
+	# Находим цель (игрока)
+	var player = get_tree().get_first_node_in_group("player")
+	if not player:
+		print_debug(_actor.display_name, ": не могу найти игрока для атаки")
+		return
+	
+	# Создаём DamageData на основе входящих данных
+	var damage_data = DamageData.create_physical(amount)
+	if is_critical:
+		damage_data.can_crit = true
+		damage_data.crit_multiplier = 1.5
+	
+	# Рассчитываем урон
+	var final_damage = _calculate_attack_damage(damage_data)
+	
+	# Отправляем сигнал "урон нанесён" с ПРАВИЛЬНЫМ порядком параметров
+	EventBus.Player.damage_taken.emit(
+		final_damage,           # amount
+		damage_type,           # damage_type
+		_actor,               # source (кто нанёс урон)
+		false,                # was_blocked (враги не блокируют)
+		is_critical           # is_critical
+	)
+	
+	print_debug(_actor.display_name, ": наносит ", final_damage, " урона игроку")
+
+func _calculate_attack_damage(damage_data: DamageData) -> int:
+	"""Расчёт урона, который враг наносит игроку"""
+	var base = damage_data.amount
+	
+	if damage_data.can_crit and randf() < 0.1:
+		base = int(base * damage_data.crit_multiplier)
+		print_debug("КРИТ ВРАГА! x", damage_data.crit_multiplier)
+	
+	return base
 
 # ==================== ТОЧКИ РЕШЕНИЙ ====================
 func check_decision_triggers() -> Dictionary:
@@ -69,18 +121,13 @@ func check_decision_triggers() -> Dictionary:
 	if not _is_active:
 		return {}
 	
-	# Вычисляем время боя
 	var current_time = Time.get_ticks_msec() / 1000.0
 	var combat_time = current_time - _combat_start_time
-	
-	# Процент здоровья
 	var hp_percent = float(current_health) / max_health
 	
-	# Проверяем все триггеры
 	for trigger in decision_triggers:
 		var trigger_type = trigger.get("type", "")
 		
-		# Пропускаем использованные триггеры
 		if trigger_type in _used_triggers:
 			continue
 		
@@ -105,131 +152,104 @@ func mark_trigger_used(trigger_type: String) -> void:
 		if trigger.get("type") == trigger_type:
 			trigger["used"] = true
 
-# ==================== УРОН И СМЕРТЬ ====================
+# ==================== ПОЛУЧЕНИЕ УРОНА ====================
 func take_damage(damage_data: DamageData, source: Node = null) -> void:
 	if not _is_active or current_health <= 0:
 		return
 	
-	# 1. Рассчитываем урон
 	var final_damage = _calculate_damage(damage_data)
-	
-	# 2. Проверяем, пересекаем ли порог HP
 	var hp_after = current_health - final_damage
 	var hp_percent_after = float(hp_after) / max_health
 	
-	# 3. Проверяем HP-триггеры (только неиспользованные)
+	# Проверяем HP-триггеры
 	for trigger in decision_triggers:
 		if trigger.get("type") == "hp" and not trigger.get("used", false):
 			var threshold = trigger.get("threshold", 1.0)
 			var current_percent = get_health_percentage()
 			
-			# Пересекаем порог сверху вниз?
 			if current_percent > threshold and hp_percent_after <= threshold:
-				# НЕМЕДЛЕННО вызываем точку решения
 				if _combat_manager:
 					_combat_manager.request_decision_point(self, trigger)
-				# ПРЕКРАЩАЕМ обработку урона - ждём решения игрока
 				return
 	
-	# 4. Если триггеров нет или они уже использованы - применяем урон
+	# Применяем урон
 	current_health = max(0, current_health - final_damage)
 	health_changed.emit(current_health, max_health)
 	damage_data.damage_calculated.emit(final_damage)
 	
-	print_debug("Получен урон: ", final_damage, " (тип: ", damage_data.get_damage_type_name(), 
-			   ") HP: ", current_health, "/", max_health)
+	print_debug("Получен урон: ", final_damage, " HP: ", current_health, "/", max_health)
 	
-	# 4. Визуальная реакция
 	if _actor:
 		_play_hit_reaction(source, damage_data.damage_type)
 	
-	# 5. Проверка смерти
 	if current_health <= 0:
 		_die(source)
 
 func _play_hit_reaction(source: Node, damage_type: int = -1) -> void:
-	"""Визуальная реакция на получение урона"""
-	# Если damage_type не указан - используем PHYSICAL по умолчанию
 	if damage_type == -1:
 		damage_type = DamageData.DamageType.PHYSICAL
 	
 	var sprite = _actor.get_node_or_null("Sprite2D")
 	if sprite:
-		# Разный цвет для разных типов урона
 		var damage_color = Color(1, 1, 1)
 		match damage_type:
 			DamageData.DamageType.PHYSICAL:
-				damage_color = Color(1, 0.5, 0.5)  # Красноватый
+				damage_color = Color(1, 0.5, 0.5)
 			DamageData.DamageType.MAGICAL:
-				damage_color = Color(0.5, 0.5, 1)  # Синеватый
+				damage_color = Color(0.5, 0.5, 1)
 			DamageData.DamageType.TRUE:
-				damage_color = Color(1, 1, 0.5)    # Желтоватый
+				damage_color = Color(1, 1, 0.5)
 		
-		# Анимация получения урона
 		var tween = _actor.create_tween()
 		tween.tween_property(sprite, "modulate", damage_color, 0.1)
 		tween.tween_property(sprite, "modulate", Color(1, 1, 1), 0.1)
-	
 
 func take_damage_legacy(amount: int, source: Node = null) -> void:
-	"""Совместимость со старым кодом (TestAttack)"""
 	var legacy_data = DamageData.create_physical(amount)
 	take_damage(legacy_data, source)
 
 func _die(killer: Node = null) -> void:
-	"""Смерть в бою"""
 	print_debug("CombatComponent: смерть")
-	
 	set_active(false)
 	died.emit()
 	
-	# Уведомляем актёра о смерти
 	if _actor and _actor.has_method("_on_combat_death"):
 		_actor._on_combat_death(killer)
 
 # ==================== ГЕТТЕРЫ ====================
 func get_health_percentage() -> float:
-	"""Процент здоровья"""
 	return float(current_health) / max_health if max_health > 0 else 0.0
 
 func is_alive() -> bool:
-	"""Проверка, жив ли"""
 	return current_health > 0
 
 func get_combat_time() -> float:
-	"""Время в бою"""
 	if not _is_active:
 		return 0.0
 	return (Time.get_ticks_msec() / 1000.0) - _combat_start_time
 
 func get_actor() -> Actor:
-	"""Получить ссылку на актёра"""
 	return _actor
 
 # ==================== УТИЛИТЫ ====================
 func reset() -> void:
-	"""Сброс компонента (для возрождения)"""
 	current_health = max_health
 	_used_triggers.clear()
 	_is_active = false
 	print_debug("CombatComponent сброшен")
-	
-# ==================== НОВЫЕ МЕТОДЫ ДЛЯ ABILITY системы ====================
+
 func _calculate_damage(damage_data: DamageData) -> int:
-	"""Расчёт финального урона с учётом защиты"""
+	"""Расчёт урона, полученного ЭТИМ актёром"""
 	var base_damage = damage_data.amount
 	
-	# Критический удар
-	if damage_data.can_crit and randf() < 0.1:  # 10% шанс крита для теста
+	if damage_data.can_crit and randf() < 0.1:
 		base_damage = int(base_damage * damage_data.crit_multiplier)
 		damage_data.damage_crit.emit(base_damage)
 		print_debug("КРИТИЧЕСКИЙ УДАР! x", damage_data.crit_multiplier)
 	
-	# TRUE урон - игнорирует защиту
 	if damage_data.is_true_damage():
 		return base_damage
 	
-	# PHYSICAL/MAGICAL урон - учитывает защиту
 	var defense = 0
 	match damage_data.damage_type:
 		DamageData.DamageType.PHYSICAL:
@@ -237,8 +257,5 @@ func _calculate_damage(damage_data: DamageData) -> int:
 		DamageData.DamageType.MAGICAL:
 			defense = magical_defense
 	
-	# Применяем проникающую способность
 	var effective_defense = defense * (1.0 - damage_data.penetration)
-	
-	# Минимум 1 урон
 	return max(1, base_damage - effective_defense)

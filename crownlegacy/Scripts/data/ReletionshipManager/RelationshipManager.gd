@@ -1,9 +1,10 @@
-# RelationshipManager.gd
+# RelationshipManager
 extends Node
 
-# Сигналы менеджера (локальные)
-signal trust_changed(new_value, delta)
-signal will_changed(new_value, delta)
+# Сигналы менеджера (только для внутреннего использования, не для EventBus)
+# Подписчики должны использовать EventBus.Relationship
+signal trust_changed(new_value: int, delta: int)
+signal will_changed(new_value: int, delta: int)
 
 # Данные отношений
 var relationship_data: RelationshipData
@@ -18,18 +19,14 @@ func _ready() -> void:
 		default_relationship_data = RelationshipData.new()
 		default_relationship_data.resource_name = "DefaultRelationshipData"
 	
-	# Создаём копию для игрового процесса
+	# ВСЕГДА создаём копию для игрового процесса
 	relationship_data = default_relationship_data.duplicate()
 	
 	# Подключаем сигналы данных к менеджеру
 	relationship_data.trust_changed.connect(_on_data_trust_changed)
 	relationship_data.will_changed.connect(_on_data_will_changed)
 	
-	print_debug("RelationshipManager загружен! Доверие: ", get_trust_level(), 
-		  " Воля Героя: ", get_will_power())
-	await get_tree().process_frame
-	
-	# Отправляем начальные значения
+	# Отправляем начальные значения через EventBus
 	EventBus.Relationship.trust_changed.emit(get_trust_level(), 0)
 	EventBus.Relationship.will_changed.emit(get_will_power(), 0)
 	
@@ -82,13 +79,11 @@ func get_refusal_chance() -> float:
 	"""Вероятность отказа Клоуса выполнить команду (0.0-1.0)"""
 	var trust = get_trust_level()
 	
-	# Простая формула из GDD
 	if trust >= 50:
 		return 0.0
 	elif trust <= -50:
 		return 0.5
 	else:
-		# Линейная интерполяция
 		return remap(trust, -50, 50, 0.5, 0.0)
 
 # === ГЕТТЕРЫ ===
@@ -116,31 +111,25 @@ func has_enough_trust(required_trust: int) -> bool:
 # === ОБРАБОТЧИКИ СИГНАЛОВ ДАННЫХ ===
 func _on_data_trust_changed(new_value: int, delta: int) -> void:
 	"""Когда данные доверия изменились"""
-	# Эмитим локальный сигнал
-	trust_changed.emit(new_value, delta)
+	# ❌ НЕ эмитим локальный сигнал - подписчики используют EventBus
 	
-	# Эмитим сигнал через EventBus (новая структура)
+	# ✅ Единый источник правды: EventBus
 	EventBus.Relationship.trust_changed.emit(new_value, delta)
 	
 	# Дополнительные эффекты при сильном изменении
 	if abs(delta) >= 20:
 		EventBus.Relationship.trust_effect_applied.emit("major_change", delta / 100.0)
-	
-	print_debug("Доверие изменено: ", delta, ". Новое значение: ", new_value)
 
 func _on_data_will_changed(new_value: int, delta: int) -> void:
 	"""Когда данные воли изменились"""
-	# Эмитим локальный сигнал
-	will_changed.emit(new_value, delta)
+	# ❌ НЕ эмитим локальный сигнал
 	
-	# Эмитим сигнал через EventBus (новая структура)
+	# ✅ Единый источник правды: EventBus
 	EventBus.Relationship.will_changed.emit(new_value, delta)
 	
 	# Если использовали Волю
 	if delta < 0:
 		EventBus.Relationship.will_used.emit(true, new_value)
-	
-	print_debug("Воля изменена: ", delta, ". Новое значение: ", new_value)
 
 # === СОХРАНЕНИЕ И ЗАГРУЗКА ===
 func save_data() -> Dictionary:
@@ -148,7 +137,7 @@ func save_data() -> Dictionary:
 	return {
 		"trust_level": relationship_data.trust_level,
 		"will_power": relationship_data.will_power,
-		"character_flags": relationship_data.character_flags
+		"character_flags": relationship_data.character_flags.duplicate()
 	}
 
 func load_data(data: Dictionary) -> void:
@@ -158,7 +147,7 @@ func load_data(data: Dictionary) -> void:
 	if data.has("will_power"):
 		relationship_data.will_power = data.will_power
 	if data.has("character_flags"):
-		relationship_data.character_flags = data.character_flags
+		relationship_data.character_flags = data.character_flags.duplicate()
 
 # === УТИЛИТЫ ===
 func get_relationship_summary() -> Dictionary:
@@ -168,6 +157,5 @@ func get_relationship_summary() -> Dictionary:
 		"will": get_will_power(),
 		"status": get_trust_status(),
 		"refusal_chance": get_refusal_chance(),
-		"damage_modifier": get_combat_modifier("damage_multiplier"),
-		"dodge_chance": get_combat_modifier("dodge_chance")
+		"damage_modifier": get_combat_modifier("damage_multiplier")
 	}

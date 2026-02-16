@@ -1,11 +1,9 @@
-# RelationshipData.gd
-@tool
 extends Resource
 class_name RelationshipData
 
 # Сигналы ресурса
-signal trust_changed(new_value, delta)
-signal will_changed(new_value, delta)
+signal trust_changed(new_value: int, delta: int)
+signal will_changed(new_value: int, delta: int)
 
 # Система флагов
 @export_category("Флаги персонажа")
@@ -15,10 +13,10 @@ signal will_changed(new_value, delta)
 @export_range(-100, 100, 1) var trust_level: int = 50:
 	set(value):
 		var clamped_value = clampi(value, -100, 100)
-		var delta = clamped_value - trust_level  # Разница ДО изменения
-		if delta != 0:  # Если значение реально изменилось
+		var delta = clamped_value - trust_level
+		if delta != 0:
 			trust_level = clamped_value
-			trust_changed.emit(trust_level, delta)  # Передаём delta
+			trust_changed.emit(trust_level, delta)
 
 @export_range(0, 10, 1) var will_power: int = 3:
 	set(value):

@@ -5,7 +5,7 @@ var abilities_by_id: Dictionary = {}  # {ability_id: AbilityResource}
 var unlocked_abilities: Array[String] = []  # ID разблокированных способностей
 
 func _ready():
-	load_abilities_from_json("res://Scripts/core/battle/Ability/abilities.json")
+	load_abilities_from_json("res://Scripts/Abilities/abilities.json")
 	
 	# ТЕСТ - правильный способ
 	print("=== ABILITY SYSTEM SELF-TEST ===")

@@ -1,70 +1,41 @@
 class_name DodgeState extends CombatState
 
 var dodge_timer: float = 0.0
-var dodge_direction: Vector2 = Vector2.DOWN
-var dodge_speed: float = 400.0  # Высокая скорость для уворота
-var can_aim: bool = false
-var aiming_during_dodge: bool = false
+var dodge_direction: Vector2 = Vector2.ZERO
+var dodge_speed: float = 0.0
 
-func enter():
-	print("DodgeState: уворот в направлении ", fsm.last_dodge_direction)
-	
-	dodge_direction = fsm.last_dodge_direction.normalized()
+# Уворот: только выход в Idle по окончании (кулдаун = длительность анимации/движения).
+
+func enter() -> void:
+	dodge_direction = command_data.get("direction", Vector2.ZERO)
+	if dodge_direction == Vector2.ZERO:
+		dodge_direction = fsm.last_dodge_direction
 	if dodge_direction == Vector2.ZERO:
 		dodge_direction = Vector2.DOWN
-	
-	dodge_timer = dodge_params.get("duration", 0.3)
-	dodge_speed = dodge_params.get("distance", 80.0) / dodge_timer
-	can_aim = false  # УБРАТЬ aiming_during_dodge логику
-	
-	# Проверяем выносливость
-	if not player_data.use_stamina(dodge_params.get("stamina_cost", 25)):
-		EventBus.Combat.dodge_failed.emit()
-		transition_requested.emit("Idle")
-		return
-	
-	# Блокируем обычное управление
-	if player.has_method("set_movement_allowed"):
-		player.set_movement_allowed(false)
-	
+	dodge_direction = dodge_direction.normalized()
+
+	var distance = dodge_params.get("distance", 200.0)
+	var duration = dodge_params.get("duration", 0.3)
+	dodge_timer = duration
+	dodge_speed = distance / duration if duration > 0 else 0.0
+	set_battle_velocity(dodge_direction * dodge_speed)
 	EventBus.Combat.dodge_started.emit()
 
-func physics_process(delta: float):
-	# ПРИНУДИТЕЛЬНОЕ ДВИЖЕНИЕ В НАПРАВЛЕНИИ УВОРОТА
-	player.velocity = dodge_direction * dodge_speed
-	player.move_and_slide()
+func physics_process(_delta: float) -> void:
+	set_battle_velocity(dodge_direction * dodge_speed)
+	apply_movement()
 
-func process(delta: float):
+func process(delta: float) -> void:
 	dodge_timer -= delta
-	
-	# Разрешаем прицеливание во второй половине
-	if dodge_timer <= dodge_params.get("duration", 0.3) * 0.5 and not can_aim:
-		can_aim = true
-	
-	if dodge_timer <= 0:
-		_finish_dodge()
+	if dodge_timer <= 0.0:
+		transition_requested.emit("Idle")
 
-func _finish_dodge():
-	# Восстанавливаем управление
-	if player.has_method("set_movement_allowed"):
-		player.set_movement_allowed(true)
-	
-	# Останавливаем
-	player.velocity = Vector2.ZERO
-	
-	# ВСЕГДА в Idle после уворота
-	transition_requested.emit("Idle")
-	
+func exit() -> void:
+	set_battle_velocity(Vector2.ZERO)
 	EventBus.Combat.dodge_completed.emit()
 
 func can_exit() -> bool:
-	return dodge_timer <= 0
+	return dodge_timer <= 0.0
 
-func exit():
-	# Гарантированно восстанавливаем управление
-	if player.has_method("set_movement_allowed"):
-		player.set_movement_allowed(true)
-	player.velocity = Vector2.ZERO
-
-func get_allowed_transitions() -> Array[StringName]:
-	return ["Idle", "Aiming"]
+func get_allowed_transitions() -> Array[String]:
+	return ["Idle", "Stun"]

@@ -37,7 +37,11 @@ func duplicate_data() -> DamageData:
 
 func get_damage_type_name() -> String:
 	"""Возвращает название типа урона"""
-	return DamageType.keys()[damage_type] if damage_type < DamageType.size() else "UNKNOWN"
+	match damage_type:
+		DamageType.PHYSICAL: return "PHYSICAL"
+		DamageType.MAGICAL: return "MAGICAL"
+		DamageType.TRUE: return "TRUE"
+		_: return "UNKNOWN"
 
 func is_physical() -> bool:
 	return damage_type == DamageType.PHYSICAL

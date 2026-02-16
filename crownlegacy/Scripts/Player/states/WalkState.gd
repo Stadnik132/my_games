@@ -1,16 +1,16 @@
-class_name IdleState extends CombatState
+class_name WalkState extends CombatState
 
-# Idle: покой. Переходы во все кроме Cast — Walk, Attack, Dodge, Block, Aim.
-# При вводе движения переходим в Walk.
+# Walk: передвижение в бою. Переходы: Idle, Attack, Dodge, Block, Aim.
 
-func enter() -> void:
-	set_battle_velocity(Vector2.ZERO)
-
-func physics_process(_delta: float) -> void:
+func physics_process(delta: float) -> void:
 	var input_vector = player._get_input_vector()
 	if input_vector != Vector2.ZERO:
+		player._handle_movement(input_vector, delta)
+		player.last_movement_direction = input_vector
 		fsm.last_dodge_direction = input_vector
-		transition_requested.emit("Walk")
+	else:
+		player._handle_stop_movement(delta)
+		transition_requested.emit("Idle")
 		return
 	apply_movement()
 
@@ -27,4 +27,4 @@ func handle_command(command: String, data: Dictionary = {}) -> void:
 			transition_requested.emit("Aim")
 
 func get_allowed_transitions() -> Array[String]:
-	return ["Walk", "Attack", "Dodge", "Block", "Aim", "Stun"]
+	return ["Idle", "Attack", "Dodge", "Block", "Aim", "Stun"]

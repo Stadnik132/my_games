@@ -26,5 +26,3 @@ func clear_flag(flag_name: String) -> void:
 
 func get_all_flags() -> Dictionary:
 	return flags.duplicate()
-	
-	

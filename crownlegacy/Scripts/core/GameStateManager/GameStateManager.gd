@@ -22,20 +22,14 @@ func _ready() -> void:
 
 func _setup_event_bus_connections() -> void:
 	"""Подключение к EventBus сигналам"""
-	eb.Game.transition_to_world_requested.connect(_on_transition_to_world_requested)
-	eb.Game.transition_to_dialogue_requested.connect(_on_transition_to_dialogue_requested)
-	eb.Game.transition_to_battle_requested.connect(_on_transition_to_battle_requested)
-	eb.Game.transition_to_menu_requested.connect(_on_transition_to_menu_requested)
-	eb.Game.transition_to_cutscene_requested.connect(_on_transition_to_cutscene_requested)
-	eb.Game.transition_to_game_over_requested.connect(_on_transition_to_game_over_requested)
-	eb.Player.died.connect(_on_player_died)  # Всегда -> GAME_OVER
-	#Старые
-	eb.Dialogue.started.connect(_on_dialogue_started_legacy)
-	eb.Dialogue.ended.connect(_on_dialogue_ended_legacy)
-	eb.UI.menu_requested.connect(_on_menu_requested)
-	eb.Combat.started.connect(_on_combat_started_legacy)
-	eb.Combat.ended.connect(_on_combat_ended_legacy)
-	eb.Actors.interaction_started.connect(_on_actor_interaction_started)
+	eb.Game.world_requested.connect(_on_transition_to_world_requested)
+	eb.Game.dialogue_requested.connect(_on_transition_to_dialogue_requested)
+	eb.Combat.started.connect(_on_transition_to_battle_requested)
+	eb.Game.menu_requested.connect(_on_transition_to_menu_requested)
+	eb.Game.cutscene_requested.connect(_on_transition_to_cutscene_requested)
+	eb.Game.game_over_requested.connect(_on_transition_to_game_over_requested)
+	eb.Player.died.connect(_on_player_died)
+	eb.Combat.dialogic_decision_made.connect(_on_dialogic_decision_made)
 	
 	print_debug("GameStateManager подключён к EventBus")
 
@@ -126,36 +120,19 @@ func _on_transition_to_cutscene_requested(cutscene_id: String) -> void:
 
 func _on_transition_to_game_over_requested() -> void:
 	change_state(GameState.GAME_OVER)
-	
+
+func _on_dialogic_decision_made(choice: String) -> void:
+	"""Обработка выбора в диалоге после точки решения"""
+	match choice:
+		"to_combat":
+			change_state(GameState.BATTLE)
+		"to_world":
+			change_state(GameState.WORLD)
+
 # ---------- ОБРАБОТЧИКИ ИГРОВЫХ СОБЫТИЙ ----------
 func _on_player_died() -> void:
 	# Смерть игрока всегда ведет к GAME_OVER
 	change_state(GameState.GAME_OVER)
-
-# ==================== УСТАРЕВШИЕ МЕТОДЫ (для обратной совместимости) ====================
-func _on_dialogue_started_legacy(timeline_name: String) -> void:
-	print_debug("GameStateManager: Устаревший сигнал dialogue_started. Используйте transition_to_dialogue_requested")
-	eb.Game.transition_to_dialogue_requested.emit(timeline_name)
-	
-func _on_dialogue_ended_legacy() -> void:
-	print_debug("GameStateManager: Устаревший сигнал dialogue_ended. Используйте явные переходы")
-
-func _on_menu_requested() -> void:
-	"""Запрос меню"""
-	if _current_state in [GameState.WORLD, GameState.BATTLE]:
-		change_state(GameState.MENU)
-
-
-func _on_combat_started_legacy(enemies: Array) -> void:
-	print_debug("GameStateManager: Устаревший сигнал combat_started. Используйте transition_to_battle_requested")
-	eb.Game.transition_to_battle_requested.emit(enemies)
-	
-func _on_combat_ended_legacy(victory: bool) -> void:
-	print_debug("GameStateManager: Устаревший сигнал combat_ended. Используйте явные переходы")
-
-func _on_actor_interaction_started(actor: Node) -> void:
-	"""Взаимодействие с актёром"""
-	print_debug("Взаимодействие с: ", actor.name if actor else "unknown")
 
 # === ПУБЛИЧНЫЕ МЕТОДЫ ===
 func get_current_state() -> GameState:

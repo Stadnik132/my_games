@@ -1,44 +1,81 @@
-# PlayerManager.gd (АВТОЗАГРУЗКА)
 extends Node
-
-# ==================== СИГНАЛЫ ====================
-signal level_up(new_level: int, stat_increases: Dictionary)
-signal experience_gained(amount: int, new_total: int)
-signal equipment_changed(slot: String, old_item: String, new_item: String)
+# НЕТ class_name - это автозагрузка!
 
 # ==================== ПЕРЕМЕННЫЕ ====================
 var player_data: PlayerData
-var equipped_items: Dictionary = {}  # Кэш реальных объектов снаряжения
-var active_buffs: Array = []
 
-# Конфигурация баланса
-@export var balance_config: BalanceConfig  # Создайте отдельный ресурс
+# Кэш модификаторов отношений (обновляется через EventBus)
+var _trust_damage_multiplier: float = 1.0
+var _trust_cost_multiplier: float = 1.0
 
 # ==================== ИНИЦИАЛИЗАЦИЯ ====================
 func _ready() -> void:
 	# Загружаем данные по умолчанию
 	player_data = PlayerData.new()
 	
-	# Создаём конфиг баланса, если не задан
-	if not balance_config:
-		balance_config = BalanceConfig.new()
+	_setup_connections()
 	
 	print_debug("PlayerManager загружен")
-
+	
 	await get_tree().process_frame
-	call_deferred("_sync_ability_assignments")
+	_sync_ability_assignments()
 	
-	# Отправляем начальные данные
+	# Hurtbox -> урон и стан обрабатываются в PlayerCombatComponent (_on_hurtbox_damage -> apply_damage_data + request_stun)
+	
+	# Эмитим начальное состояние
+	EventBus.Player.experience_gained.emit(0, player_data.experience)
 	EventBus.Player.level_up.emit(player_data.level, {})
+
+func _setup_connections() -> void:
+	# Слушаем сигналы самого PlayerData
+	player_data.died.connect(_on_player_died)
+	player_data.hp_changed.connect(_on_hp_changed)
+	player_data.mp_changed.connect(_on_mp_changed)
+	player_data.stamina_changed.connect(_on_stamina_changed)
+	player_data.level_changed.connect(_on_level_changed)
+	player_data.experience_changed.connect(_on_experience_changed)
 	
-	print_debug("PlayerManager загружен")
+	# Слушаем изменения отношений через EventBus
+	EventBus.Relationship.trust_changed.connect(_on_trust_changed)
+	
+	# Запросы на получение урона
+	EventBus.Player.damage_taken.connect(damage_taken)
+
+# ==================== ОБРАБОТЧИКИ СОБЫТИЙ PLAYERDATA ====================
+func _on_player_died() -> void:
+	print_debug("PlayerManager: игрок умер")
+	EventBus.Player.died.emit()
+
+func _on_hp_changed(new_hp: int, old_hp: int) -> void:
+	EventBus.Player.hp_changed.emit(new_hp, old_hp)
+
+func _on_mp_changed(new_mp: int, old_mp: int) -> void:
+	EventBus.Player.mp_changed.emit(new_mp, old_mp)
+
+func _on_stamina_changed(new_stamina: int, old_stamina: int) -> void:
+	EventBus.Player.stamina_changed.emit(new_stamina, old_stamina)
+
+func _on_level_changed(new_level: int, old_level: int) -> void:
+	# При изменении уровня эмитим level_up с пустыми статами
+	# Реальное увеличение статов происходит в _level_up()
+	EventBus.Player.level_up.emit(new_level, {})
+	print_debug("Уровень игрока: ", new_level)
+
+func _on_experience_changed(new_exp: int, old_exp: int) -> void:
+	EventBus.Player.experience_gained.emit(new_exp - old_exp, new_exp)
+
+# ==================== ОБРАБОТЧИКИ ВНЕШНИХ СОБЫТИЙ ====================
+func _on_trust_changed(new_value: int, delta: int) -> void:
+	"""Обновляем кэш модификаторов при изменении доверия"""
+	_trust_damage_multiplier = 1.0 + (new_value * 0.005)
+	_trust_cost_multiplier = max(0.5, 1.0 + (new_value * -0.002))
+
 # ==================== УРОВНИ И ОПЫТ ====================
 func add_experience(amount: int, source: String = "unknown") -> void:
 	if not player_data:
 		return
 	
-	player_data.experience += amount
-	EventBus.experience_gained.emit(amount, player_data.experience)
+	player_data.set_experience(player_data.experience + amount)
 	
 	var levels_gained = 0
 	while player_data.experience >= player_data.experience_to_next_level:
@@ -49,129 +86,119 @@ func add_experience(amount: int, source: String = "unknown") -> void:
 		print_debug("Получено %d уровней от %s" % [levels_gained, source])
 
 func _level_up() -> void:
-	var old_level = player_data.level
-	
 	# Расчёт нового опыта
 	player_data.experience -= player_data.experience_to_next_level
-	player_data.level += 1
-	player_data.experience_to_next_level = int(player_data.experience_to_next_level * balance_config.level_exp_multiplier)
+	
+	# Увеличение уровня
+	var old_level = player_data.level
+	player_data.set_level(player_data.level + 1)
+	
+	# Прогрессия опыта: каждые 5 уровней +25% к порогу
+	var level = player_data.level
+	var multiplier = 1.0 + (floor(level / 5) * 0.25)
+	player_data.experience_to_next_level = int(100 * multiplier)
 	
 	# Увеличение характеристик
 	var stat_increases = {}
-	for stat in balance_config.stats_per_level:
-		var increase = balance_config.stats_per_level[stat]
-		player_data.base_stats[stat] += increase
-		stat_increases[stat] = increase
 	
-	# Восстановление здоровья/маны
-	player_data.max_hp += balance_config.hp_per_level
+	# Базовое увеличение статов
+	player_data.set_stat("attack", player_data.get_stat("attack") + 2)
+	stat_increases["attack"] = 2
+	
+	player_data.set_stat("magic_attack", player_data.get_stat("magic_attack") + 2)
+	stat_increases["magic_attack"] = 2
+	
+	player_data.set_stat("defense", player_data.get_stat("defense") + 1)
+	stat_increases["defense"] = 1
+	
+	player_data.set_stat("magic_defense", player_data.get_stat("magic_defense") + 1)
+	stat_increases["magic_defense"] = 1
+	
+	player_data.set_stat("speed", player_data.get_stat("speed") + 1)
+	stat_increases["speed"] = 1
+	
+	player_data.set_stat("agility", player_data.get_stat("agility") + 1)
+	stat_increases["agility"] = 1
+	
+	# Увеличение здоровья и маны
+	player_data.max_hp += 10
 	player_data.set_current_hp(player_data.max_hp)
-	player_data.max_mp += balance_config.mp_per_level
+	
+	player_data.max_mp += 5
 	player_data.set_current_mp(player_data.max_mp)
 	
-	# Сигналы
-	level_up.emit(player_data.level, stat_increases)
-	EventBus.level_up.emit(player_data.level, stat_increases)
+	# Сигнал уже будет отправлен через _on_level_changed
 	print_debug("Уровень повышен до %d!" % player_data.level)
 
-# ==================== СНАРЯЖЕНИЕ ====================
-func equip_item(item_id: String, slot: String) -> void:
-	if not slot in player_data.equipment:
-		push_warning("Неизвестный слот: %s" % slot)
-		return
-	
-	var old_item = player_data.equipment[slot]
-	player_data.equipment[slot] = item_id
-	
-	# Здесь можно загрузить реальный ресурс предмета
-	# var item_resource = load("res://items/%s.tres" % item_id)
-	# equipped_items[slot] = item_resource
-	
-	equipment_changed.emit(slot, old_item, item_id)
-	EventBus.equipment_changed.emit(slot, old_item, item_id)
-
-func get_equipment_bonus(stat_name: String) -> int:
-	# Рассчитывает суммарный бонус от всего снаряжения
-	var total_bonus = 0
-	for item in equipped_items.values():
-		if item and item.has_stat_bonus(stat_name):
-			total_bonus += item.get_stat_bonus(stat_name)
-	return total_bonus
-
 # ==================== БОЕВЫЕ МЕТОДЫ ====================
-func take_damage(amount: int, damage_type: String = "physical") -> void:
+func apply_damage_data(damage_data: DamageData, source: Node = null, was_blocked: bool = false) -> void:
+	"""Урон из Hurtbox (Hitbox -> Hurtbox). Конвертирует DamageData в amount/type и вызывает damage_taken."""
+	if not damage_data:
+		return
+	var amount = damage_data.amount
+	var damage_type = damage_data.get_damage_type_name().to_lower()
+	damage_taken(amount, damage_type, source, was_blocked, damage_data.can_crit)
+
+func damage_taken(amount: int, damage_type: String, source: Node = null, was_blocked: bool = false, is_critical: bool = false) -> void:
+	print_debug("Игрок получает урон:", amount, " тип:", damage_type)
+	
 	if not player_data or not player_data.is_alive():
+		print_debug("  Игрок мёртв или нет данных")
 		return
 	
 	var old_hp = player_data.current_hp
 	
-	# Рассчёт защиты
+	# Расчёт защиты
 	var defense_stat = "defense" if damage_type == "physical" else "magic_defense"
 	var defense_value = get_effective_stat(defense_stat)
-	var damage_taken = max(1, amount - defense_value)  # Минимум 1 урон
+	var final_damage = maxi(1, amount - defense_value)
 	
-	player_data.set_current_hp(player_data.current_hp - damage_taken)
+	if was_blocked:
+		final_damage = player_data.calculate_blocked_damage(final_damage)
+		print_debug("  Блок: урон снижен до ", final_damage)
 	
-	# Сигнал в EventBus
-	EventBus.player_took_damage.emit(damage_taken, player_data.current_hp)
+	print_debug("  Защита:", defense_value, " Получено урона:", final_damage)
 	
-	if not player_data.is_alive():
-		EventBus.player_died.emit()
+	player_data.set_current_hp(player_data.current_hp - final_damage)
+	
+	EventBus.Player.damage_taken.emit(final_damage, damage_type, source, was_blocked, is_critical)
 
 func heal(amount: int, source: String = "unknown") -> void:
+	print_debug("Игрок лечится:", amount, " от:", source)
+	
 	if not player_data or not player_data.is_alive():
 		return
 	
 	var old_hp = player_data.current_hp
 	player_data.set_current_hp(player_data.current_hp + amount)
 	
-	# Сигнал только если действительно полечились
 	if player_data.current_hp > old_hp:
-		EventBus.player_healed.emit(player_data.current_hp - old_hp, player_data.current_hp)
+		EventBus.Player.healed.emit(player_data.current_hp - old_hp, player_data.current_hp)
 
-func _sync_ability_assignments():
-	# Находим AbilityComponent (может быть в Player узле)
+# ==================== СИНХРОНИЗАЦИЯ СПОСОБНОСТЕЙ ====================
+func _sync_ability_assignments() -> void:
 	var player = get_tree().get_first_node_in_group("player")
 	if player and player.has_node("AbilityComponent"):
 		var ability_comp = player.get_node("AbilityComponent")
 		ability_comp.load_assignments(player_data.ability_slot_assignments)
-		print("PlayerManager: синхронизированы назначения способностей")
-	
-	# Альтернатива через сигнал
-	EventBus.UI.hud_update_required.connect(_on_hud_update_requested)
-	
-func _on_hud_update_requested(data: Dictionary):
-	# Можно обновлять UI здесь если нужно
-	pass
+		print_debug("PlayerManager: синхронизированы назначения способностей")
 
 # ==================== УТИЛИТЫ ====================
 func get_effective_stat(stat_name: String) -> int:
 	var base = player_data.get_stat(stat_name)
-	var equipment_bonus = get_equipment_bonus(stat_name)
-	var effect_bonus = _get_effects_bonus(stat_name)
-	var trust_multiplier = RelationshipManager.get_combat_modifier("damage_multiplier")  # Пример
-	
-	return int((base + equipment_bonus + effect_bonus) * trust_multiplier)
-
-func _get_effects_bonus(stat_name: String) -> int:
-	# Суммирует бонусы от всех активных эффектов
-	var total = 0
-	for effect in active_buffs:
-		if effect.has_stat_bonus(stat_name):
-			total += effect.get_stat_bonus(stat_name)
-	return total
+	# Снаряжение и эффекты пока не реализованы
+	return int(base * _trust_damage_multiplier)
 
 # ==================== СОХРАНЕНИЕ ====================
 func save_player_data() -> Dictionary:
-	var data = player_data.get_save_data()
-	
 	# Сохраняем текущие назначения из AbilityComponent
 	var player = get_tree().get_first_node_in_group("player")
 	if player and player.has_node("AbilityComponent"):
 		var ability_comp = player.get_node("AbilityComponent")
 		player_data.ability_slot_assignments = ability_comp.save_assignments()
 	
-	return data
+	return player_data.get_save_data()
 
 func load_player_data(data: Dictionary) -> void:
 	player_data.load_save_data(data)
+	print_debug("PlayerManager: данные загружены")

@@ -10,7 +10,7 @@ var cooldowns: Dictionary = {}                  # Кулдауны по инде
 
 # Ссылки
 var player_data: PlayerData
-@onready var ability_manager = get_node("/root/AbilityManager")
+@onready var ability_manager = AbilityManager
 
 func _ready():
 	player_data = PlayerManager.player_data
@@ -135,9 +135,6 @@ func cast_ability(slot_index: int, target_position: Vector2 = Vector2.ZERO) -> b
 	if ability.cast_animation != "":
 		EventBus.Player.animation_requested.emit(ability.cast_animation, ability.cast_time)
 	
-	# Таймер для фактического применения эффекта
-	await get_tree().create_timer(ability.cast_time).timeout
-	
 	# Применение эффекта
 	_apply_ability_effect(ability, target_position)
 	
@@ -192,6 +189,8 @@ func _apply_damage_effect(ability: AbilityResource, target_position: Vector2):
 				enemy.apply_combat_damage_data(damage_data, get_parent())
 			else:
 				print("    -> Враг не имеет метода apply_combat_damage_data")
+# TODO: Вынести поиск целей в CombatManager
+	# Сейчас временная реализация для прототипа
 
 func _apply_heal_effect(ability: AbilityResource):
 	player_data.set_current_hp(player_data.current_hp + ability.heal_amount)
@@ -220,6 +219,8 @@ func _spawn_projectile(ability: AbilityResource, target_position: Vector2):
 		closest_enemy.apply_combat_damage_data(damage_data, get_parent())
 		print("Снаряд попал в врага")
 		EventBus.Combat.enemy_hit.emit(closest_enemy, damage_data.amount, false)
+	# TODO: Создать отдельную систему ProjectileManager
+	# Временная заглушка
 
 func _create_area_effect(ability: AbilityResource, target_position: Vector2):
 	"""Временная зонная атака"""
@@ -272,13 +273,13 @@ func get_slot_assignment(slot_index: int) -> String:
 	return slot_assignments[slot_index]
 
 func _update_ui(slot_index: int):
-	"""Отправить данные в UI"""
+	var ability = slots[slot_index] if slot_index < slots.size() else null
 	EventBus.UI.hud_update_required.emit({
 		"type": "ability_cooldown",
 		"slot_index": slot_index,
 		"percentage": get_cooldown_percentage(slot_index),
 		"on_cooldown": is_on_cooldown(slot_index),
-		"ability_name": slots[slot_index].ability_name if slots[slot_index] else ""
+		"ability_name": ability.ability_name if ability != null else ""
 	})
 
 # ==================== СОХРАНЕНИЕ ====================
