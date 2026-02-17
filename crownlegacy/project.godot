@@ -23,7 +23,6 @@ config/icon="res://icon.svg"
 
 EventBus="*res://Scripts/core/EventBus.gd"
 GameStateManager="*res://Scripts/core/GameStateManager/GameStateManager.gd"
-StateDebugger="*res://StateDebugger.gd"
 RelationshipManager="*res://Scripts/data/ReletionshipManager/RelationshipManager.gd"
 GameFlags="*res://Scripts/dialogic/GameFlags.gd"
 PlayerManager="*res://Scripts/core/PlayerManager.gd"

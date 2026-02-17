@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://c3gn1gu8g8qaw"]
 
-[ext_resource type="Script" uid="uid://cn56cpn1tcbxa" path="res://Actors/Player/PlayerController.gd" id="1_jnk8a"]
+[ext_resource type="Script" uid="uid://cn56cpn1tcbxa" path="res://Scripts/Player/PlayerController.gd" id="1_jnk8a"]
 [ext_resource type="Texture2D" uid="uid://dvyb0bgcvslyr" path="res://Assets/Klous/Klaus.test animac.png" id="2_jnk8a"]
 [ext_resource type="Script" uid="uid://dcenurv8uxest" path="res://Scenes/player/PlayerInteractionDetector.gd" id="3_gpg7s"]
 [ext_resource type="Script" uid="uid://b6capshss8oj4" path="res://Actors/TestAttack.gd" id="4_r5va5"]
@@ -192,6 +192,8 @@ height = 46.0
 [node name="Player" type="CharacterBody2D" unique_id=591630021 groups=["player"]]
 disable_mode = 1
 script = ExtResource("1_jnk8a")
+move_speed = 0.0
+sprint_speed = 10.0
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1332803639]
 texture = ExtResource("2_jnk8a")

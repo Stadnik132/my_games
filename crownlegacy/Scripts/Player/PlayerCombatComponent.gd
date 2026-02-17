@@ -22,6 +22,8 @@ func _ready() -> void:
 	fsm.setup(player_body, player_data, self)
 	_setup_event_bus_connections()
 	_setup_hurtbox()
+	fsm.set_process(false)
+	fsm.set_physics_process(false)
 
 func get_attack_params() -> Dictionary:
 	return {
@@ -68,6 +70,23 @@ func _setup_event_bus_connections() -> void:
 	EventBus.Combat.ability_target_confirmed.connect(_on_ability_target_confirmed)
 	EventBus.Combat.aiming_cancelled.connect(_on_ability_target_cancelled)
 
+	EventBus.Game.state_changed.connect(_on_game_state_changed)
+
+
+func _on_state_initialized(current_state: int) -> void:
+	_on_game_state_changed(current_state, -1)
+
+func _on_game_state_changed(new_state: int, old_state: int) -> void:
+	var is_battle = (new_state == 2)  # STATE_BATTLE
+	
+	if is_battle:
+		fsm.set_process(true)
+		fsm.set_physics_process(true)
+	else:
+		fsm.change_state("Idle")
+		fsm.set_process(false)
+		fsm.set_physics_process(false)
+
 func _on_attack() -> void:
 	fsm.send_command("attack")
 
@@ -98,28 +117,36 @@ func _on_ability_slot_pressed(slot_index: int) -> void:
 		return
 	
 	print_debug("  -> Способность: ", ability.ability_name)
-	print_debug("  -> Можно использовать: ", ability_component.can_cast_ability(slot_index))
-	print_debug("  -> На кулдауне: ", ability_component.is_on_cooldown(slot_index))
 	
-	# Отправляем команду в FSM с индексом слота
-	var state = fsm.get_current_state_name()
+	# ПРОВЕРКА 1: можно ли использовать?
+	var can_cast = ability_component.can_cast_ability(slot_index)
+	print_debug("  -> can_cast_ability: ", can_cast)
 	
-	match state:
-		"Idle", "Walk", "Aiming":
-			fsm.send_command("ability_selected", {
-				"ability": ability,
-				"slot_index": slot_index
-			})
-			fsm.send_command("aim_start")
+	if not can_cast:
+		# УЗНАЁМ ПРИЧИНУ
+		var is_on_cooldown = ability_component.is_on_cooldown(slot_index)
+		print_debug("  -> на кулдауне: ", is_on_cooldown)
 		
-		"Dodge":
-			fsm.send_command("ability_selected", {
-				"ability": ability,
-				"slot_index": slot_index
-			})
+		# Проверка ресурсов вручную
+		if ability.mana_cost > 0:
+			print_debug("  -> мана: ", PlayerManager.player_data.current_mp, "/", ability.mana_cost)
+		if ability.stamina_cost > 0:
+			print_debug("  -> стамина: ", PlayerManager.player_data.current_stamina, "/", ability.stamina_cost)
+		if ability.health_cost > 0:
+			print_debug("  -> хп: ", PlayerManager.player_data.current_hp, "/", ability.health_cost)
 		
-		_:
-			print_debug("Нельзя выбрать способность в состоянии: ", state)
+		return
+	
+	# Дальше идём в FSM
+	var current_state = fsm.get_current_state_name()
+	print_debug("  -> текущее состояние FSM: ", current_state)
+	
+	if current_state in ["Idle", "Walk", "Attack"]:
+		fsm.send_command("ability_selected", {
+			"ability": ability,
+			"slot_index": slot_index
+		})
+		fsm.send_command("aiming_start")
 
 func cast_current_ability(target_position: Vector2) -> void:
 	"""Каст текущей способности (вызывается из CastState)"""
@@ -139,12 +166,6 @@ func confirm_cast(target_position: Vector2) -> void:
 
 func cancel_aiming() -> void:
 	fsm.send_command("aim_cancel")
-
-func _process(delta: float) -> void:
-	fsm._process(delta)
-
-func _physics_process(delta: float) -> void:
-	fsm._physics_process(delta)
 
 func apply_ability_effect(slot_index: int, target_position: Vector2) -> void:
 	"""Применить эффект способности (вызывается из CastState)"""

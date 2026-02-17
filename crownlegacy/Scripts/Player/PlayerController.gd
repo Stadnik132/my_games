@@ -49,7 +49,6 @@ func _physics_process(delta: float) -> void:
 	if not _can_move:
 		velocity = Vector2.ZERO
 		_play_idle_animation()
-		move_and_slide()
 		return
 	
 	var input_vector = _get_input_vector()
@@ -62,8 +61,6 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 # ==================== ОБРАБОТКА ВВОДА ====================
-# Все кнопки (движение, взаимодействие, атака, блок, уворот, способности) обрабатываются здесь.
-# При необходимости можно вынести маппинг в отдельный скрипт (например PlayerInputMap.gd).
 func _input(event: InputEvent) -> void:
 	if _handle_global_input(event):
 		return
@@ -194,6 +191,7 @@ func _on_game_state_changed(new_state: int, old_state: int) -> void:
 		STATE_WORLD:
 			_can_move = true
 			_can_interact = true
+			_in_combat_mode = false
 			print_debug("Player: WORLD - движение + взаимодействие")
 		
 		STATE_DIALOGUE:

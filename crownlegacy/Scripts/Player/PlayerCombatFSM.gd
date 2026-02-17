@@ -40,6 +40,8 @@ func setup(p_player: CharacterBody2D, p_data: PlayerData, p_component: Node) -> 
 	change_state("Idle")
 
 func change_state(state_name: String) -> void:
+	print("=== FSM CHANGE STATE: ТЕКУЩЕЕ=", get_current_state_name(), " НОВОЕ=", state_name)  # NEW
+	
 	if not states.has(state_name):
 		push_error("FSM: состояние не найдено: " + state_name)
 		return
@@ -47,8 +49,10 @@ func change_state(state_name: String) -> void:
 	var old_name = get_current_state_name()
 
 	if current_state and not current_state.can_exit():
+		print("FSM: текущее состояние не может выйти")
 		return
 	if current_state and not state_name in current_state.get_allowed_transitions():
+		print("FSM: переход ", old_name, " -> ", state_name, " не разрешён")
 		return
 
 	if current_state:
@@ -60,9 +64,9 @@ func change_state(state_name: String) -> void:
 	state_changed.emit(old_name, state_name)
 
 func send_command(command: String, data: Dictionary = {}) -> void:
-	if current_state:
-		current_state.handle_command(command, data)
-
+	print("FSM send_command: ", command, " data: ", data)
+	
+	# СНАЧАЛА обновляем данные FSM
 	match command:
 		"ability_selected":
 			if data.has("slot_index"):
@@ -70,8 +74,17 @@ func send_command(command: String, data: Dictionary = {}) -> void:
 			if data.has("ability"):
 				current_ability = data.ability
 		"cast":
-			if data.has("target"):
-				cast_target_position = data.target
+			if data.has("slot_index"):
+				current_slot_index = data.slot_index
+			if data.has("ability"):
+				current_ability = data.ability
+	
+	# ПОТОМ отправляем команду в текущее состояние с полными данными
+	if current_state:
+		current_state.handle_command(command, data)
+	
+	# Дополнительная обработка
+	match command:
 		"aim_cancel":
 			cast_target_position = Vector2.ZERO
 			current_slot_index = -1

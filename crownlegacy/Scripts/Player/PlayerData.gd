@@ -32,7 +32,7 @@ class_name PlayerData
 }
 
 # Боевые параметры
-@export var base_attack_damage: int = 5
+@export var base_attack_damage: int = 15
 @export var attack_cooldown: float = 0.8
 @export var dodge_stamina_cost: int = 25
 @export var block_damage_reduction: float = 0.5

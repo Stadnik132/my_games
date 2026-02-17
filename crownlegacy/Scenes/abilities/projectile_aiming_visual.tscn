@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://dnhhhjwdtye3o"]
+
+[ext_resource type="Texture2D" uid="uid://cabygo0kafipr" path="res://icon.svg" id="1_qnawv"]
+[ext_resource type="Script" uid="uid://ob8xbt7ys4rc" path="res://Scripts/core/battle/Ability/aiming_visuals/projectile_aiming_visual.gd" id="1_ug6vf"]
+[ext_resource type="Texture2D" uid="uid://5qqbbsii4eij" path="res://Assets/UI/Exclamation mark.png" id="2_ubjma"]
+
+[node name="ProjectileAimingVisual" type="Node2D" unique_id=1133895707]
+script = ExtResource("1_ug6vf")
+
+[node name="Line2D" type="Line2D" parent="." unique_id=1896346038]
+width = 2.0
+
+[node name="TargetMarker" type="Sprite2D" parent="." unique_id=120311260]
+position = Vector2(0.25000012, 0)
+scale = Vector2(0.027343752, 0.03125)
+texture = ExtResource("1_qnawv")
+
+[node name="Blocker" type="Sprite2D" parent="." unique_id=1787343182]
+texture = ExtResource("2_ubjma")

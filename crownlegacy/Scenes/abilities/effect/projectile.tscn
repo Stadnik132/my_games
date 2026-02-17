@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://dqqy8c41cnjfv"]
+
+[ext_resource type="Script" uid="uid://kykcmnbgr2sn" path="res://Scripts/core/battle/Ability/ability_effect/projectile.gd" id="1_sbfxd"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_e1u7d"]
+
+[node name="Projectile" type="Area2D" unique_id=465032863]
+script = ExtResource("1_sbfxd")
+
+[node name="CircleShape2D" type="CollisionShape2D" parent="." unique_id=102270101]
+shape = SubResource("CircleShape2D_e1u7d")

@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://b1yni07w6kvgx"]
+
+[ext_resource type="Script" uid="uid://bcauku51lnmxj" path="res://Scripts/core/battle/Ability/ability_effect/area_effect.gd" id="1_23jaj"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_fhvr3"]
+
+[node name="AreaEffect" type="Area2D" unique_id=1520718951]
+script = ExtResource("1_23jaj")
+
+[node name="CircleShape2D" type="CollisionShape2D" parent="." unique_id=1399606679]
+shape = SubResource("CircleShape2D_fhvr3")

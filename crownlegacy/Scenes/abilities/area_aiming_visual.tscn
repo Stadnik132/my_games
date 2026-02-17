@@ -1,0 +1,14 @@
+[gd_scene format=3 uid="uid://blq28t7xhbpbn"]
+
+[ext_resource type="Texture2D" uid="uid://dcim2hniimeoe" path="res://Assets/Abilities/Area_effect.png" id="1_br2pa"]
+[ext_resource type="Script" uid="uid://c1hdm6761lqqt" path="res://Scripts/core/battle/Ability/aiming_visuals/area_aiming_visual.gd" id="1_edykj"]
+[ext_resource type="Texture2D" uid="uid://5qqbbsii4eij" path="res://Assets/UI/Exclamation mark.png" id="2_edykj"]
+
+[node name="AreaAimingVisual" type="Node2D" unique_id=242581656]
+script = ExtResource("1_edykj")
+
+[node name="CircleSprite" type="Sprite2D" parent="." unique_id=248677807]
+texture = ExtResource("1_br2pa")
+
+[node name="Blocker" type="Sprite2D" parent="." unique_id=36274057]
+texture = ExtResource("2_edykj")

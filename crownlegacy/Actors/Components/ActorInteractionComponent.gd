@@ -59,10 +59,12 @@ func update_visibility() -> void:
 	# 2. Актёр интерактивен
 	# 3. Актёр жив
 	# 4. Актёр в мирном режиме
+	# 5. Сейчас нет активного диалога с этим актёром
 	if (_actor._player_in_range and 
 		_actor.is_interactive and 
 		_actor.is_alive() and
-		_actor.current_mode == "peaceful"):
+		_actor.current_mode == "peaceful" and
+		not _actor._is_in_dialogue):
 		interaction_icon.show()
 	else:
 		interaction_icon.hide()

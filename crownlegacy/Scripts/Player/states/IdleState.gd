@@ -23,8 +23,8 @@ func handle_command(command: String, data: Dictionary = {}) -> void:
 			transition_requested.emit("Dodge")
 		"block_start":
 			transition_requested.emit("Block")
-		"aim_start":
-			transition_requested.emit("Aim")
+		"aiming_start":
+			transition_requested.emit("Aiming")
 
 func get_allowed_transitions() -> Array[String]:
-	return ["Walk", "Attack", "Dodge", "Block", "Aim", "Stun"]
+	return ["Walk", "Attack", "Dodge", "Block", "Aiming", "Stun"]

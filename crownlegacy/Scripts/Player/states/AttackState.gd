@@ -87,9 +87,9 @@ func handle_command(command: String, data: Dictionary = {}) -> void:
 		"block_start":
 			_reset_combo()
 			transition_requested.emit("Block")
-		"aim_start":
+		"aiming_start":
 			_reset_combo()
-			transition_requested.emit("Aim")
+			transition_requested.emit("Aiming")
 
 func _reset_combo() -> void:
 	fsm.attack_combo_step = 0
@@ -105,5 +105,5 @@ func exit() -> void:
 
 func get_allowed_transitions() -> Array[String]:
 	if can_combo_or_cancel:
-		return ["Idle", "Walk", "Attack", "Dodge", "Block", "Aim", "Stun"]
+		return ["Idle", "Walk", "Attack", "Dodge", "Block", "Aiming", "Stun"]
 	return ["Attack"]

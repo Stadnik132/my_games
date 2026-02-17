@@ -13,7 +13,10 @@ scale = Vector2(6.36719, 5.05469)
 texture = ExtResource("1_ej3ka")
 
 [node name="Klous" parent="." unique_id=1832941691 instance=ExtResource("3_iavhu")]
+position = Vector2(26, 1)
+move_speed = 200.0
+sprint_speed = 350.0
 
 [node name="Actor" parent="." unique_id=1186382391 instance=ExtResource("3_ej3ka")]
-position = Vector2(134, -39)
+position = Vector2(135, -37)
 actor_id = "guard_01"

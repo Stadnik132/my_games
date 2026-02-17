@@ -43,10 +43,12 @@ var _is_in_dialogue: bool = false
 @onready var ai_vision = get_node_or_null(ai_vision_path)
 @onready var ai_brain = get_node_or_null(ai_brain_path)
 @onready var ai_move = get_node_or_null(ai_move_path)
+@onready var hurtbox: Hurtbox = $Hurtbox
 
 # ==================== ИНИЦИАЛИЗАЦИЯ ====================
 func _ready() -> void:
-	
+	if hurtbox:
+		hurtbox.damage_taken.connect(_on_hurtbox_damage)
 	current_health = max_health
 	current_mode = initial_mode
 	
@@ -135,6 +137,9 @@ func _play_interaction_feedback() -> void:
 
 
 # ==================== БОЙ ====================
+func _on_hurtbox_damage(damage_data: DamageData, source: Node):
+	apply_combat_damage_data(damage_data, source)
+
 func apply_combat_damage_data(damage_data: DamageData, source: Node = null) -> void:
 	if combat_component and combat_component.has_method("take_damage"):
 		combat_component.take_damage(damage_data, source)
@@ -263,10 +268,18 @@ func _apply_hostile_appearance() -> void:
 func _on_dialogue_started(timeline_name: String) -> void:
 	if timeline_name == dialogue_timeline:
 		_is_in_dialogue = true
+		# Сразу прячем иконку взаимодействия, чтобы она не "висела" во время диалога
+		if interaction_component:
+			interaction_component.update_visibility()
 
 
 func _on_dialogue_ended() -> void:
 	_is_in_dialogue = false
+	# После завершения диалога обновляем видимость.
+	# Если игрок всё ещё в зоне и остальные условия выполняются,
+	# иконка снова появится; иначе останется скрытой.
+	if interaction_component:
+		interaction_component.update_visibility()
 
 
 # ==================== УТИЛИТЫ ====================

@@ -10,6 +10,7 @@ class GameSignals:
 	signal game_over_requested()
 
 
+
 class PlayerSignals:
 	signal died
 	signal moved(is_moving: bool, direction: Vector2)
