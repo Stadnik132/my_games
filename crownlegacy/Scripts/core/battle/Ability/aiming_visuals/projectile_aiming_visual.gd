@@ -24,6 +24,9 @@ func _ready_setup() -> void:
 		blocker.visible = false  # пока не показываем
 
 func _process(delta: float) -> void:
+	# Визуал следует за игроком (если игрок двигается во время прицеливания)
+	global_position = caster.global_position
+	
 	var mouse_pos = get_global_mouse_position()
 	var direction = (mouse_pos - caster.global_position).normalized()
 	var distance = caster.global_position.distance_to(mouse_pos)
@@ -33,33 +36,23 @@ func _process(delta: float) -> void:
 	var is_blocked: bool = false
 	
 	if distance <= max_range:
-		# Мышь в пределах дальности - прицел идёт за мышью
 		target_pos = mouse_pos
 		is_blocked = false
 	else:
-		# Мышь дальше максимума - прицел на максимальной дистанции
 		target_pos = caster.global_position + direction * max_range
 		is_blocked = true
 	
-	# Обновляем линию
+	# Обновляем линию (от локального (0,0) до цели в локальных координатах)
 	if line:
 		line.points = [Vector2.ZERO, to_local(target_pos)]
-		# Меняем цвет, если упёрлись в максимум
-		if is_blocked:
-			line.default_color = Color.RED
-		else:
-			line.default_color = line_color
+		line.default_color = Color.RED if is_blocked else line_color
 	
 	# Обновляем маркер цели
 	if target_marker:
 		target_marker.global_position = target_pos
-		# Меняем цвет маркера
-		if is_blocked:
-			target_marker.modulate = Color.RED
-		else:
-			target_marker.modulate = line_color
+		target_marker.modulate = Color.RED if is_blocked else line_color
 	
-	# Показываем "блокер" если упёрлись в максимум
+	# Показываем блокер
 	if blocker:
 		blocker.visible = is_blocked
 		if is_blocked:

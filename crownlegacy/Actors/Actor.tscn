@@ -15,7 +15,7 @@ height = 34.0
 radius = 33.0
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_jamds"]
-radius = 12.0
+radius = 16.0
 height = 46.0
 
 [node name="Actor" type="CharacterBody2D" unique_id=1897500711]
@@ -33,10 +33,12 @@ position = Vector2(0, 33)
 texture = ExtResource("2_46bny")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=276052645]
+visible = false
 position = Vector2(0, 36)
 shape = SubResource("CapsuleShape2D_okbp1")
 
 [node name="ActorInteractionComponent" type="Area2D" parent="." unique_id=837963139]
+visible = false
 collision_layer = 3
 collision_mask = 3
 script = ExtResource("2_tm1wl")
@@ -45,6 +47,7 @@ script = ExtResource("2_tm1wl")
 texture = ExtResource("4_okbp1")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="ActorInteractionComponent" unique_id=649644440]
+visible = false
 position = Vector2(0, 36)
 shape = SubResource("CircleShape2D_46bny")
 
@@ -55,4 +58,5 @@ script = ExtResource("5_okbp1")
 script = ExtResource("6_tsjs1")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox" unique_id=792606536]
+position = Vector2(0, 35)
 shape = SubResource("CapsuleShape2D_jamds")

@@ -256,6 +256,49 @@ func _apply_self_buff(ability: AbilityResource):
 	
 	# TODO: Добавить систему баффов
 
+func spend_resources(slot_index: int) -> bool:
+	"""Тратит ресурсы способности, возвращает успех"""
+	var ability = get_ability_in_slot(slot_index)
+	if not ability:
+		return false
+	
+	var pd = PlayerManager.player_data
+	
+	if ability.mana_cost > 0:
+		if pd.current_mp < ability.mana_cost:
+			return false
+		pd.set_current_mp(pd.current_mp - ability.mana_cost)
+	
+	if ability.stamina_cost > 0:
+		if pd.current_stamina < ability.stamina_cost:
+			return false
+		pd.set_current_stamina(pd.current_stamina - ability.stamina_cost)
+	
+	if ability.health_cost > 0:
+		if pd.current_hp <= ability.health_cost:
+			return false
+		pd.set_current_hp(pd.current_hp - ability.health_cost)
+	
+	return true
+
+# Можно также добавить метод для проверки без траты
+func has_resources(slot_index: int) -> bool:
+	"""Проверяет, хватает ли ресурсов без их траты"""
+	var ability = get_ability_in_slot(slot_index)
+	if not ability:
+		return false
+	
+	var pd = PlayerManager.player_data
+	
+	if ability.mana_cost > 0 and pd.current_mp < ability.mana_cost:
+		return false
+	if ability.stamina_cost > 0 and pd.current_stamina < ability.stamina_cost:
+		return false
+	if ability.health_cost > 0 and pd.current_hp <= ability.health_cost:
+		return false
+	
+	return true
+
 # ==================== УТИЛИТЫ ====================
 func find_slot_index(ability: AbilityResource) -> int:
 	"""Найти индекс слота по AbilityResource"""

@@ -45,7 +45,7 @@
 		"crit_multiplier": 1.8
 	  },
 	  "projectile_speed": 300.0,
-	  "effect_radius": 100.0,
+	  "effect_radius": 50.0,
 	  "effect_duration": 0.3,
 	  "cast_animation": "cast_fire",
 	  "projectile_scene": "res://Scenes/abilities/effect/projectile.tscn",
@@ -71,7 +71,7 @@
 		"can_crit": false,
 		"crit_multiplier": 1.0
 	  },
-	  "effect_radius": 200.0,
+	  "effect_radius": 50.0,
 	  "effect_duration": 0.5,
 	  "cast_animation": "cast_ice",
 	  "area_effect_scene": "res://Scenes/abilities/effect/area_effect.tscn",

@@ -11,36 +11,38 @@ func enter() -> void:
 	super.enter()
 	
 	print("=== CAST STATE ENTER ===")
-	print("command_data = ", command_data)  # Посмотрим что здесь
+	print("command_data = ", command_data)
 	
-	# БЕРЁМ ДАННЫЕ ИЗ command_data (а не из fsm)
-	ability = command_data.get("ability")
-	slot_index = command_data.get("slot_index", -1)
-	target_data = command_data.get("target_data", {})
+	# Приоритет 1: данные из command_data
+	if command_data.has("ability"):
+		ability = command_data.get("ability")
+		slot_index = command_data.get("slot_index", -1)
+		target_data = command_data.get("target_data", {})
+	else:
+		# Приоритет 2: данные из FSM
+		ability = fsm.current_ability
+		slot_index = fsm.current_slot_index
+		target_data = fsm.cast_target_data
 	
 	print("CastState: ability = ", ability.ability_name if ability else "null")
 	print("CastState: slot_index = ", slot_index)
 	print("CastState: target_data = ", target_data)
 	
 	if not ability:
-		print("CastState: нет способности в command_data!")
+		print("CastState: нет способности!")
 		fsm.change_state("Idle")
 		return
 	
-	# Проверяем, можно ли всё ещё использовать способность
 	if not _can_cast():
 		print("CastState: нельзя использовать способность (ресурсы изменились)")
 		fsm.change_state("Idle")
 		return
 	
-	# Настраиваем таймер каста
 	cast_timer = ability.cast_time
 	is_channeling = ability.channeled
 	
-	# Тратим ресурсы (для channeled - только начальные)
 	_spend_resources()
 	
-	# Запускаем анимацию
 	if ability.cast_animation:
 		EventBus.Player.animation_requested.emit(ability.cast_animation, ability.cast_time)
 	
@@ -87,10 +89,11 @@ func _spawn_projectile() -> void:
 	"""Создаёт снаряд"""
 	print("CastState: создаю снаряд")
 	
-	var projectile_scene = ability.get_projectile_scene()
+	var projectile_scene = ability.projectile_scene  # вместо ability.get_projectile_scene()
 	if not projectile_scene:
-		print("CastState: нет сцены снаряда для ", ability.ability_name)
-		return
+	 	# Если не загружена, можно попробовать загрузить
+		if ability.projectile_scene_path:
+			projectile_scene = load(ability.projectile_scene_path)
 	
 	var projectile = projectile_scene.instantiate()
 	
@@ -121,20 +124,25 @@ func _spawn_area_effect() -> void:
 	"""Создаёт зону поражения"""
 	print("CastState: создаю область")
 	
-	var area_scene = ability.get_area_effect_scene()
+	var area_scene = ability.area_effect_scene
 	if not area_scene:
-		# Если нет кастомной сцены, создаём стандартную
-		area_scene = load("res://combat/area_effect.tscn")
-		print("CastState: использую стандартную сцену области")
+		if ability.area_effect_scene_path:
+			area_scene = load(ability.area_effect_scene_path)
+		else:
+			area_scene = load("res://Scenes/abilities/effect/area_effect.tscn")
 	
 	var area_effect = area_scene.instantiate()
+	var target_pos = target_data.get("position", player.global_position)
 	
-	# Настраиваем
+	# ВАЖНО: СНАЧАЛА добавляем в дерево, ПОТОМ задаём global_position.
+	# Иначе позиция задаётся как локальная и после add_child получается смещение из-за родителя.
+	get_tree().current_scene.add_child(area_effect)
+	area_effect.global_position = target_pos
+	
 	if area_effect.has_method("setup"):
 		area_effect.setup({
 			"caster": player,
 			"damage_data": ability.get_damage_data(),
-			"position": target_data.get("position", player.global_position),
 			"radius": ability.effect_radius,
 			"duration": ability.effect_duration
 		})
@@ -142,12 +150,6 @@ func _spawn_area_effect() -> void:
 		print("CastState: область не имеет метода setup!")
 		area_effect.queue_free()
 		return
-	
-	# Позиционируем
-	area_effect.global_position = target_data.get("position", player.global_position)
-	
-	# Добавляем на сцену
-	get_tree().current_scene.add_child(area_effect)
 	
 	print("CastState: создана область ", ability.ability_name, " в ", area_effect.global_position)
 
@@ -193,29 +195,17 @@ func _can_cast() -> bool:
 	"""Проверяет, можно ли использовать способность"""
 	var ability_comp = combat_component.ability_component
 	
-	# Проверяем кулдаун
 	if ability_comp.is_on_cooldown(slot_index):
 		print("CastState: способность на кулдауне")
 		return false
 	
-	# Проверяем ресурсы
-	return ability_comp.can_cast_ability(slot_index)
+	# Используем новый метод has_resources
+	return ability_comp.has_resources(slot_index)
 
 func _spend_resources() -> void:
 	"""Тратит ресурсы на способность"""
-	var pd = PlayerManager.player_data
-	
-	if ability.mana_cost > 0:
-		pd.set_current_mp(pd.current_mp - ability.mana_cost)
-		print("CastState: потрачено маны ", ability.mana_cost)
-	
-	if ability.stamina_cost > 0:
-		pd.set_current_stamina(pd.current_stamina - ability.stamina_cost)
-		print("CastState: потрачено стамины ", ability.stamina_cost)
-	
-	if ability.health_cost > 0:
-		pd.set_current_hp(pd.current_hp - ability.health_cost)
-		print("CastState: потрачено здоровья ", ability.health_cost)
+	var ability_comp = combat_component.ability_component
+	ability_comp.spend_resources(slot_index)
 
 func _get_player_hitbox() -> Hitbox:
 	"""Возвращает текущий хитбокс игрока"""

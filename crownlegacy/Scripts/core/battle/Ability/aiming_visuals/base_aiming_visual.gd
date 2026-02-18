@@ -24,16 +24,13 @@ func _ready_setup() -> void:
 	pass
 
 func _input(event: InputEvent) -> void:
-	print("BaseAimingVisual _input: ", event)  # ВРЕМЕННО
 	if not is_active:
 		return
 	
 	if event.is_action_pressed("basic_attack"):
-		print("  -> basic_attack! ВЫЗЫВАЮ _confirm()")
 		_confirm()
 		get_viewport().set_input_as_handled()  # Важно!
 	elif event.is_action_pressed("block"):
-		print("  -> block! ВЫЗЫВАЮ cancel()")
 		cancel()
 		get_viewport().set_input_as_handled()  # Важно!
 

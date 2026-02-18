@@ -32,7 +32,10 @@ func get_allowed_transitions() -> Array[String]:
 	return []
 
 func handle_command(command: String, data: Dictionary = {}) -> void:
-	command_data = data
+	command_data = data  # Сохраняем данные последней команды
+	match command:
+		_:
+			pass
 
 # --- Движение (для состояний боя) ---
 func set_battle_velocity(v: Vector2) -> void:

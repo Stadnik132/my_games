@@ -24,6 +24,9 @@ func _ready_setup() -> void:
 		blocker.visible = false
 
 func _process(delta: float) -> void:
+	# Визуал следует за игроком
+	global_position = caster.global_position
+	
 	var mouse_pos = get_global_mouse_position()
 	var distance_from_caster = caster.global_position.distance_to(mouse_pos)
 	
@@ -39,15 +42,18 @@ func _process(delta: float) -> void:
 		target_pos = caster.global_position + direction * max_range
 		is_blocked = true
 	
-	# Позиционируем круг
-	global_position = target_pos
+	# Позиционируем круг (локально относительно визуала, но визуал сам на игроке)
+	$CircleSprite.position = to_local(target_pos)
 	
-	# Меняем цвет если упёрлись в максимум
+	# Меняем цвет
 	if circle_sprite:
+		circle_sprite.modulate = Color(1, 0, 0, 0.5) if is_blocked else color
+	
+	# Показываем блокер
+	if blocker:
+		blocker.visible = is_blocked
 		if is_blocked:
-			circle_sprite.modulate = Color(1, 0, 0, 0.5)  # красный
-		else:
-			circle_sprite.modulate = color
+			blocker.global_position = target_pos
 	
 	# Показываем блокер
 	if blocker:

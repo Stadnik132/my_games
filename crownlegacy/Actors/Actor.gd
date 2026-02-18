@@ -209,6 +209,9 @@ func change_mode(new_mode: String) -> void:
 			_on_become_peaceful()
 			if is_in_group("enemies"):
 				remove_from_group("enemies")
+				
+	if hurtbox:
+		hurtbox.update_layer_from_owner()
 	
 	mode_changed.emit(new_mode, old_mode)
 	EventBus.Actors.mode_changed.emit(self, new_mode, old_mode)

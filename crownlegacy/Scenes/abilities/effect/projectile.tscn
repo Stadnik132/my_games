@@ -7,5 +7,5 @@
 [node name="Projectile" type="Area2D" unique_id=465032863]
 script = ExtResource("1_sbfxd")
 
-[node name="CircleShape2D" type="CollisionShape2D" parent="." unique_id=102270101]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=102270101]
 shape = SubResource("CircleShape2D_e1u7d")

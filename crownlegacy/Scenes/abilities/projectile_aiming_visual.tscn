@@ -8,7 +8,7 @@
 script = ExtResource("1_ug6vf")
 
 [node name="Line2D" type="Line2D" parent="." unique_id=1896346038]
-width = 2.0
+width = 0.0
 
 [node name="TargetMarker" type="Sprite2D" parent="." unique_id=120311260]
 position = Vector2(0.25000012, 0)

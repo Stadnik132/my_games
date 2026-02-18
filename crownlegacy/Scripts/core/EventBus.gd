@@ -74,6 +74,8 @@ class CombatSignals:
 	signal ability_slot_pressed(slot_index: int)
 	signal ability_aiming_started(slot_index: int)
 	signal ability_target_confirmed(target_position: Vector2)
+	signal ability_cast_started(ability: AbilityResource)
+	signal ability_cast_completed()
 	
 	signal aiming_started
 	signal aiming_cancelled
