@@ -36,7 +36,9 @@ func enter() -> void:
 	print("AimingState: начато прицеливание для ", ability.ability_name)
 
 func _create_aiming_visual() -> BaseAimingVisual:
-	if ability.ability_type == AbilityResource.AbilityType.SELF_TARGET:
+	# Мгновенные способности и self-target не требуют прицеливания
+	if ability.ability_type == AbilityResource.AbilityType.SELF_TARGET or \
+	   ability.ability_type == AbilityResource.AbilityType.INSTANT:
 		return null
 	
 	var visual_scene = ability.get_aiming_visual_scene()

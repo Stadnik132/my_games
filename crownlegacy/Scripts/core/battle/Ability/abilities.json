@@ -48,7 +48,7 @@
 	  "effect_radius": 50.0,
 	  "effect_duration": 0.3,
 	  "cast_animation": "cast_fire",
-	  "projectile_scene": "res://Scenes/abilities/effect/projectile.tscn",
+	  "projectile_scene": "res://Scenes/abilities/fireball.tscn",
 	  "sound_effect": ""
 	},
 	{

@@ -62,7 +62,7 @@ func change_state(state_name: String) -> void:
 	state_changed.emit(old_name, state_name)
 
 func send_command(command: String, data: Dictionary = {}) -> void:
-	print("FSM send_command: ", command, " data: ", data)
+
 	
 	match command:
 		"ability_selected":

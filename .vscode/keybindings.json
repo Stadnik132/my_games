@@ -1,0 +1,14 @@
+[
+  {
+    "key": "ctrl+shift+g",
+    "command": "godot-tools.open-in-editor"
+  },
+  {
+    "key": "ctrl+shift+r",
+    "command": "godot-tools.run-project"
+  },
+  {
+    "key": "ctrl+shift+b",
+    "command": "godot-tools.build-project"
+  }
+]

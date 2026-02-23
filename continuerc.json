@@ -1,0 +1,20 @@
+{
+  "contextProviders": [
+    {
+      "name": "codebase",
+      "params": {
+        "includePatterns": ["**/*.gd", "**/*.tscn", "**/*.tres"],
+        "excludePatterns": ["**/addons/**", "**/.godot/**"]
+      }
+    }
+  ],
+  "slashCommands": [
+    {
+      "name": "godot-docs",
+      "description": "Искать в документации Godot",
+      "params": {
+        "url": "https://docs.godotengine.org/en/stable/"
+      }
+    }
+  ]
+}

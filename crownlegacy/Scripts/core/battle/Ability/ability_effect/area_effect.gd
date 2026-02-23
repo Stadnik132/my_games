@@ -3,6 +3,7 @@ class_name AreaEffect extends Area2D
 var caster: Node
 var damage_data: DamageData
 var duration: float = 0.5
+var radius: float = 50.0
 var applied: bool = false
 
 @onready var collision_shape: CollisionShape2D = $CircleShape2D
@@ -11,6 +12,7 @@ func setup(params: Dictionary) -> void:
 	caster = params.get("caster")
 	damage_data = params.get("damage_data")
 	duration = params.get("duration", 0.5)
+	radius = params.get("radius", 50.0)
 	
 	# === ДИНАМИЧЕСКАЯ НАСТРОЙКА СЛОЁВ КОЛЛИЗИЙ ===
 	collision_layer = 0  # Область сама не обнаруживается
@@ -32,9 +34,12 @@ func setup(params: Dictionary) -> void:
 		print("AreaEffect: кастует неизвестный, ищем все слои")
 	# =============================================
 	
-	# Настраиваем радиус
-	if params.has("radius") and collision_shape and collision_shape.shape is CircleShape2D:
-		collision_shape.shape.radius = params["radius"]
+	# Настраиваем радиус collision shape
+	if collision_shape and collision_shape.shape is CircleShape2D:
+		collision_shape.shape.radius = radius
+		print("AreaEffect: установлен радиус ", radius)
+	else:
+		print("AreaEffect: WARNING - collision_shape не найден или не CircleShape2D!")
 	
 	# Сохраняем ссылку на дерево
 	var tree = get_tree()
@@ -64,6 +69,8 @@ func _apply_damage() -> void:
 	print("=== AREA EFFECT APPLY DAMAGE ===")
 	print("caster: ", caster)
 	print("damage_data: ", damage_data.amount if damage_data else "null")
+	print("radius: ", radius)
+	print("position: ", global_position)
 	print("collision_mask = ", collision_mask)
 	print("collision_layer = ", collision_layer)
 	
@@ -73,32 +80,54 @@ func _apply_damage() -> void:
 	print("bodies found: ", bodies.size())
 	print("areas found: ", areas.size())
 	
-	# Проверяем тела
+	# Проверяем тела с проверкой радиуса
 	for body in bodies:
 		print("  body: ", body.name, " (", body, ")")
 		if body == caster:
 			print("    -> пропускаем, это кастер")
 			continue
+		
+		# Проверяем расстояние до цели
+		var distance = global_position.distance_to(body.global_position)
+		print("    расстояние: ", distance, " (радиус: ", radius, ")")
+		
+		if distance > radius:
+			print("    -> цель вне радиуса, пропускаем")
+			continue
+		
 		if body.has_method("apply_combat_damage_data"):
 			print("    -> ЕСТЬ метод apply_combat_damage_data, применяем урон")
 			body.apply_combat_damage_data(damage_data, caster)
 		else:
 			print("    -> НЕТ метода apply_combat_damage_data")
 	
-	# Проверяем хёртбоксы
+	# Проверяем хёртбоксы с проверкой радиуса
 	for area in areas:
 		print("  area: ", area.name, " (", area, ")")
 		print("    area.layer = ", area.collision_layer)
 		if area is Hurtbox:
 			print("    -> это Hurtbox, owner: ", area.owner)
 			print("    area.collision_layer = ", area.collision_layer)
-			if area.owner != caster:
-				if area.owner and area.owner.has_method("apply_combat_damage_data"):
+			
+			if area.owner == caster:
+				print("    -> owner - кастер, пропускаем")
+				continue
+			
+			# Проверяем расстояние до owner хёртбокса
+			if area.owner:
+				var distance = global_position.distance_to(area.owner.global_position)
+				print("    расстояние до owner: ", distance, " (радиус: ", radius, ")")
+				
+				if distance > radius:
+					print("    -> owner вне радиуса, пропускаем")
+					continue
+				
+				if area.owner.has_method("apply_combat_damage_data"):
 					print("    -> применяем урон к owner")
 					area.owner.apply_combat_damage_data(damage_data, caster)
 				else:
 					print("    -> owner не имеет метода apply_combat_damage_data")
 			else:
-				print("    -> owner - кастер, пропускаем")
+				print("    -> owner отсутствует")
 	
 	applied = true

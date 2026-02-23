@@ -7,11 +7,13 @@ class_name Actor
 @export var actor_id: String = "unnamed_actor"
 @export var dialogue_timeline: String = ""
 @onready var sprite: Sprite2D = $Sprite2D
+@onready var animation_player: AnimationPlayer = $AnimationPlayer
 
 @export_category("Состояние")
 @export var max_health: int = 100
 @export var initial_mode: String = "peaceful"  # peaceful/hostile
 @export var is_interactive: bool = true
+
 
 const MODE_PEACEFUL = "peaceful"
 const MODE_HOSTILE = "hostile" 
@@ -20,9 +22,8 @@ const MODE_HOSTILE = "hostile"
 @export var interaction_component_path: NodePath
 @export var combat_component_path: NodePath
 @export var ai_component_path: NodePath
-@export var ai_vision_path: NodePath
+@export var ai_perception_path: NodePath
 @export var ai_brain_path: NodePath
-@export var ai_move_path: NodePath
 
 # ==================== СИГНАЛЫ ====================
 signal health_changed(current: int, max: int)
@@ -35,14 +36,15 @@ var current_health: int
 var current_mode: String
 var _player_in_range: bool = false
 var _is_in_dialogue: bool = false
+var facing_direction: String = "down"
+var last_facing_direction: String = "down"  # Запоминаем последнее направление для атак
 
 # Компоненты
 @onready var interaction_component = get_node_or_null(interaction_component_path)
 @onready var combat_component = get_node_or_null(combat_component_path)
 @onready var ai_component = get_node_or_null(ai_component_path)
-@onready var ai_vision = get_node_or_null(ai_vision_path)
+@onready var ai_perception = get_node_or_null(ai_perception_path)
 @onready var ai_brain = get_node_or_null(ai_brain_path)
-@onready var ai_move = get_node_or_null(ai_move_path)
 @onready var hurtbox: Hurtbox = $Hurtbox
 
 # ==================== ИНИЦИАЛИЗАЦИЯ ====================
@@ -72,13 +74,6 @@ func _setup_components() -> void:
 	
 	if ai_component:
 		ai_component.setup(self)
-	if ai_vision and ai_vision.has_method("set_active"):
-		ai_vision.set_active(false)
-	if ai_brain and ai_brain.has_method("set_active"):
-		ai_brain.set_active(false)
-	if ai_move and ai_move.has_method("set_active"):
-		ai_move.set_active(false)
-
 
 func _setup_connections() -> void:
 	EventBus.Actors.interaction_requested.connect(_on_interaction_requested)
@@ -88,11 +83,95 @@ func _setup_connections() -> void:
 
 
 func _physics_process(delta):
-	if velocity.length() > 5 and sprite:
-		var direction = velocity.normalized()
-		sprite.rotation = lerp_angle(sprite.rotation, direction.angle(), 10.0 * delta)
-	elif sprite:
-		sprite.rotation = lerp_angle(sprite.rotation, 0, 5.0 * delta)
+	# Движением управляет AI через velocity
+	# Просто применяем текущую velocity
+	move_and_slide()
+	
+	# Обновляем направление взгляда на основе текущей скорости
+	_update_facing_direction()
+	
+	# Обновляем анимацию ходьбы/стоя на основе скорости
+	_update_animation()
+
+
+func _update_facing_direction() -> void:
+	"""Определяет направление взгляда на основе текущей скорости (8 направлений)"""
+	if velocity.length() > 10:
+		var dir = velocity.normalized()
+		var angle = rad_to_deg(dir.angle())
+		if angle < 0:
+			angle += 360
+		
+		# Определяем одно из 8 направлений
+		if angle >= 337.5 or angle < 22.5:
+			facing_direction = "right"
+		elif angle >= 22.5 and angle < 67.5:
+			facing_direction = "down_right"
+		elif angle >= 67.5 and angle < 112.5:
+			facing_direction = "down"
+		elif angle >= 112.5 and angle < 157.5:
+			facing_direction = "down_left"
+		elif angle >= 157.5 and angle < 202.5:
+			facing_direction = "left"
+		elif angle >= 202.5 and angle < 247.5:
+			facing_direction = "up_left"
+		elif angle >= 247.5 and angle < 292.5:
+			facing_direction = "up"
+		elif angle >= 292.5 and angle < 337.5:
+			facing_direction = "up_right"
+		
+		# Запоминаем последнее направление для использования в атаках
+		last_facing_direction = facing_direction
+
+
+func _update_animation() -> void:
+	if not animation_player:
+		return
+	
+	var speed = velocity.length()
+	if speed > 5:
+		_play_walk_animation()
+	else:
+		_play_idle_animation()
+
+func _get_cardinal_direction() -> String:
+	# Преобразуем 8 направлений в 4 (up/down/left/right) для анимаций
+	var dir = get_facing_direction()
+	match dir:
+		"up", "up_left", "up_right":
+			return "up"
+		"down", "down_left", "down_right":
+			return "down"
+		"left":
+			return "left"
+		"right":
+			return "right"
+		_:
+			return "down"
+
+func _play_walk_animation() -> void:
+	var direction = _get_cardinal_direction()
+	var anim_name = "walk_" + direction
+	if animation_player.has_animation(anim_name):
+		animation_player.play(anim_name)
+
+func _play_idle_animation() -> void:
+	var direction = _get_cardinal_direction()
+	var anim_name = "idle_" + direction
+	if animation_player.has_animation(anim_name):
+		animation_player.play(anim_name)
+
+
+# ==================== НАПРАВЛЕНИЕ ДЛЯ ХИТБОКСА ====================
+func get_facing_direction() -> String:
+	"""Возвращает направление для атаки (8 направлений)
+	   Использует последнее известное направление, если персонаж стоит"""
+	if velocity.length() > 10:
+		# Если движемся, возвращаем текущее направление
+		return facing_direction
+	else:
+		# Если стоим, возвращаем последнее запомненное направление
+		return last_facing_direction
 
 
 # ==================== ВЗАИМОДЕЙСТВИЕ ====================
@@ -139,6 +218,9 @@ func _play_interaction_feedback() -> void:
 # ==================== БОЙ ====================
 func _on_hurtbox_damage(damage_data: DamageData, source: Node):
 	apply_combat_damage_data(damage_data, source)
+	if ai_component and current_mode == MODE_HOSTILE:
+		ai_component.apply_stun(0.5)
+
 
 func apply_combat_damage_data(damage_data: DamageData, source: Node = null) -> void:
 	if combat_component and combat_component.has_method("take_damage"):
@@ -215,21 +297,16 @@ func change_mode(new_mode: String) -> void:
 	
 	mode_changed.emit(new_mode, old_mode)
 	EventBus.Actors.mode_changed.emit(self, new_mode, old_mode)
+
+
 func _on_become_hostile() -> void:
 	print_debug("!!! _on_become_hostile ВЫЗВАН для ", display_name)
 	is_interactive = false
 	
 	if combat_component:
 		combat_component.set_active(true)
-	
 	if ai_component:
 		ai_component.set_active(true)
-	if ai_vision and ai_vision.has_method("set_active"):
-		ai_vision.set_active(true)
-	if ai_brain and ai_brain.has_method("set_active"):
-		ai_brain.set_active(true)
-	if ai_move and ai_move.has_method("set_active"):
-		ai_move.set_active(true)
 
 
 func _on_become_peaceful() -> void:
@@ -240,13 +317,6 @@ func _on_become_peaceful() -> void:
 	
 	if ai_component:
 		ai_component.set_active(false)
-	
-	if ai_vision and ai_vision.has_method("set_active"):
-		ai_vision.set_active(false)
-	if ai_brain and ai_brain.has_method("set_active"):
-		ai_brain.set_active(false)
-	if ai_move and ai_move.has_method("set_active"):
-		ai_move.set_active(false)
 
 
 func become_enemy(combat_manager: Node = null) -> void:

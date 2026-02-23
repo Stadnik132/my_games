@@ -1,0 +1,70 @@
+[gd_scene format=3 uid="uid://c2wtt5pll1wk1"]
+
+[ext_resource type="Script" uid="uid://bo21fp46mrla3" path="res://Scripts/core/battle/Ability/ability_effect/fireball.gd" id="1_0proa"]
+[ext_resource type="Texture2D" uid="uid://gtaxq632xsqk" path="res://Assets/Abilities/Firaball.png" id="2_p00ce"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_0proa"]
+radius = 5.0990195
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ftwy4"]
+atlas = ExtResource("2_p00ce")
+region = Rect2(30, 0, 10, 10)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_hgcdv"]
+atlas = ExtResource("2_p00ce")
+region = Rect2(40, 0, 10, 10)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ip8wt"]
+atlas = ExtResource("2_p00ce")
+region = Rect2(0, 0, 10, 10)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_u7gng"]
+atlas = ExtResource("2_p00ce")
+region = Rect2(10, 0, 10, 10)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j8qhb"]
+atlas = ExtResource("2_p00ce")
+region = Rect2(20, 0, 10, 10)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_8siyv"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ftwy4")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_hgcdv")
+}],
+"loop": true,
+"name": &"explode",
+"speed": 9.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ip8wt")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_u7gng")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j8qhb")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_u7gng")
+}],
+"loop": true,
+"name": &"fly",
+"speed": 10.0
+}]
+
+[node name="Projectile" type="Area2D" unique_id=1857173166]
+script = ExtResource("1_0proa")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1878235663]
+shape = SubResource("CircleShape2D_0proa")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=953203725]
+sprite_frames = SubResource("SpriteFrames_8siyv")
+animation = &"fly"
+frame = 3
+frame_progress = 0.16843481

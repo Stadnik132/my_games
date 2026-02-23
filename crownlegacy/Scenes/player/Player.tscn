@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://cn56cpn1tcbxa" path="res://Scripts/Player/PlayerController.gd" id="1_jnk8a"]
 [ext_resource type="Texture2D" uid="uid://dvyb0bgcvslyr" path="res://Assets/Klous/Klaus.test animac.png" id="2_jnk8a"]
 [ext_resource type="Script" uid="uid://dcenurv8uxest" path="res://Scenes/player/PlayerInteractionDetector.gd" id="3_gpg7s"]
-[ext_resource type="Script" uid="uid://b6capshss8oj4" path="res://Actors/TestAttack.gd" id="4_r5va5"]
+[ext_resource type="Script" uid="uid://b6capshss8oj4" path="res://Scripts/Actors/TestAttack.gd" id="4_r5va5"]
 [ext_resource type="Script" uid="uid://cdkfkfjl5u06d" path="res://Scripts/Player/PlayerCombatComponent.gd" id="5_h8poa"]
 [ext_resource type="Script" uid="uid://cpud8hdv0qkko" path="res://Scripts/Player/PlayerCombatFSM.gd" id="6_8hdke"]
 [ext_resource type="Script" uid="uid://6tmd2w4u00ic" path="res://Scripts/Player/states/IdleState.gd" id="7_3tjkw"]
