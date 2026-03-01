@@ -1,261 +1,250 @@
-extends Node
-class_name CombatComponent
-
-# ==================== НАСТРОЙКИ ====================
-@export_category("Защита")
-@export_range(0, 100, 1) var physical_defense: int = 5
-@export_range(0, 100, 1) var magical_defense: int = 5
-
-@export_category("Параметры боя")
-@export var base_damage: int = 10
-@export var max_health: int = 100
-@export var decision_triggers: Array[Dictionary] = [
-	{"type": "time", "seconds": 45.0, "dialogue_timeline": "enemy_surrender"},
-	{"type": "hp", "threshold": 0.3, "dialogue_timeline": "enemy_surrender"}
-]
-
-# ==================== СИГНАЛЫ ====================
-signal health_changed(current: int, max: int)
-signal died
-signal combat_activated
+extends CombatComponent
+class_name ActorCombatComponent
 
 # ==================== ПЕРЕМЕННЫЕ ====================
-var current_health: int = 100
-var _actor: Actor = null
-var _used_triggers: Array = []
+var actor_data: ActorData
 var _combat_start_time: float = 0.0
-var _is_active: bool = false
+var _used_decision_triggers: Dictionary = {}
 var _combat_manager: Node = null
 
 # ==================== ИНИЦИАЛИЗАЦИЯ ====================
-func setup(actor: Actor) -> void:
-	"""Настройка компонента для работы с актёром"""
-	_actor = actor
-	current_health = max_health
-	set_active(false)
+func setup(owner_entity: Entity, data: ActorData) -> void:
+	"""Явная настройка компонента (вызывается из Actor)"""
+	self.owner_entity = owner_entity
+	self.actor_data = data
 	
-	if not EventBus.Player.damage_taken.is_connected(_on_enemy_attack_requested):
-		EventBus.Player.damage_taken.connect(_on_enemy_attack_requested)
+	_find_components()
+	_setup_connections()
 	
-	print_debug("CombatComponent настроен для: ", actor.display_name)
+	# Если есть FSM, настраиваем её (опционально)
+	if fsm and combat_config:
+		fsm.setup(owner_entity, stats_provider, self, combat_config)
+		fsm.set_process(false)
+		fsm.set_physics_process(false)
+	
+	print_debug("ActorCombatComponent настроен для: ", owner_entity.name if owner_entity else "unknown")
 
-func _exit_tree() -> void:
-	"""Отписка от сигналов при удалении"""
-	if EventBus.Player.damage_taken.is_connected(_on_enemy_attack_requested):
-		EventBus.Player.damage_taken.disconnect(_on_enemy_attack_requested)
+func _find_components() -> void:
+	"""Переопределяем поиск компонентов (все опциональны)"""
+	hitbox_component = owner_entity.get_node_or_null("HitboxComponent") as HitboxComponent
+	
+	# Опциональные компоненты
+	stats_provider = owner_entity.get_node_or_null("ProgressionComponent") as ProgressionComponent
+	stamina_component = owner_entity.get_node_or_null("StaminaComponent") as ResourceComponent
+	ability_component = owner_entity.get_node_or_null("AbilityComponent") as AbilityComponent
+	
+	# FSM опциональна
+	fsm = owner_entity.get_node_or_null("EntityCombatFSM") as EntityCombatFSM
 
-func setup_combat(combat_manager: Node) -> void:
-	"""Настройка для участия в бою"""
-	_combat_manager = combat_manager
-	set_active(true)
-	print_debug("CombatComponent: вступление в бой")
+func _setup_connections() -> void:
+	"""Подключаем только нужные сигналы"""
+	EventBus.Game.state_changed.connect(_on_game_state_changed)
+	
+	var hurtbox = owner_entity.get_node_or_null("Hurtbox")
+	if hurtbox:
+		hurtbox.damage_taken.connect(_on_hurtbox_damage)
 
 # ==================== АКТИВАЦИЯ ====================
+func setup_combat(combat_manager: Node) -> void:
+	"""Вызывается при вступлении в бой"""
+	_combat_manager = combat_manager
+	_combat_start_time = Time.get_ticks_msec() / 1000.0
+	_used_decision_triggers.clear()
+	
+	# Активируем FSM если есть
+	if fsm:
+		fsm.set_process(true)
+		fsm.set_physics_process(true)
+		fsm.change_state("Idle")
+	
+	print_debug("ActorCombatComponent: вступил в бой для ", owner_entity.name if owner_entity else "unknown")
+
 func set_active(value: bool) -> void:
-	"""Включение/выключение компонента"""
-	if _is_active == value:
-		return
-	
-	_is_active = value
-	
-	if value:
-		_combat_start_time = Time.get_ticks_msec() / 1000.0
-		_used_triggers.clear()
-		print_debug("CombatComponent активирован")
-		combat_activated.emit()
-	else:
-		print_debug("CombatComponent деактивирован")
+	"""Включение/выключение компонента (вызывается из Actor.change_mode)"""
+	if fsm:
+		fsm.set_process(value)
+		fsm.set_physics_process(value)
+		if not value:
+			fsm.change_state("Idle")
 
-func is_active() -> bool:
-	return _is_active
-
-# ==================== НАНЕСЕНИЕ УРОНА ====================
-func _on_enemy_attack_requested(amount: int, damage_type: String, source: Node, was_blocked: bool, is_critical: bool) -> void:
-	"""Обработчик: враг хочет атаковать (подписан на Player.damage_taken)"""
-	# Проверяем, что источник атаки — этот актёр
-	if source != _actor:
+# ==================== ПОЛУЧЕНИЕ УРОНА ====================
+func _on_hurtbox_damage(damage_data: DamageData, source: Node) -> void:
+	var health = owner_entity.health_component
+	if not health:
 		return
 	
-	if not _is_active:
-		return
+	# Рассчитываем урон с учётом защиты актёра
+	var final_damage = _calculate_damage(damage_data)
 	
-	# Находим цель (игрока)
-	var player = get_tree().get_first_node_in_group("player")
-	if not player:
-		print_debug(_actor.display_name, ": не могу найти игрока для атаки")
-		return
+	# Сохраняем старое HP для проверки триггеров
+	var old_hp = health.get_current_health()
 	
-	# Создаём DamageData на основе входящих данных
-	var damage_data = DamageData.create_physical(amount)
-	if is_critical:
-		damage_data.can_crit = true
-		damage_data.crit_multiplier = 1.5
-	
-	# Рассчитываем урон
-	var final_damage = _calculate_attack_damage(damage_data)
-	
-	# Отправляем сигнал "урон нанесён" с ПРАВИЛЬНЫМ порядком параметров
-	EventBus.Player.damage_taken.emit(
-		final_damage,           # amount
-		damage_type,           # damage_type
-		_actor,               # source (кто нанёс урон)
-		false,                # was_blocked (враги не блокируют)
-		is_critical           # is_critical
+	# Применяем урон
+	health.take_damage(
+		final_damage,
+		damage_data.damage_type,
+		source,
+		damage_data.is_critical
 	)
 	
-	print_debug(_actor.display_name, ": наносит ", final_damage, " урона игроку")
+	# Проверяем триггеры HP после получения урона
+	if _combat_manager and health.get_current_health() != old_hp:
+		var trigger = _check_hp_threshold_after_damage(old_hp, health.get_current_health())
+		if trigger:
+			EventBus.Combat.decision.point_requested.emit(owner_entity, trigger)
 
-func _calculate_attack_damage(damage_data: DamageData) -> int:
-	"""Расчёт урона, который враг наносит игроку"""
+func _calculate_damage(damage_data: DamageData) -> int:
+	"""Расчёт урона с учётом защиты актёра"""
 	var base = damage_data.amount
 	
-	if damage_data.can_crit and randf() < 0.1:
+	# Критический удар
+	if damage_data.can_crit and randf() < 0.1:  # 10% базовый шанс
 		base = int(base * damage_data.crit_multiplier)
-		print_debug("КРИТ ВРАГА! x", damage_data.crit_multiplier)
+		damage_data.damage_crit.emit(base)
+		print_debug("КРИТИЧЕСКИЙ УДАР по ", owner_entity.name)
 	
-	return base
+	# Игнорирование защиты для истинного урона
+	if damage_data.is_true_damage() or not actor_data:
+		return base
+	
+	# Применяем защиту из actor_data
+	var defense = 0
+	match damage_data.damage_type:
+		DamageData.DamageType.PHYSICAL:
+			defense = actor_data.physical_defense
+		DamageData.DamageType.MAGICAL:
+			defense = actor_data.magical_defense
+	
+	var effective_defense = defense * (1.0 - damage_data.penetration)
+	return max(1, base - effective_defense)
 
 # ==================== ТОЧКИ РЕШЕНИЙ ====================
 func check_decision_triggers() -> Dictionary:
 	"""Проверяет триггеры для точек решений"""
-	if not _is_active:
+	if not _combat_manager or not actor_data:  # Не в бою или нет данных
 		return {}
 	
 	var current_time = Time.get_ticks_msec() / 1000.0
 	var combat_time = current_time - _combat_start_time
-	var hp_percent = float(current_health) / max_health
+	var health = owner_entity.health_component
+	var hp_percent = health.get_health_percentage() if health else 1.0
 	
-	for trigger in decision_triggers:
+	for trigger in actor_data.decision_triggers:
 		var trigger_type = trigger.get("type", "")
+		var trigger_value = trigger.get("seconds", trigger.get("threshold", 0))
 		
-		if trigger_type in _used_triggers:
+		if is_decision_trigger_used(trigger_type, trigger_value):
 			continue
 		
 		match trigger_type:
 			"time":
-				var seconds_needed = trigger.get("seconds", 0.0)
-				if combat_time >= seconds_needed:
-					print_debug("Триггер времени сработал после ", seconds_needed, "с")
+				if combat_time >= trigger.get("seconds", 0.0):
+					print_debug("Триггер времени сработал для ", owner_entity.name)
 					return trigger
-			
 			"hp":
-				var threshold = trigger.get("threshold", 1.0)
-				if hp_percent <= threshold:
-					print_debug("Триггер HP сработал при ", hp_percent * 100, "%")
+				if hp_percent <= trigger.get("threshold", 1.0):
+					print_debug("Триггер HP сработал для ", owner_entity.name)
 					return trigger
-	
 	return {}
 
-func mark_trigger_used(trigger_type: String) -> void:
-	"""Пометить триггер определённого типа как использованный"""
-	for trigger in decision_triggers:
-		if trigger.get("type") == trigger_type:
-			trigger["used"] = true
+func _check_hp_threshold_after_damage(old_hp: int, new_hp: int) -> Dictionary:
+	"""Проверяет, не пересекли ли мы порог HP для триггера"""
+	if not actor_data or not owner_entity.health_component:
+		return {}
+	
+	var max_hp = owner_entity.health_component.get_max_health()
+	var old_percent = float(old_hp) / max_hp
+	var new_percent = float(new_hp) / max_hp
+	
+	for trigger in actor_data.decision_triggers:
+		if trigger.get("type") != "hp":
+			continue
+		var threshold = trigger.get("threshold", 1.0)
+		var trigger_value = threshold
+		if is_decision_trigger_used("hp", trigger_value):
+			continue
+		if old_percent > threshold and new_percent <= threshold:
+			print_debug("HP-триггер сработал при переходе через ", threshold)
+			return trigger
+	return {}
 
-# ==================== ПОЛУЧЕНИЕ УРОНА ====================
-func take_damage(damage_data: DamageData, source: Node = null) -> void:
-	if not _is_active or current_health <= 0:
+func mark_trigger_used(trigger_type: String, trigger_value: Variant) -> void:
+	var key = _get_trigger_key(trigger_type, trigger_value)
+	_used_decision_triggers[key] = true
+
+func is_decision_trigger_used(trigger_type: String, trigger_value: Variant) -> bool:
+	var key = _get_trigger_key(trigger_type, trigger_value)
+	return _used_decision_triggers.has(key)
+
+func _get_trigger_key(trigger_type: String, trigger_value: Variant) -> String:
+	return trigger_type + "_" + str(trigger_value)
+
+# ==================== АТАКИ (ДЛЯ AI) ====================
+func perform_attack(target_position: Vector2, damage_multiplier: float = 1.0) -> void:
+	"""Выполнить атаку (вызывается из AI)"""
+	if not hitbox_component or not actor_data:
 		return
 	
-	var final_damage = _calculate_damage(damage_data)
-	var hp_after = current_health - final_damage
-	var hp_percent_after = float(hp_after) / max_health
+	# Получаем направление из Actor
+	var actor = owner_entity as Actor
+	if not actor:
+		return
 	
-	# Проверяем HP-триггеры
-	for trigger in decision_triggers:
-		if trigger.get("type") == "hp" and not trigger.get("used", false):
-			var threshold = trigger.get("threshold", 1.0)
-			var current_percent = get_health_percentage()
-			
-			if current_percent > threshold and hp_percent_after <= threshold:
-				if _combat_manager:
-					_combat_manager.request_decision_point(self, trigger)
-				return
+	var direction = actor.get_facing_direction()
+	var spawn_pos = actor.global_position + _direction_to_vector(direction) * 50.0
 	
-	# Применяем урон
-	current_health = max(0, current_health - final_damage)
-	health_changed.emit(current_health, max_health)
-	damage_data.damage_calculated.emit(final_damage)
+	var base_damage = actor_data.base_damage
+	if stats_provider:
+		base_damage = stats_provider.get_stat("attack")
 	
-	print_debug("Получен урон: ", final_damage, " HP: ", current_health, "/", max_health)
-	
-	if _actor:
-		_play_hit_reaction(source, damage_data.damage_type)
-	
-	if current_health <= 0:
-		_die(source)
+	hitbox_component.spawn_attack_hitbox(
+		spawn_pos,
+		_direction_to_vector(direction),
+		base_damage,
+		damage_multiplier,
+		false
+	)
 
-func _play_hit_reaction(source: Node, damage_type: int = -1) -> void:
-	if damage_type == -1:
-		damage_type = DamageData.DamageType.PHYSICAL
-	
-	var sprite = _actor.get_node_or_null("Sprite2D")
-	if sprite:
-		var damage_color = Color(1, 1, 1)
-		match damage_type:
-			DamageData.DamageType.PHYSICAL:
-				damage_color = Color(1, 0.5, 0.5)
-			DamageData.DamageType.MAGICAL:
-				damage_color = Color(0.5, 0.5, 1)
-			DamageData.DamageType.TRUE:
-				damage_color = Color(1, 1, 0.5)
-		
-		var tween = _actor.create_tween()
-		tween.tween_property(sprite, "modulate", damage_color, 0.1)
-		tween.tween_property(sprite, "modulate", Color(1, 1, 1), 0.1)
+func _direction_to_vector(dir: String) -> Vector2:
+	match dir:
+		"up": return Vector2.UP
+		"down": return Vector2.DOWN
+		"left": return Vector2.LEFT
+		"right": return Vector2.RIGHT
+		"up_left": return Vector2(-1, -1).normalized()
+		"up_right": return Vector2(1, -1).normalized()
+		"down_left": return Vector2(-1, 1).normalized()
+		"down_right": return Vector2(1, 1).normalized()
+		_: return Vector2.DOWN
 
-func take_damage_legacy(amount: int, source: Node = null) -> void:
-	var legacy_data = DamageData.create_physical(amount)
-	take_damage(legacy_data, source)
+# ==================== УПРАВЛЕНИЕ FSM (ОТ COMBATCOMPONENT) ====================
+# Переопределяем методы ввода как пустые (актёр не использует ввод)
+func _on_attack_requested() -> void:
+	pass
 
-func _die(killer: Node = null) -> void:
-	print_debug("CombatComponent: смерть")
-	set_active(false)
-	died.emit()
-	
-	if _actor and _actor.has_method("_on_combat_death"):
-		_actor._on_combat_death(killer)
+func _on_dodge_requested(direction: Vector2) -> void:
+	pass
 
-# ==================== ГЕТТЕРЫ ====================
-func get_health_percentage() -> float:
-	return float(current_health) / max_health if max_health > 0 else 0.0
+func _on_block_started() -> void:
+	pass
 
-func is_alive() -> bool:
-	return current_health > 0
+func _on_block_ended() -> void:
+	pass
 
+func _on_ability_slot_pressed(slot_index: int) -> void:
+	pass
+
+# ==================== УТИЛИТЫ ====================
 func get_combat_time() -> float:
-	if not _is_active:
+	if not _combat_manager:
 		return 0.0
 	return (Time.get_ticks_msec() / 1000.0) - _combat_start_time
 
-func get_actor() -> Actor:
-	return _actor
-
-# ==================== УТИЛИТЫ ====================
-func reset() -> void:
-	current_health = max_health
-	_used_triggers.clear()
-	_is_active = false
-	print_debug("CombatComponent сброшен")
-
-func _calculate_damage(damage_data: DamageData) -> int:
-	"""Расчёт урона, полученного ЭТИМ актёром"""
-	var base_damage = damage_data.amount
+func _on_game_state_changed(new_state: int, old_state: int) -> void:
+	var is_battle = (new_state == 2)  # STATE_BATTLE
 	
-	if damage_data.can_crit and randf() < 0.1:
-		base_damage = int(base_damage * damage_data.crit_multiplier)
-		damage_data.damage_crit.emit(base_damage)
-		print_debug("КРИТИЧЕСКИЙ УДАР! x", damage_data.crit_multiplier)
-	
-	if damage_data.is_true_damage():
-		return base_damage
-	
-	var defense = 0
-	match damage_data.damage_type:
-		DamageData.DamageType.PHYSICAL:
-			defense = physical_defense
-		DamageData.DamageType.MAGICAL:
-			defense = magical_defense
-	
-	var effective_defense = defense * (1.0 - damage_data.penetration)
-	return max(1, base_damage - effective_defense)
+	if fsm:
+		fsm.set_process(is_battle)
+		fsm.set_physics_process(is_battle)
+		if not is_battle:
+			fsm.change_state("Idle")

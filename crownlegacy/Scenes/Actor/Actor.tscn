@@ -2,19 +2,25 @@
 
 [ext_resource type="Script" uid="uid://giukr7p5o2e8" path="res://Scripts/Actors/Actor.gd" id="1_vpcky"]
 [ext_resource type="Texture2D" uid="uid://dvyb0bgcvslyr" path="res://Assets/Klous/Klaus.test animac.png" id="2_aiuxd"]
+[ext_resource type="Script" uid="uid://b1braurhti7u8" path="res://Scripts/resources/ActorData.gd" id="2_is3bj"]
 [ext_resource type="Script" uid="uid://cprrclxegvl7f" path="res://Scripts/Actors/Components/ActorInteractionComponent.gd" id="2_tm1wl"]
 [ext_resource type="Texture2D" uid="uid://5qqbbsii4eij" path="res://Assets/UI/Exclamation mark.png" id="4_okbp1"]
 [ext_resource type="Script" uid="uid://baarqgcghdftt" path="res://Scripts/Actors/Components/ActorCombatComponent.gd" id="5_okbp1"]
-[ext_resource type="Script" uid="uid://duijk3xsl0n36" path="res://Scripts/Player/Hurtbox.gd" id="6_tsjs1"]
+[ext_resource type="Script" uid="uid://duijk3xsl0n36" path="res://Scripts/entitis/Hurtbox.gd" id="6_tsjs1"]
 [ext_resource type="Script" uid="uid://bjrcji1t2ifi" path="res://Scripts/Actors/Components/AI/AIComponent.gd" id="7_4pigi"]
-[ext_resource type="Script" uid="uid://boukduxe4xvol" path="res://Scripts/Player/Hitbox.gd" id="7_aiuxd"]
-[ext_resource type="Script" uid="uid://c0sqmqb1yldm6" path="res://Scripts/Actors/Components/State/EnemyIdleState.gd" id="7_swutr"]
-[ext_resource type="Script" uid="uid://cf2nrknfn3wrk" path="res://Scripts/Actors/Components/State/EnemyMoveState.gd" id="8_7vp7r"]
-[ext_resource type="Script" uid="uid://njpgqv8bqqdi" path="res://Scripts/Actors/Components/EnemyCombatFSM.gd" id="8_ppv75"]
-[ext_resource type="Script" uid="uid://bx2lqo00gkw5f" path="res://Scripts/Actors/Components/State/EnemyAttackState.gd" id="9_fv5qn"]
-[ext_resource type="Script" uid="uid://cxh7g4g8txh8h" path="res://Scripts/Actors/Components/State/EnemyStunState.gd" id="10_4pigi"]
+[ext_resource type="Script" uid="uid://c0sqmqb1yldm6" path="res://Scripts/Actors/Components/State/ActorIdleState.gd" id="7_swutr"]
+[ext_resource type="Script" uid="uid://cf2nrknfn3wrk" path="res://Scripts/Actors/Components/State/ActorMoveState.gd" id="8_7vp7r"]
+[ext_resource type="Script" uid="uid://njpgqv8bqqdi" path="res://Scripts/Actors/Components/ActorCombatFSM.gd" id="8_ppv75"]
+[ext_resource type="Script" uid="uid://bx2lqo00gkw5f" path="res://Scripts/Actors/Components/State/ActorAttackState.gd" id="9_fv5qn"]
+[ext_resource type="Script" uid="uid://cxh7g4g8txh8h" path="res://Scripts/Actors/Components/State/ActorStunState.gd" id="10_4pigi"]
 [ext_resource type="Script" uid="uid://cf2tiqncq8vgo" path="res://Scripts/Actors/Components/AI/AIPerception.gd" id="11_fv5qn"]
 [ext_resource type="Script" uid="uid://bohemxes4bdbx" path="res://Scripts/Actors/Components/AI/AIBrain.gd" id="12_4pigi"]
+[ext_resource type="Script" uid="uid://dbwavq7uexbqc" path="res://Scripts/Actors/Components/State/ActorCastState.gd" id="16_is3bj"]
+[ext_resource type="Script" uid="uid://criu0f278ujh0" path="res://Scripts/Actors/Components/State/ActorBlockState.gd" id="16_o07q7"]
+
+[sub_resource type="Resource" id="Resource_leyws"]
+script = ExtResource("2_is3bj")
+metadata/_custom_type_script = "uid://b1braurhti7u8"
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_okbp1"]
 radius = 15.0
@@ -24,8 +30,8 @@ height = 34.0
 radius = 33.0
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_jamds"]
-radius = 58.0
-height = 116.0
+radius = 15.0
+height = 50.0
 
 [sub_resource type="Animation" id="Animation_gpg7s"]
 length = 0.001
@@ -193,10 +199,9 @@ disable_mode = 1
 collision_layer = 3
 collision_mask = 3
 script = ExtResource("1_vpcky")
-display_name = "Страж"
-dialogue_timeline = "guard_encounter"
+actor_data = SubResource("Resource_leyws")
 interaction_component_path = NodePath("ActorInteractionComponent")
-combat_component_path = NodePath("CombatComponent")
+combat_component_path = NodePath("ActorCombatComponent")
 ai_component_path = NodePath("AIComponent")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=42403944]
@@ -222,21 +227,13 @@ visible = false
 position = Vector2(0, 36)
 shape = SubResource("CircleShape2D_46bny")
 
-[node name="CombatComponent" type="Node" parent="." unique_id=806878576]
+[node name="ActorCombatComponent" type="Node" parent="." unique_id=806878576]
 script = ExtResource("5_okbp1")
 
 [node name="Hurtbox" type="Area2D" parent="." unique_id=894493670]
 script = ExtResource("6_tsjs1")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox" unique_id=792606536]
-visible = false
-position = Vector2(0, 35)
-shape = SubResource("CapsuleShape2D_jamds")
-
-[node name="Hitbox" type="Area2D" parent="." unique_id=225984950]
-script = ExtResource("7_aiuxd")
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox" unique_id=1787716891]
 position = Vector2(0, 35)
 shape = SubResource("CapsuleShape2D_jamds")
 
@@ -244,28 +241,37 @@ shape = SubResource("CapsuleShape2D_jamds")
 script = ExtResource("7_4pigi")
 perception = NodePath("AIPerception")
 brain = NodePath("AIBrain")
-fsm = NodePath("EnemyCombatFSM")
-
-[node name="EnemyCombatFSM" type="Node" parent="AIComponent" unique_id=263326880]
-script = ExtResource("8_ppv75")
-
-[node name="EnemyIdleState" type="Node" parent="AIComponent/EnemyCombatFSM" unique_id=2077134346]
-script = ExtResource("7_swutr")
-
-[node name="EnemyMoveState" type="Node" parent="AIComponent/EnemyCombatFSM" unique_id=1513737135]
-script = ExtResource("8_7vp7r")
-
-[node name="EnemyAttackState" type="Node" parent="AIComponent/EnemyCombatFSM" unique_id=981188241]
-script = ExtResource("9_fv5qn")
-
-[node name="EnemyStunState" type="Node" parent="AIComponent/EnemyCombatFSM" unique_id=2019608689]
-script = ExtResource("10_4pigi")
+fsm = NodePath("ActorCombatFSM")
 
 [node name="AIPerception" type="Node" parent="AIComponent" unique_id=2030081872]
 script = ExtResource("11_fv5qn")
 
 [node name="AIBrain" type="Node" parent="AIComponent" unique_id=673108565]
 script = ExtResource("12_4pigi")
+
+[node name="ActorCombatFSM" type="Node" parent="AIComponent" unique_id=263326880]
+script = ExtResource("8_ppv75")
+
+[node name="idle" type="Node" parent="AIComponent/ActorCombatFSM" unique_id=2077134346]
+script = ExtResource("7_swutr")
+
+[node name="walk" type="Node" parent="AIComponent/ActorCombatFSM" unique_id=1513737135]
+script = ExtResource("8_7vp7r")
+move_speed = null
+
+[node name="attack" type="Node" parent="AIComponent/ActorCombatFSM" unique_id=981188241]
+script = ExtResource("9_fv5qn")
+
+[node name="block" type="Node" parent="AIComponent/ActorCombatFSM" unique_id=788987767]
+script = ExtResource("16_o07q7")
+
+[node name="cast" type="Node" parent="AIComponent/ActorCombatFSM" unique_id=2026617128]
+script = ExtResource("16_is3bj")
+
+[node name="stun" type="Node" parent="AIComponent/ActorCombatFSM" unique_id=2019608689]
+script = ExtResource("10_4pigi")
+stun_duration = null
+stun_color = null
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1167056206]
 libraries/ = SubResource("AnimationLibrary_aiuxd")

@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://dqqy8c41cnjfv"]
 
-[ext_resource type="Script" uid="uid://kykcmnbgr2sn" path="res://Scripts/core/battle/Ability/ability_effect/projectile.gd" id="1_sbfxd"]
+[ext_resource type="Script" uid="uid://bmyggsbcpqlrv" path="res://Scripts/Ability/AbilityEffect/Projectile.gd" id="1_sbfxd"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_e1u7d"]
 

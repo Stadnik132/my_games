@@ -5,7 +5,7 @@ class_name AIComponent extends Node
 # Ссылки на дочерние компоненты (их нужно будет назначить в инспекторе)
 @export var perception: AIPerception
 @export var brain: AIBrain
-@export var fsm: EnemyCombatFSM
+@export var fsm: ActorCombatFSM
 
 # Ссылка на владельца
 var actor: Actor
@@ -41,11 +41,11 @@ func setup(p_actor: Actor) -> void:
 			actor.combat_component.damage_taken.connect(_on_damage_taken)
 
 func _on_actor_mode_changed(new_mode: String, old_mode: String) -> void:
-	is_active = (new_mode == Actor.MODE_HOSTILE)
+	is_active = (new_mode == Actor.MODE_BATTLE)
 	
 	if is_active and fsm:
 		# При активации начинаем с состояния IDLE
-		fsm.change_state(EnemyCombatFSM.State.IDLE)
+		fsm.change_state(ActorCombatFSM.State.IDLE)
 
 func _on_damage_taken(damage_data: DamageData, source: Node) -> void:
 	if is_active and fsm:
@@ -56,7 +56,7 @@ func apply_stun(duration: float = 0.5) -> void:
 		return
 	
 	# Переключаемся в стан
-	fsm.change_state(EnemyCombatFSM.State.STUN)
+	fsm.change_state(ActorCombatFSM.State.STUN)
 	
 	# Здесь можно передать длительность стана
 	# Для этого нужно добавить параметр в StunState
@@ -86,6 +86,6 @@ func set_active(active: bool) -> void:
 	if is_active and fsm:
 		# Добавь проверку, что FSM уже инициализирован
 		if fsm.actor != null:
-			fsm.change_state(EnemyCombatFSM.State.IDLE)
+			fsm.change_state(ActorCombatFSM.State.IDLE)
 		else:
 			print_debug("AIComponent: FSM ещё не инициализирован, откладываю переход")

@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://c2wtt5pll1wk1"]
 
-[ext_resource type="Script" uid="uid://bo21fp46mrla3" path="res://Scripts/core/battle/Ability/ability_effect/fireball.gd" id="1_0proa"]
+[ext_resource type="Script" uid="uid://5q12kiqt3grc" path="res://Scripts/Ability/AbilityEffect/fireball.gd" id="1_0proa"]
 [ext_resource type="Texture2D" uid="uid://gtaxq632xsqk" path="res://Assets/Abilities/Firaball.png" id="2_p00ce"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_0proa"]
@@ -66,5 +66,4 @@ shape = SubResource("CircleShape2D_0proa")
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=953203725]
 sprite_frames = SubResource("SpriteFrames_8siyv")
 animation = &"fly"
-frame = 3
-frame_progress = 0.16843481
+frame_progress = 0.6330027

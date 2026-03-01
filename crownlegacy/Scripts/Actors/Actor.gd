@@ -1,108 +1,89 @@
-extends CharacterBody2D
+extends Entity
 class_name Actor
 
-# ==================== НАСТРОЙКИ ====================
-@export_category("Основные настройки")
-@export var display_name: String = "NPC"
-@export var actor_id: String = "unnamed_actor"
-@export var dialogue_timeline: String = ""
-@onready var sprite: Sprite2D = $Sprite2D
-@onready var animation_player: AnimationPlayer = $AnimationPlayer
+# ==================== РЕЖИМЫ ====================
+const MODE_WORLD = "world"
+const MODE_BATTLE = "battle"
 
-@export_category("Состояние")
-@export var max_health: int = 100
-@export var initial_mode: String = "peaceful"  # peaceful/hostile
-@export var is_interactive: bool = true
+# ==================== СИГНАЛЫ ====================
+signal mode_changed(new_mode: String, old_mode: String)  # Добавляем
+signal interaction_started(actor: Actor)                  # Добавляем
 
-
-const MODE_PEACEFUL = "peaceful"
-const MODE_HOSTILE = "hostile" 
+# ==================== ЭКСПОРТ ====================
+@export_category("Данные актёра")
+@export var actor_data: ActorData
 
 @export_category("Компоненты (опционально)")
 @export var interaction_component_path: NodePath
 @export var combat_component_path: NodePath
 @export var ai_component_path: NodePath
-@export var ai_perception_path: NodePath
-@export var ai_brain_path: NodePath
 
-# ==================== СИГНАЛЫ ====================
-signal health_changed(current: int, max: int)
-signal mode_changed(new_mode: String, old_mode: String)
-signal interaction_started(actor: Actor)
-signal actor_died(actor: Actor)
+# ==================== ССЫЛКИ ====================
+@onready var sprite: Sprite2D = $Sprite2D
+@onready var animation_player: AnimationPlayer = $AnimationPlayer
+@onready var interaction_component = get_node_or_null(interaction_component_path) as ActorInteractionComponent
+@onready var actor_combat_component = get_node_or_null(combat_component_path) as ActorCombatComponent
+@onready var ai_component = get_node_or_null(ai_component_path)
 
-# ==================== ПЕРЕМЕННЫЕ ====================
-var current_health: int
+# ==================== ПЕРЕМЕННЫЕ СОСТОЯНИЯ ====================
 var current_mode: String
+var is_interactive: bool = true  # Добавляем (берём из actor_data, но для доступа)
 var _player_in_range: bool = false
 var _is_in_dialogue: bool = false
-var facing_direction: String = "down"
-var last_facing_direction: String = "down"  # Запоминаем последнее направление для атак
 
-# Компоненты
-@onready var interaction_component = get_node_or_null(interaction_component_path)
-@onready var combat_component = get_node_or_null(combat_component_path)
-@onready var ai_component = get_node_or_null(ai_component_path)
-@onready var ai_perception = get_node_or_null(ai_perception_path)
-@onready var ai_brain = get_node_or_null(ai_brain_path)
-@onready var hurtbox: Hurtbox = $Hurtbox
+# Направление для анимаций и атак
+var facing_direction: String = "down"
+var last_facing_direction: String = "down"
 
 # ==================== ИНИЦИАЛИЗАЦИЯ ====================
 func _ready() -> void:
-	if hurtbox:
-		hurtbox.damage_taken.connect(_on_hurtbox_damage)
-	current_health = max_health
-	current_mode = initial_mode
+	super._ready()
+	
+	if not actor_data:
+		push_warning("Actor: actor_data не назначен для ", name)
+		return
+	
+	is_interactive = actor_data.is_interactive
+	current_mode = actor_data.initial_mode
 	
 	_setup_components()
 	_setup_connections()
 	
 	add_to_group("actors")
-	print_debug("Actor создан: ", display_name, " (режим: ", current_mode, ")")
-
+	
+	_apply_mode()
+	
+	print_debug("Actor создан: ", actor_data.display_name, " (режим: ", current_mode, ")")
 
 func _setup_components() -> void:
 	if interaction_component:
 		interaction_component.setup(self)
 	
-	if combat_component:
-		combat_component.setup(self)
-		if combat_component.has_signal("health_changed"):
-			combat_component.health_changed.connect(_on_combat_health_changed)
-		if combat_component.has_signal("died"):
-			combat_component.died.connect(_on_combat_death)
+	if actor_combat_component:
+		actor_combat_component.setup(self, actor_data)
 	
-	if ai_component:
+	if ai_component and ai_component.has_method("setup"):
 		ai_component.setup(self)
 
 func _setup_connections() -> void:
 	EventBus.Actors.interaction_requested.connect(_on_interaction_requested)
 	EventBus.Dialogue.started.connect(_on_dialogue_started)
-	EventBus.Game.world_requested.connect(_on_dialogue_ended)
-	EventBus.Game.state_changed.connect(_on_game_state_changed)
+	EventBus.Dialogue.ended.connect(_on_dialogue_ended)
 
-
-func _physics_process(delta):
-	# Движением управляет AI через velocity
-	# Просто применяем текущую velocity
+# ==================== ФИЗИКА И АНИМАЦИИ ====================
+func _physics_process(delta: float) -> void:
 	move_and_slide()
 	
-	# Обновляем направление взгляда на основе текущей скорости
 	_update_facing_direction()
-	
-	# Обновляем анимацию ходьбы/стоя на основе скорости
 	_update_animation()
 
-
 func _update_facing_direction() -> void:
-	"""Определяет направление взгляда на основе текущей скорости (8 направлений)"""
 	if velocity.length() > 10:
 		var dir = velocity.normalized()
 		var angle = rad_to_deg(dir.angle())
 		if angle < 0:
 			angle += 360
 		
-		# Определяем одно из 8 направлений
 		if angle >= 337.5 or angle < 22.5:
 			facing_direction = "right"
 		elif angle >= 22.5 and angle < 67.5:
@@ -120,22 +101,9 @@ func _update_facing_direction() -> void:
 		elif angle >= 292.5 and angle < 337.5:
 			facing_direction = "up_right"
 		
-		# Запоминаем последнее направление для использования в атаках
 		last_facing_direction = facing_direction
 
-
-func _update_animation() -> void:
-	if not animation_player:
-		return
-	
-	var speed = velocity.length()
-	if speed > 5:
-		_play_walk_animation()
-	else:
-		_play_idle_animation()
-
 func _get_cardinal_direction() -> String:
-	# Преобразуем 8 направлений в 4 (up/down/left/right) для анимаций
 	var dir = get_facing_direction()
 	match dir:
 		"up", "up_left", "up_right":
@@ -149,127 +117,29 @@ func _get_cardinal_direction() -> String:
 		_:
 			return "down"
 
+func _update_animation() -> void:
+	if not animation_player:
+		return
+	
+	if velocity.length() > 5:
+		_play_walk_animation()
+	else:
+		_play_idle_animation()
+
 func _play_walk_animation() -> void:
-	var direction = _get_cardinal_direction()
-	var anim_name = "walk_" + direction
+	var anim_name = "walk_" + _get_cardinal_direction()
 	if animation_player.has_animation(anim_name):
 		animation_player.play(anim_name)
 
 func _play_idle_animation() -> void:
-	var direction = _get_cardinal_direction()
-	var anim_name = "idle_" + direction
+	var anim_name = "idle_" + _get_cardinal_direction()
 	if animation_player.has_animation(anim_name):
 		animation_player.play(anim_name)
 
-
-# ==================== НАПРАВЛЕНИЕ ДЛЯ ХИТБОКСА ====================
 func get_facing_direction() -> String:
-	"""Возвращает направление для атаки (8 направлений)
-	   Использует последнее известное направление, если персонаж стоит"""
 	if velocity.length() > 10:
-		# Если движемся, возвращаем текущее направление
 		return facing_direction
-	else:
-		# Если стоим, возвращаем последнее запомненное направление
-		return last_facing_direction
-
-
-# ==================== ВЗАИМОДЕЙСТВИЕ ====================
-func _on_interaction_requested() -> void:
-	if _can_interact():
-		start_interaction()
-
-
-func _can_interact() -> bool:
-	return (is_interactive and 
-			_player_in_range and 
-			not _is_in_dialogue and
-			is_alive() and
-			current_mode == MODE_PEACEFUL)
-
-
-func start_interaction() -> void:
-	"""Начало взаимодействия с актёром"""
-	if not _can_interact():
-		return
-	
-	_is_in_dialogue = true
-	
-	print_debug(display_name, ": начало взаимодействия")
-	
-	interaction_started.emit(self)
-	EventBus.Actors.interaction_started.emit(self)
-	
-	if dialogue_timeline != "":
-		EventBus.Game.dialogue_requested.emit(dialogue_timeline)
-	else:
-		print_debug("У актёра ", display_name, " нет диалога")
-		_is_in_dialogue = false
-	
-	_play_interaction_feedback()
-
-
-func _play_interaction_feedback() -> void:
-	var interaction_comp = get_node_or_null(interaction_component_path)
-	if interaction_comp and interaction_comp.has_method("play_feedback"):
-		interaction_comp.play_feedback()
-
-
-# ==================== БОЙ ====================
-func _on_hurtbox_damage(damage_data: DamageData, source: Node):
-	apply_combat_damage_data(damage_data, source)
-	if ai_component and current_mode == MODE_HOSTILE:
-		ai_component.apply_stun(0.5)
-
-
-func apply_combat_damage_data(damage_data: DamageData, source: Node = null) -> void:
-	if combat_component and combat_component.has_method("take_damage"):
-		combat_component.take_damage(damage_data, source)
-	else:
-		push_warning("CombatComponent не найден или не поддерживает DamageData")
-
-
-func _on_combat_health_changed(current: int, max: int) -> void:
-	current_health = current
-	max_health = max
-	health_changed.emit(current, max)
-
-
-func _on_combat_death(killer: Node = null) -> void:
-	"""Смерть в бою"""
-	print_debug(display_name, ": смерть в бою")
-	
-	is_interactive = false
-	_player_in_range = false
-	
-	if interaction_component:
-		interaction_component.set_active(false)
-	
-	if combat_component:
-		combat_component.set_active(false)
-	
-	if ai_component:
-		ai_component.set_active(false)
-	
-	_play_death_effect(killer)
-	
-	actor_died.emit(self)
-	EventBus.Actors.died.emit(self)
-
-
-func _play_death_effect(killer: Node = null) -> void:
-	if sprite:
-		var tween = create_tween()
-		tween.tween_property(sprite, "modulate", Color(0.3, 0.3, 0.3, 0.5), 0.5)
-		tween.tween_callback(_finalize_death)
-
-
-func _finalize_death() -> void:
-	hide()
-	set_process(false)
-	set_physics_process(false)
-	queue_free()
-
+	return last_facing_direction
 
 # ==================== РЕЖИМЫ ====================
 func change_mode(new_mode: String) -> void:
@@ -279,81 +149,121 @@ func change_mode(new_mode: String) -> void:
 	var old_mode = current_mode
 	current_mode = new_mode
 	
-	print_debug(display_name, ": смена режима ", old_mode, " → ", new_mode)
+	print_debug(actor_data.display_name, ": смена режима ", old_mode, " → ", new_mode)
 	
-	match new_mode:
-		MODE_HOSTILE:
-			_on_become_hostile()
-			if not is_in_group("enemies"):
-				add_to_group("enemies")
-		
-		MODE_PEACEFUL:
-			_on_become_peaceful()
-			if is_in_group("enemies"):
-				remove_from_group("enemies")
-				
-	if hurtbox:
-		hurtbox.update_layer_from_owner()
+	_apply_mode()
 	
 	mode_changed.emit(new_mode, old_mode)
 	EventBus.Actors.mode_changed.emit(self, new_mode, old_mode)
 
-
-func _on_become_hostile() -> void:
-	print_debug("!!! _on_become_hostile ВЫЗВАН для ", display_name)
-	is_interactive = false
+func _apply_mode() -> void:
+	match current_mode:
+		MODE_BATTLE:
+			is_interactive = false
+			lock_interaction(true)
+			if not is_in_group("enemies"):
+				add_to_group("enemies")
+			if actor_combat_component:
+				actor_combat_component.set_active(true)
+			if ai_component:
+				ai_component.set_active(true)
+		
+		MODE_WORLD:
+			is_interactive = true
+			lock_interaction(false)
+			if is_in_group("enemies"):
+				remove_from_group("enemies")
+			if actor_combat_component:
+				actor_combat_component.set_active(false)
+			if ai_component:
+				ai_component.set_active(false)
 	
-	if combat_component:
-		combat_component.set_active(true)
-	if ai_component:
-		ai_component.set_active(true)
-
-
-func _on_become_peaceful() -> void:
-	is_interactive = true
+	if hurtbox:
+		hurtbox.update_layer_from_owner()
 	
-	if combat_component:
-		combat_component.set_active(false)
-	
-	if ai_component:
-		ai_component.set_active(false)
-
+	var hitbox = get_node_or_null("Hitbox") as Hitbox
+	if hitbox:
+		hitbox.update_layer_from_owner()
 
 func become_enemy(combat_manager: Node = null) -> void:
-	print_debug(display_name, ": становлюсь врагом!")
-	change_mode(MODE_HOSTILE)  # ← УЖЕ ЭМИТИТ
+	print_debug(actor_data.display_name, ": становлюсь врагом!")
+	change_mode(MODE_BATTLE)
 	
-	if combat_component:
-		if combat_manager:
-			combat_component.setup_combat(combat_manager)
-		else:
-			var cm = get_tree().get_first_node_in_group("combat_manager")
-			if cm:
-				combat_component.setup_combat(cm)
+	if actor_combat_component and combat_manager:
+		actor_combat_component.setup_combat(combat_manager)
 
+# ==================== ВЗАИМОДЕЙСТВИЕ ====================
+func _on_interaction_requested() -> void:
+	if _can_interact():
+		start_interaction()
 
-func _apply_hostile_appearance() -> void:
-	if sprite:
-		print_debug(display_name, ": внешний вид изменён на враждебный")
+func _can_interact() -> bool:
+	return (is_interactive and 
+			_player_in_range and 
+			not _is_in_dialogue and
+			is_alive() and
+			current_mode == MODE_WORLD and
+			not interaction_locked)
 
+func start_interaction() -> void:
+	if not _can_interact():
+		return
+	
+	_is_in_dialogue = true
+	print_debug(actor_data.display_name, ": начало взаимодействия")
+	
+	interaction_started.emit(self)
+	EventBus.Actors.interaction_started.emit(self)
+	
+	if actor_data.dialogue_timeline != "":
+		EventBus.Game.dialogue_requested.emit(actor_data.dialogue_timeline)
+	else:
+		print_debug("У актёра ", actor_data.display_name, " нет диалога")
+		_is_in_dialogue = false
+	
+	if interaction_component:
+		interaction_component.play_feedback()
 
 # ==================== ДИАЛОГИ ====================
 func _on_dialogue_started(timeline_name: String) -> void:
-	if timeline_name == dialogue_timeline:
+	if timeline_name == actor_data.dialogue_timeline:
 		_is_in_dialogue = true
-		# Сразу прячем иконку взаимодействия, чтобы она не "висела" во время диалога
 		if interaction_component:
 			interaction_component.update_visibility()
 
-
 func _on_dialogue_ended() -> void:
 	_is_in_dialogue = false
-	# После завершения диалога обновляем видимость.
-	# Если игрок всё ещё в зоне и остальные условия выполняются,
-	# иконка снова появится; иначе останется скрытой.
 	if interaction_component:
 		interaction_component.update_visibility()
 
+# ==================== СМЕРТЬ ====================
+func _on_died() -> void:
+	super._on_died()
+	
+	print_debug(actor_data.display_name, ": смерть")
+	
+	is_interactive = false
+	_player_in_range = false
+	
+	if interaction_component:
+		interaction_component.set_active(false)
+	
+	if actor_combat_component:
+		actor_combat_component.set_active(false)
+	
+	if ai_component:
+		ai_component.set_active(false)
+	
+	_play_death_effect()
+
+func _play_death_effect() -> void:
+	if sprite:
+		var tween = create_tween()
+		tween.tween_property(sprite, "modulate", Color(0.3, 0.3, 0.3, 0.5), 0.5)
+		tween.tween_callback(_finalize_death)
+
+func _finalize_death() -> void:
+	hide()
 
 # ==================== УТИЛИТЫ ====================
 func set_player_in_range(value: bool) -> void:
@@ -361,52 +271,26 @@ func set_player_in_range(value: bool) -> void:
 	if interaction_component:
 		interaction_component.update_visibility()
 
-
-func is_alive() -> bool:
-	return current_health > 0
-
-
-func get_health_percentage() -> float:
-	return float(current_health) / max_health if max_health > 0 else 0.0
-
-
 func get_actor_info() -> Dictionary:
-	return {
-		"actor_id": actor_id,
-		"display_name": display_name,
-		"current_health": current_health,
-		"max_health": max_health,
-		"current_mode": current_mode,
-		"is_interactive": is_interactive,
-		"dialogue_timeline": dialogue_timeline
-	}
-
-
-func _on_game_state_changed(new_state: int, old_state: int) -> void:
-	# Только для обратной совместимости, может быть удалён позже
-	pass
-
+	if actor_data:
+		return actor_data.get_actor_info()
+	return {}
 
 func get_actor_id() -> String:
-	return actor_id
-
+	return actor_data.actor_id if actor_data else ""
 
 # ==================== ПУБЛИЧНЫЕ МЕТОДЫ ====================
 func enter_combat(combat_manager: Node) -> void:
-	print_debug(display_name, ": вступает в бой")
-	
-	if combat_component and combat_component.has_method("setup_combat"):
-		combat_component.setup_combat(combat_manager)
-	
-	change_mode(MODE_HOSTILE)
-
+	print_debug(actor_data.display_name, ": вступает в бой")
+	if actor_combat_component:
+		actor_combat_component.setup_combat(combat_manager)
+	change_mode(MODE_BATTLE)
 
 func check_decision_triggers() -> Dictionary:
-	if combat_component and combat_component.has_method("check_decision_triggers"):
-		return combat_component.check_decision_triggers()
+	if actor_combat_component:
+		return actor_combat_component.check_decision_triggers()
 	return {}
 
-
-func mark_trigger_used(trigger_type: String) -> void:
-	if combat_component and combat_component.has_method("mark_trigger_used"):
-		combat_component.mark_trigger_used(trigger_type)
+func mark_trigger_used(trigger_type: String, trigger_value: Variant) -> void:
+	if actor_combat_component:
+		actor_combat_component.mark_trigger_used(trigger_type, trigger_value)

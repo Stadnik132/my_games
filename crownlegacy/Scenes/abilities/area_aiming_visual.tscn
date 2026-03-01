@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://blq28t7xhbpbn"]
 
 [ext_resource type="Texture2D" uid="uid://dcim2hniimeoe" path="res://Assets/Abilities/Area_effect.png" id="1_br2pa"]
-[ext_resource type="Script" uid="uid://c1hdm6761lqqt" path="res://Scripts/core/battle/Ability/aiming_visuals/area_aiming_visual.gd" id="1_edykj"]
+[ext_resource type="Script" uid="uid://c2k6p0j6atkm7" path="res://Scripts/Ability/AbilityVisual/AreaAimingVisual.gd" id="1_edykj"]
 [ext_resource type="Texture2D" uid="uid://5qqbbsii4eij" path="res://Assets/UI/Exclamation mark.png" id="2_edykj"]
 
 [node name="AreaAimingVisual" type="Node2D" unique_id=242581656]

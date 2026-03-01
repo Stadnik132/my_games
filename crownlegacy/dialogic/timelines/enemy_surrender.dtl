@@ -1,4 +1,4 @@
-Guard: Сдаюся!
+Actor: Сдаюся!
 - Пощадить
 	[wait time="1.0"]
 	[signal arg="to_world"]
