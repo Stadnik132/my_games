@@ -1,0 +1,1231 @@
+EventBus.gd
+Назначение: Глобальная шина сигналов для связи между системами. Сигналы сгруппированы по вложенным классам (Game, Entity, Player, Relationship, Dialogue, Combat, Animations, UI, Actors, Flags, System). Реализует паттерн «Наблюдатель» и обеспечивает слабую связанность компонентов. Содержит подгруппы боя (enemy, decision, attack, dodge, block, ability) и слой совместимости со старыми сигналами.
+Классы/Секции сигналов:
+GameSignals
+Управление глобальными состояниями и переходами игры.
+•	state_changed(new_state: int, old_state: int) — изменение глобального состояния игры
+•	paused(is_paused: bool) — логическая пауза игры
+•	world_requested() — запрос перехода в режим WORLD
+•	dialogue_requested(timeline_name: String) — запрос запуска диалога
+•	menu_requested() — запрос открытия меню
+•	cutscene_requested(cutscene_id: String) — запрос катсцены
+•	game_over_requested() — запрос GAME_OVER
+•	decision_point_activated() — активация точки решения (замедление времени)
+•	decision_point_deactivated() — деактивация точки решения (нормальное время)
+EntitySignals
+Общие сигналы для всех живых сущностей (Player, Actor, Enemy).
+•	health_changed(entity: Node, new_value: int, old_value: int, max_value: int) — изменение здоровья
+•	damage_taken(entity: Node, amount: int, damage_type: int, source: Node, is_critical: bool) — получение урона
+•	healed(entity: Node, amount: int, new_health: int) — лечение
+•	died(entity: Node) — смерть сущности
+•	mana_changed(entity: Node, new_value: int, old_value: int, max_value: int) — изменение маны
+•	stamina_changed(entity: Node, new_value: int, old_value: int, max_value: int) — изменение выносливости
+•	interaction_started(entity: Node, activator: Node) — начало взаимодействия
+•	interaction_ended(entity: Node) — завершение взаимодействия
+PlayerSignals
+Специфичные сигналы игрока.
+•	level_up(new_level: int, stat_increases: Dictionary) — повышение уровня
+•	experience_gained(amount: int, new_total: int) — получение опыта
+•	equipment_changed(slot: String, old_item: String, new_item: String) — смена экипировки
+RelationshipSignals
+Нарративная система «Доверие / Воля».
+•	trust_changed(new_value: int, delta: int) — изменение доверия
+•	will_changed(new_value: int, delta: int) — изменение Воли
+•	will_used(amount: int, remaining: int) — использование Воли
+•	trust_effect_applied(effect_type: String, multiplier: float) — применение эффекта от доверия
+DialogueSignals
+Интеграция с Dialogic 2.0.
+•	started(timeline_name: String, npc: Node) — начало диалога
+•	ended() — завершение диалога
+•	choice_selected(choice_index: int, choice_text: String) — выбор игрока
+•	requested(timeline_name: String, npc_id: String) — запрос диалога
+•	change_trust(amount: int) — изменение доверия
+•	set_flag(flag_name: String, value: Variant) — установка флага
+•	use_will(amount: int) — использование Воли
+•	start_battle(npc_id: String) — запуск боя из диалога
+CombatSignals
+Боевая система реального времени с подгруппами.
+Управление боем:
+•	started(enemies: Array) — начало боя
+•	ended(victory: bool) — завершение боя
+•	combat_state_changed(old_state: String, new_state: String) — смена состояния боевого FSM
+•	player_stunned(is_stunned: bool) — изменение стана игрока
+EnemySignals (Combat.enemy):
+•	health_changed(enemy: Node, current_hp: int, max_hp: int) — изменение HP врага
+•	died(enemy: Node, experience: int) — смерть врага
+•	hit(enemy: Node, damage: int, is_critical: bool) — попадание по врагу
+DecisionSignals (Combat.decision):
+•	point_triggered(enemy: Node, trigger_data: Dictionary) — активация точки решения
+•	made(enemy: Node, choice: String) — выбор игрока
+•	ui_closed() — закрытие UI точки решения
+•	dialogic_made(choice: String) — выбор через Dialogic
+•	combat_to_dialogue_requested(enemy: Node) — запрос перехода из боя в диалог
+•	point_requested(enemy: Node, trigger_data: Dictionary) — запрос точки решения
+•	transition_to_dialogue(enemy: Node, timeline: String) — переход в диалог
+•	enemy_spared(enemy: Node) — враг пощажён
+AttackSignals (Combat.attack):
+•	basic_requested() — запрос базовой атаки
+•	basic_started() — начало атаки
+•	basic_hit(combo_step: int, enemies_hit: int) — попадание атаки
+•	combo_reset() — сброс комбо
+•	combo_window_opened() — начало окна комбо
+•	combo_window_closed() — конец окна комбо
+DodgeSignals (Combat.dodge):
+•	requested(direction: Vector2) — запрос уворота
+•	started() — начало уворота
+•	completed() — завершение уворота
+BlockSignals (Combat.block):
+•	started() — начало блока
+•	ended() — конец блока
+•	active() — блок активен
+•	reduced_damage(damage_after_block: int) — урон после блока
+•	broken() — блок сломан
+AbilitySignals (Combat.ability):
+•	slot_pressed(slot_index: int) — нажатие слота способности
+•	aiming_started(slot_index: int) — начало прицеливания
+•	aiming_cancelled() — отмена прицеливания
+•	target_confirmed(target_position: Vector2) — подтверждение цели
+•	cast_started(ability: Resource) — начало каста способности
+•	cast_completed() — завершение каста
+•	animation_started(animation_name: String, duration: float) — анимация способности
+AnimationSignals
+•	requested(target: Node, animation_name: String, duration: float) — запрос анимации
+•	started(target: Node, animation_name: String) — начало анимации
+•	finished(target: Node, animation_name: String) — завершение анимации
+•	interrupted(target: Node, animation_name: String) — прерывание анимации
+UISignals
+•	menu_opened(menu_type: String) — открытие меню
+•	menu_closed() — закрытие меню
+•	notification(text: String, duration: float) — уведомление
+•	hud_update_required() — запрос обновления HUD (также принимает Dictionary с данными, см. AbilityComponent)
+ActorsSignals
+•	mode_changed(actor: Node, new_mode: String, old_mode: String) — смена режима актора (world/battle)
+•	interaction_started(actor: Node) — устаревшее событие начала взаимодействия (заменено Entity.interaction_started)
+•	died(actor: Node) — устаревшая смерть актора (заменено Entity.died)
+•	interaction_requested() — устаревший запрос на взаимодействие
+FlagsSignals
+•	flag_changed(flag_name: String, value: Variant) — изменение глобального флага
+SystemSignals
+•	settings_changed(setting_name: String, value: Variant) — изменение настроек
+•	scene_changed(old_scene: String, new_scene: String) — смена сцены
+Экземпляры классов:
+•	Game, Entity, Player, Relationship, Dialogue, Combat, Animations, UI, Actors, Flags, System — синглтоны групп сигналов
+•	Подгруппы Combat: enemy, decision, attack, dodge, block, ability
+Методы:
+•	_ready() — инициализация, очистка старых подключений, отладочный вывод
+•	_clear_all_connections() — перебор всех групп/подгрупп и отключение всех сигналов
+•	_print_debug_info() — краткая информация о структуре EventBus
+•	_get_property_list() — добавляет служебное свойство для редактора
+•	_get(property: StringName) — перехват обращений к устаревшим сигналам (Player_*), выводит предупреждение
+Совместимость:
+•	Добавлен слой миграции: при обращении к Player_damage_taken, Player_hp_changed, Player_mp_changed, Player_stamina_changed выводится предупреждение «используйте EventBus.Entity.*»
+Зависимости: Нет (корневой синглтон, загружается через автозагрузку).
+
+________________________________________
+GameStateManager.gd
+Назначение: Управляет глобальными состояниями игры (WORLD, DIALOGUE, BATTLE, MENU, CUTSCENE, GAME_OVER). Проверяет допустимость переходов, изменяет time_scale/paused и рассылает сигналы в EventBus.
+Классы/Секции:
+Enum GameState
+•	WORLD — свободное перемещение по миру
+•	DIALOGUE — активен диалог
+•	BATTLE — бой в реальном времени
+•	MENU — открыто меню
+•	CUTSCENE — катсцена
+•	GAME_OVER — конец игры
+Переменные:
+•	_current_state: GameState — текущее состояние
+•	_previous_state: GameState — предыдущее состояние
+•	eb: EventBus — ссылка на глобальную шину
+Методы:
+•	func _ready() -> void — настройка подключений, вывод текущего состояния
+•	func _setup_event_bus_connections() -> void — подписка на сигналы EventBus.Game и EventBus.Combat
+•	func change_state(new_state: GameState, force: bool = false) -> void — смена состояния с проверкой матрицы переходов
+•	func _is_transition_allowed(from_state: GameState, to_state: GameState) -> bool — матрица допустимых переходов
+•	func _handle_state_change_effects(new_state: GameState, old_state: GameState) -> void — изменение Engine.time_scale, get_tree().paused и посылка Game.paused
+•	func _on_transition_to_world_requested() -> void — переход в WORLD
+•	func _on_transition_to_dialogue_requested(timeline_name: String = "") -> void — переход в DIALOGUE и логирование имен диалогов
+•	func _on_transition_to_battle_requested(enemies: Array = []) -> void — переход в BATTLE, лог количества врагов
+•	func _on_transition_to_menu_requested() -> void — переход в MENU
+•	func _on_transition_to_cutscene_requested(cutscene_id: String) -> void — переход в CUTSCENE
+•	func _on_transition_to_game_over_requested() -> void — переход в GAME_OVER
+•	func _on_dialogic_decision_made(choice: String) -> void — обработка выбора из Dialogic («to_combat»/«to_world»)
+•	func _on_entiry_died(entity: Node) -> void — реагирует на смерть игрока (группа player), возвращает в WORLD
+Публичные методы:
+•	func get_current_state() -> GameState
+•	func get_current_state_name() -> String
+•	func can_player_move() -> bool — можно ли двигаться (WORLD/BATTLE)
+•	func is_ui_blocking() -> bool — активно ли блокирующее UI-состояние
+•	func is_in_combat() -> bool
+•	func is_dialogue_active() -> bool
+Подписка на EventBus:
+•	eb.Game.world_requested
+•	eb.Game.dialogue_requested
+•	eb.Combat.started
+•	eb.Game.menu_requested
+•	eb.Game.cutscene_requested
+•	eb.Game.game_over_requested
+•	eb.Entity.died (для игрока)
+•	eb.Combat.decision.dialogic_made
+Испускает:
+•	EventBus.Game.state_changed(new_state, old_state)
+•	EventBus.Game.paused(is_paused)
+
+________________________________________
+Entity.gd
+Назначение: Базовый класс для всех живых сущностей (Player, Actor, враги). Хранит ссылки на компоненты (здоровье, ресурсы, прогресс, способности, Hurtbox), управляет их сигналами и ретранслирует события в EventBus.
+Классы/Секции:
+Ссылки на компоненты:
+•	health_component: HealthComponent — здоровье
+•	mana_component: ResourceComponent — мана
+•	stamina_component: ResourceComponent — выносливость
+•	progression_component: ProgressionComponent — уровень/опыт/статы
+•	ability_component: AbilityComponent — способности
+•	hurtbox: Hurtbox — область получения урона
+Переменные состояния:
+•	is_dead: bool — флаг смерти
+•	movement_locked: bool — блокировка движения
+•	interaction_locked: bool — блокировка взаимодействия
+Методы:
+•	func _ready() -> void — поиск компонентов, подключение сигналов, добавление в группу "entities"
+•	func _find_components() -> void — ищет дочерние узлы-компоненты
+•	func _setup_component_connections() -> void — подписка на сигналы компонентов (health, mana, stamina, progression)
+•	func _on_health_changed(new_value, old_value, max_value) -> void — ретрансляция в EventBus.Entity.health_changed
+•	func _on_died() -> void — установка is_dead, эмит EventBus.Entity.died, отключение сущности
+•	func _on_damage_taken(amount, damage_type, source, is_critical) -> void — ретрансляция в EventBus.Entity.damage_taken
+•	func _on_mana_changed(...) / _on_stamina_changed(...) -> void — ретрансляция изменений ресурсов
+•	func _on_level_up(...) / _on_experience_gained(...) -> void — заглушки (реализация в Player)
+•	func _disable_entity() -> void — выключает обработку, скрывает сущность
+Публичные методы:
+•	func take_damage(amount, damage_type, source = null, is_critical = false) -> void — наносит урон через HealthComponent
+•	func heal(amount: int) -> void — лечение
+•	func use_stamina(amount: int) -> bool
+•	func use_mana(amount: int) -> bool
+•	func get_stat(stat_name: String) -> int — запрос стата через ProgressionComponent
+•	func is_alive() -> bool
+•	func lock_movement(locked: bool = true) -> void
+•	func lock_interaction(locked: bool = true) -> void
+•	func _on_interaction_started(activator: Node) -> void — виртуальный, эмитит EventBus.Entity.interaction_started
+•	func _on_interaction_ended() -> void — виртуальный, эмитит EventBus.Entity.interaction_ended
+•	func get_horizontal_facing_direction() -> Vector2 — виртуальный, по умолчанию RIGHT
+Сохранение:
+•	func get_save_data() -> Dictionary — собирает уровень, опыт, HP/MP/стамину
+•	func load_save_data(data: Dictionary) -> void — виртуальный, переопределяется в наследниках
+Испускает EventBus:
+•	EventBus.Entity.health_changed, died, damage_taken, mana_changed, stamina_changed, interaction_started, interaction_ended
+
+________________________________________
+EntityData.gd
+Назначение: Ресурс данных сущности. Хранит уровень, опыт, HP/MP/стамину, базовые статы и активные эффекты. Предоставляет безопасные сеттеры и локальные сигналы для компонентов.
+Экспортируемые переменные:
+•	entity_name: String — имя сущности
+•	level: int
+•	experience: int
+•	experience_to_next_level: int
+•	max_hp / current_hp: int — здоровье
+•	max_mp / current_mp: int — мана и её регенерация mp_regen_per_second
+•	max_stamina / current_stamina: int — выносливость и её реген stamina_regen_per_second
+•	base_stats: Dictionary — базовые характеристики (attack, defense, speed и т.п.)
+•	active_effects: Array[Dictionary] — активные баффы/дебаффы
+Локальные сигналы:
+•	health_changed(new_value, old_value, max_value)
+•	mana_changed(new_value, old_value, max_value)
+•	stamina_changed(new_value, old_value, max_value)
+•	stat_changed(stat_name, new_value)
+•	level_changed(new_level, old_level)
+•	experience_changed(new_exp, old_exp)
+•	died
+Аккумуляторы регенерации:
+•	_mp_regen_accum: float
+•	_stamina_regen_accum: float
+Безопасные сеттеры:
+•	func set_current_hp(value: int) -> void — clamp, сигнал health_changed, emit died при 0
+•	func set_current_mp(value: int) -> void — только если max_mp > 0
+•	func set_current_stamina(value: int) -> void — только если max_stamina > 0
+•	func set_stat(stat_name: String, value: int) -> void — обновляет base_stats и сигнал stat_changed
+•	func set_level(value: int) -> void
+•	func set_experience(value: int) -> void
+Управление ресурсами:
+•	func use_stamina(amount: int) -> bool
+•	func use_mana(amount: int) -> bool
+•	func use_health(amount: int) -> bool — здоровье как ресурс (не даёт умереть от стоимости)
+•	func regenerate_resources(delta: float) -> void — накопительная регенерация
+•	func can_afford(stamina_cost: int = 0, mana_cost: int = 0, health_cost: int = 0) -> bool
+Геттеры:
+•	func get_stat(stat_name: String) -> int
+•	func is_alive() -> bool
+•	func get_hp_percentage() / get_mp_percentage() / get_stamina_percentage() -> float
+Сохранение:
+•	func get_save_data() -> Dictionary — полная снимок ресурсов и статов
+•	func load_save_data(data: Dictionary) -> void — загрузка с клонированием словарей/массивов
+
+________________________________________
+Player.gd
+Назначение: Конкретная реализация сущности игрока. Отвечает за движение в мире, интеграцию с боевой FSM, проигрывание анимаций, работу с PlayerData и взаимодействие с EventBus.
+Ссылки:
+•	animation_player: AnimationPlayer
+•	sprite: Sprite2D
+•	controller: PlayerController — обработчик ввода
+•	combat_component: PlayerCombatComponent — боевой компонент
+•	player_data: PlayerData — данные игрока
+•	entity_data: EntityData (совместимость, маппится на player_data)
+Переменные:
+•	move_speed, sprint_speed, acceleration, friction — параметры движения
+•	current_animation: String — текущая анимация
+•	last_movement_direction: Vector2 — последнее направление
+•	last_horizontal_direction: Vector2 — последний горизонтальный вектор
+•	_can_move_in_world: bool — можно ли двигаться в WORLD
+•	_in_combat_mode: bool — управляется ли движением FSM
+Методы:
+•	func _ready() -> void — вызывает Entity._ready(), настраивает группы, Hurtbox, подписывается на EventBus.Game.state_changed и EventBus.Animations.requested, подписывает прогрессию
+•	func _physics_process(delta: float) -> void — движение в мире, если не в бою
+•	func _get_input_vector() / _handle_movement() / _handle_stop_movement() — логика движения и анимаций
+•	func get_horizontal_facing_direction() -> Vector2 — приоритет по velocity, иначе last_horizontal_direction
+Анимации:
+•	_play_walk_animation(direction: String)
+•	_play_idle_animation()
+•	_on_animation_requested(target, animation_name, duration) — обработка глобальных анимаций
+Обработка состояний:
+•	_on_game_state_changed(new_state: int, _old_state: int) -> void — включает/выключает движение, боевой режим, взаимодействия
+Специфичные сигналы игрока:
+•	_on_level_up(new_level, stat_increases) — эмит EventBus.Player.level_up
+•	_on_experience_gained(amount, new_total, _next_level) — эмит EventBus.Player.experience_gained
+Публичные методы:
+•	force_stop() — принудительная остановка
+•	teleport(new_position: Vector2, _fade_effect: bool = true)
+•	set_last_horizontal_direction(dir: Vector2)
+Сохранение:
+•	get_save_data() — добавляет позицию, направление и текущую анимацию к данным Entity
+
+________________________________________
+PlayerController.gd
+Назначение: Обработчик ввода игрока. Разделяет глобальный ввод (интеракции, меню) и боевой ввод (атаки, блок, уклонения, способности). Работает с EventBus и боевой системой.
+Ссылки:
+•	player: Player — владелец
+Методы:
+•	func _input(event: InputEvent) -> void — точка входа для ввода
+•	func _handle_global_input(event: InputEvent) -> bool — обработка «interact» и «ui_cancel»
+•	func _handle_combat_input(event: InputEvent) -> void — обработка боевых действий:
+	- ЛКМ (basic_attack) → EventBus.Combat.attack.basic_requested или подтверждение каста
+	- block press/release → EventBus.Combat.block.started/ended
+	- dodge → EventBus.Combat.dodge.requested с направлением
+	- ability_1..4 → EventBus.Combat.ability.slot_pressed
+•	func _handle_interaction() -> void — эмит EventBus.Actors.interaction_requested
+•	func _confirm_ability_cast() -> void — вычисляет глобальную позицию мыши по камере и эмитит EventBus.Combat.ability.target_confirmed
+•	func _get_input_vector() -> Vector2 — вектор движения по WASD
+•	func _can_open_menu() -> bool — меню доступно, если игрок может двигаться в мире или в бою
+
+________________________________________
+PlayerCombatComponent.gd
+Назначение: Специализация CombatComponent для игрока. Подписывается на EventBus.Combat.* и прокидывает команды во внутреннюю FSM.
+Особенности:
+• Наследуется от CombatComponent и переопределяет _setup_connections().
+Методы:
+•	func _setup_connections() -> void — вызывает super, затем подключает:
+	- EventBus.Combat.attack.basic_requested → _on_attack_requested
+	- EventBus.Combat.dodge.requested → _on_dodge_requested
+	- EventBus.Combat.block.started / .ended → _on_block_started / _on_block_ended
+	- EventBus.Combat.ability.slot_pressed → _on_ability_slot_pressed (подтверждает подключение)
+
+________________________________________
+Actor.gd
+Назначение: Конкретная реализация актора (NPC/врага). Наследуется от Entity, добавляет режимы (world/battle), работу с диалогами, взаимодействиями, анимациями и AI.
+Экспорт:
+•	actor_id: String — идентификатор актора
+•	initial_mode: String — начальный режим (world/battle)
+•	actor_data: ActorData — данные актора
+Ссылки:
+•	sprite: Sprite2D
+•	animation_player: AnimationPlayer
+•	interaction_component: ActorInteractionComponent
+•	combat_component: ActorCombatComponent
+•	ai_controller: AIController
+•	entity_data: EntityData — совместимость, маппится на actor_data
+Переменные:
+•	current_mode: String — текущий режим (world/battle)
+•	last_facing_direction: String — направление взгляда
+•	_is_in_dialogue: bool — флаг диалога
+•	dialogue_used: bool — был ли уже базовый диалог
+Методы:
+•	_func _ready() -> void — вызывает Entity._ready(), добавляет в группу "actors", настраивает hurtbox, interaction_component, combat_component, ai_controller, подписывается на EventBus.Dialogue.*, EventBus.Actors.interaction_requested, EventBus.Combat.started
+•	_func _physics_process(delta) -> void — move_and_slide + обновление анимации
+Анимации:
+•	_update_facing_direction(), get_cardinal_direction(), _play_walk_animation(), _play_idle_animation()
+Режимы:
+•	change_mode(new_mode: String) — смена режима, эмит EventBus.Actors.mode_changed, вызывает _apply_mode()
+•	_apply_mode() — добавляет/убирает из группы "enemies", включает/выключает AI, обновляет слой hurtbox
+Взаимодействие:
+•	_on_player_entered_range()/ _on_player_exited_range() — лог
+•	_on_interaction_requested() — проверяет _can_interact и вызывает start_interaction()
+•	_can_interact() — игрок в зоне, нет диалога, режим WORLD, взаимодействие не заблокировано
+•	start_interaction() — устанавливает _is_in_dialogue, эмит EventBus.Actors.interaction_started, выбирает timeline (основной или повторный) из ActorData и эмитит EventBus.Game.dialogue_requested
+Диалоги:
+•	_on_dialogue_started(timeline_name: String) — если timeline совпадает с actor_data, выставляет _is_in_dialogue
+•	_on_dialogue_ended() — сбрасывает флаг диалога
+Бой:
+•	_on_combat_started(enemies: Array) — если сам актор участвует, переводит в MODE_BATTLE и включает боевой компонент
+Здоровье:
+•	_on_health_changed(...) — лог HP
+•	_on_died() — вызывает Entity._on_died(), проигрывает эффект смерти и удаляет актора
+Сохранение:
+•	get_save_data()/load_save_data(data) — дописывает позицию, режим, флаг dialogue_used
+
+________________________________________
+ActorData.gd
+Назначение: Ресурс данных для акторов (NPC/враги). Наследуется от EntityData и добавляет поля, специфичные для акторов.
+Экспорт:
+•	display_name: String — отображаемое имя
+•	timeline_name: String — первый диалог
+•	repeat_timeline_name: String — диалог при повторном взаимодействии
+•	physical_defense: int — физическая защита
+•	magical_defense: int — магическая защита
+
+________________________________________
+PlayerData.gd
+Назначение: Расширение EntityData для игрока. Хранит настройки способностей, боевые параметры, снаряжение и предоставляет удобные методы.
+Экспорт:
+•	character_name: String — имя персонажа
+•	ability_slot_assignments: Array[String] — ID способностей в слотах 1–4
+•	attack_cooldown: float
+•	dodge_stamina_cost: int
+•	block_damage_reduction: float
+•	block_stamina_cost_per_second: int
+•	equipment: Dictionary — weapon/armor/accessory_1/2
+Методы:
+•	set_ability_slot_assignment(slot_index: int, ability_id: String) — назначение способности
+•	can_dodge() -> bool — хватает ли стамины на уворот
+•	calculate_blocked_damage(incoming_damage: int) -> int — расчёт урона после блока
+•	can_block() -> bool — простая проверка ресурсов на блок
+Сохранение:
+•	get_save_data()/load_save_data(...) — расширяют логику EntityData сохранением полей игрока
+
+________________________________________
+HealthComponent.gd
+Назначение: Компонент здоровья. Оборачивает EntityData, обрабатывает урон и лечение, генерирует локальные сигналы, при этом глобальные события идут через Entity.
+Экспорт:
+•	entity_data: EntityData — источник правды по HP
+Сигналы:
+•	health_changed(new_value, old_value, max_value)
+•	died()
+•	damage_taken(amount, damage_type, source, is_critical)
+•	healed(amount)
+Методы:
+•	_take_damage(amount, damage_type, source, is_critical) — уменьшает HP, эмитит health_changed и damage_taken, при 0 HP — died
+•	heal(amount: int) — лечение c emit healed
+•	set_max_health(new_max: int) — изменяет максимум, корректируя текущее HP
+•	is_alive(), get_health_percentage(), get_current_health(), get_max_health()
+
+________________________________________
+ResourceComponent.gd
+Назначение: Универсальный компонент ресурса (мана или выносливость). Работает поверх EntityData, обеспечивает сигналы, трату, регенерацию и утилиты.
+Тип ресурса:
+•	ResourceType.MANA или ResourceType.STAMINA
+Экспорт:
+•	resource_type: ResourceType
+•	entity_data: EntityData
+Сигналы:
+•	changed(new_value, old_value, max_value)
+•	depleted() — ресурс стал 0
+•	replenished() — ресурс восстановился с 0
+Методы:
+•	use(amount: int) -> bool — тратит ресурс через EntityData
+•	can_afford(amount: int) -> bool
+•	add(amount: int) — восполняет
+•	set_max(value: int) — изменяет максимум
+•	get_current(), get_max(), get_percentage(), is_full(), is_empty()
+Регенерация:
+•	_process(delta: float) — вызывает _regenerate
+•	_regenerate(delta: float) — накопительная регенерация по mp_regen_per_second/stamina_regen_per_second
+
+________________________________________
+ProgressionComponent.gd
+Назначение: Управляет уровнем, опытом и характеристиками сущности. Работает поверх EntityData/PlayerData, реализует прогрессию и модификаторы.
+Экспорт:
+•	entity_data: EntityData — данные сущности
+Сигналы:
+•	level_up(new_level, stat_increases)
+•	experience_gained(amount, new_total, next_level)
+•	stat_changed(stat_name, new_value)
+Основное:
+•	add_experience(amount: int, source: String) — добавляет опыт, эмитит experience_gained, обрабатывает повышение уровня
+•	_level_up(), _calculate_next_level_exp(), _apply_level_up_stats() — внутренняя логика уровня (рост статов и ресурсов)
+Статы:
+•	get_stat(stat_name: String) -> int — возвращает значение с учётом модификаторов и кэша
+•	add_modifier/remove_modifier/clear_modifiers — управление модификаторами статов
+Кэш:
+•	_cached_stats: Dictionary — кэш финальных значений
+•	_stat_modifiers: Dictionary — модификаторы
+События:
+•	_on_level_changed, _on_stat_changed, _on_experience_changed — синхронизация при изменениях EntityData
+Утилиты:
+•	get_level(), get_experience(), get_experience_to_next(), get_experience_percentage()
+
+________________________________________
+DamageData.gd
+Назначение: Ресурс описания урона. Хранит тип, величину, крит, пробивание, дополнительные эффекты и предоставляет вспомогательные методы.
+Экспорт:
+•	damage_type: DamageType (PHYSICAL, MAGICAL, TRUE)
+•	amount: int — базовый урон
+•	is_critical: bool
+•	source: Node — источник урона
+•	penetration: float — пробивание защиты (0–1)
+•	can_crit: bool
+•	crit_multiplier: float
+•	status_effects: Array[Dictionary] — будущие эффекты
+Сигналы:
+•	damage_calculated(final_damage: int)
+•	damage_crit(crit_damage: int)
+Методы:
+•	duplicate_data() -> DamageData — копия ресурса
+•	get_damage_type_name() -> String
+•	is_physical(), is_magical(), is_true_damage()
+•	_to_string() -> String — строка для отладки
+Статические фабрики:
+•	create_physical(amount, penetration)
+•	create_magical(amount, penetration)
+•	create_true(amount)
+
+________________________________________
+AbilityResource.gd
+Назначение: Ресурс описания способности. Хранит ID, тип (INSTANT/PROJECTILE/AREA/SELF_TARGET), тип прицеливания, стоимость, кулдаун, сцены эффектов и методы загрузки.
+Экспорт:
+•	ability_id, ability_name, icon_path, description
+•	ability_type: AbilityType
+•	aiming_type: AimingType — логика прицеливания
+•	unlock_level, mana_cost, stamina_cost, health_cost
+•	cast_time, cooldown, channeled
+•	damage_data_config: Dictionary — конфигурация DamageData
+•	heal_amount, buff_duration, projectile_speed, effect_duration
+•	max_cast_range, effect_radius, targeting_color
+•	projectile_scene_path, area_effect_scene_path, aiming_visual_scene_path
+•	cast_animation, sound_effect_path
+Ассеты:
+•	icon: Texture2D
+•	projectile_scene, area_effect_scene, aiming_visual_scene: PackedScene
+•	sound_effect: AudioStream
+Методы:
+•	load_assets() — лениво загружает все ассеты
+•	get_damage_data() -> DamageData — создаёт DamageData из damage_data_config
+•	can_afford(health, mana, stamina) -> bool — проверяет стоимость
+•	get_aiming_visual_scene() -> PackedScene — возвращает сцену визуала прицеливания (кастомную или стандартную)
+•	static from_json(json_data: Dictionary) -> AbilityResource — заполнение из JSON AbilityManager-а
+
+________________________________________
+AbilityComponent.gd
+Назначение: Компонент способностей сущности. Хранит слоты, назначенные способности, следит за кулдаунами, ресурсами и применяет эффекты (снаряды, области, self-баффы).
+Экспорт:
+•	initial_slot_assignments: Array[String] — стартовые ID способностей по слотам
+Ссылки (заполняются в setup):
+•	entity: Entity — владелец
+•	entity_data: EntityData — данные владельца (PlayerData/ActorData)
+•	mana_component, stamina_component: ResourceComponent
+•	health_component: HealthComponent
+Внутренние структуры:
+•	slots: Array[AbilityResource] — объекты способностей
+•	slot_assignments: Array[String] — ID способностей в слотах
+•	cooldowns: Dictionary — оставшееся время кулдауна по слотам
+Менеджеры:
+•	ability_manager: AbilityManager — глобальный менеджер способностей
+Основные методы:
+•	setup(owner_entity: Entity) — поиск компонентов и инициализация слотов
+•	_initialize_slots() — назначение AbilityResource в слоты по ID и заполнение cooldowns
+•	_process(delta) — уменьшение кулдаунов и обновление UI
+API слотов и каста:
+•	get_ability_in_slot(slot_index) -> AbilityResource
+•	set_ability_in_slot(slot_index, ability_id: String) -> bool — назначение способности
+•	can_cast_ability(slot_index) -> bool — проверка кулдауна и ресурсов
+•	is_on_cooldown(), get_cooldown_percentage()
+•	start_cooldown(slot_index)
+•	cast_ability(slot_index, target_position: Vector2) -> bool — тратит ресурсы, запускает анимацию и эффект, эмитит EventBus.Combat.ability.cast_started/completed
+Ресурсы:
+•	spend_resources(slot_index) -> bool — тратит ману/стамину/HP через компоненты
+•	has_resources(slot_index) -> bool — проверяет доступность ресурсов
+Эффекты:
+•	_apply_ability_effect(ability, target_position) — маршрутизатор по типам
+•	_apply_instant_effect(), _spawn_projectile(), _create_area_effect(), _apply_self_effect()
+•	_find_enemies_in_area() — временная реализация поиска врагов
+Сохранение:
+•	save_assignments() / load_assignments() — экспорт/импорт slot_assignments
+Интеграция с EventBus:
+•	_update_ui(slot_index) — эмит EventBus.UI.hud_update_required с данными по кулдауну
+
+________________________________________
+AbilityManager.gd
+Назначение: Глобальный менеджер способностей (автозагрузка). Загружает способности из JSON, хранит их по ID, управляет их разблокировкой.
+Сигналы:
+•	abilities_loaded
+•	ability_unlocked(ability_id: String)
+Переменные:
+•	abilities_by_id: Dictionary — id → AbilityResource
+•	unlocked_abilities: Array[String] — список разблокированных id
+Методы:
+•	_ready() — загрузка abilities.json, временная разблокировка всех способностей для теста
+•	load_abilities_from_json(json_path: String) — парсинг JSON и создание ресурсов
+•	_unlock_all_abilities_for_test() — временная отладочная функция
+•	get_ability(ability_id: String) -> AbilityResource
+•	is_ability_unlocked(ability_id: String) -> bool
+•	unlock_ability(ability_id: String) — добавляет в unlocked_abilities и эмитит ability_unlocked
+•	get_unlocked_abilities() -> Array[AbilityResource]
+Сохранение:
+•	save_data() / load_data(data: Dictionary) — сохранение списка разблокированных способностей
+
+________________________________________
+BaseAimingVisual.gd
+Назначение: Базовый класс для визуалов прицеливания (area/projectile/self). Обеспечивает общие сигналы подтверждения/отмены и обработку ввода.
+Сигналы:
+•	confirmed(target_data: Dictionary)
+•	cancelled()
+Переменные:
+•	ability: AbilityResource — способность, для которой рисуется визуал
+•	caster: Node2D — кастер (обычно Player)
+•	is_active: bool — активность визуала
+Методы:
+•	setup(p_ability, p_caster) — инициализация и вызов _ready_setup()
+•	_ready_setup() — виртуальный метод для наследников
+•	_input(event: InputEvent) — перехватывает basic_attack (подтвердить) и block (отменить)
+•	_confirm() — эмитит confirmed с _get_target_data()
+•	cancel() — эмитит cancelled и удаляет себя
+•	_get_target_data() -> Dictionary — дефолтная реализация (позиция и направление вправо)
+
+________________________________________
+ProjectileAimingVisual.gd
+Назначение: Визуал прицеливания для снарядов (линия от игрока к мыши, маркер цели, блокер при выходе за радиус).
+Переменные:
+•	max_range: float — максимальная дистанция каста
+•	line_color: Color — цвет линии
+Ссылки:
+•	line: Line2D
+•	target_marker: Sprite2D
+•	blocker: Sprite2D — маркер блокировки (когда цель за пределами)
+Методы:
+•	_ready_setup() — читает max_range и цвет из AbilityResource, настраивает Line2D и спрайты
+•	_process(delta) — двигает визуал за игроком, рассчитывает направление к мыши, ограничивает дистанцию, обновляет линию/маркер/блокер и цвет в зависимости от блокировки
+•	_get_target_data() -> Dictionary — возвращает позицию цели, направление и расстояние
+
+________________________________________
+AreaAimingVisual.gd
+Назначение: Визуал прицеливания области (круг радиуса способности с ограничением дистанции).
+Переменные:
+•	radius: float — радиус эффекта
+•	max_range: float — максимальная дистанция от кастера
+•	color: Color — цвет круга
+Ссылки:
+•	circle_sprite: Sprite2D — спрайт круга
+•	blocker: Sprite2D — маркер ограничения
+Методы:
+•	_ready_setup() — читает radius/max_range/color из AbilityResource, масштабирует спрайт
+•	_process(delta) — позиционирует визуал на игроке, рассчитывает позицию круга относительно мыши с ограничением max_range, меняет цвет/видимость блокера
+•	_get_target_data() -> Dictionary — возвращает позицию эффекта, радиус и тип "area"
+
+________________________________________
+AreaEffect.gd
+Назначение: Реализация области эффекта умений (AoE). Наследуется от Area2D, наносит урон всем подходящим целям в радиусе и удаляется через duration.
+Переменные:
+•	caster: Node — источник эффекта
+•	damage_data: DamageData — данные урона
+•	duration: float — время существования
+•	radius: float — радиус эффекта
+Ссылки:
+•	collision_shape: CollisionShape2D
+Методы:
+•	setup(params: Dictionary) — принимает caster, damage_data, duration, radius; настраивает collision_layer/mask по группам (player/enemies), выставляет радиус и подписывается на area_entered/body_entered
+•	_apply_damage() — находит все Hurtbox-ы в overlapping_bodies/areas и эмитит damage_taken
+•	_on_area_entered(area: Area2D)/_on_body_entered(body: Node) — локальное нанесение урона при входе
+Жизненный цикл:
+•	Применяет урон сразу после setup(), затем удаляется через create_timer(duration)
+
+________________________________________
+Projectile.gd
+Назначение: Базовый снаряд способности. Летит по направлению к цели, наносит урон по Hurtbox и уничтожается при столкновении или после max_distance.
+Переменные:
+•	caster: Node
+•	damage_data: DamageData
+•	direction: Vector2
+•	speed: float
+•	max_distance: float
+•	distance_traveled: float
+•	start_position: Vector2
+Ссылки:
+•	collision_shape: CollisionShape2D
+Методы:
+•	setup(params: Dictionary) — принимает caster, damage_data, speed, max_distance, start_position, target_position/direction, настраивает слои коллизий по группе стрелка (player/enemies), подписывается на body_entered/area_entered
+•	_physics_process(delta) — движение и проверка max_distance
+•	_on_body_entered(body: Node) — при столкновении с любым телом, кроме caster, применяет урон и удаляет снаряд
+•	_on_area_entered(area: Area2D) — если это Hurtbox и не стрелок, наносит урон и удаляет снаряд
+•	_apply_damage(target: Node) — ищет Hurtbox у цели и эмитит damage_taken
+
+________________________________________
+FireballProjectile.gd
+Назначение: Специализированный снаряд «огненный шар» с анимацией полёта, анимацией взрыва и звуком попадания.
+Наследование:
+•	extends Projectile
+Экспорт:
+•	flying_animation: String — анимация полёта
+•	hit_animation: String — анимация попадания
+•	hit_scene: PackedScene — дополнительная сцена взрыва
+•	audio_hit: AudioStream — звук при попадании
+Ссылки:
+•	animated_sprite: AnimatedSprite2D
+•	audio_player: AudioStreamPlayer2D
+Методы:
+•	setup(params) — вызывает Projectile.setup, находит audio_player, запускает анимацию полёта и поворачивает спрайт по направлению
+•	_physics_process(delta) — делегирует в Projectile
+•	_apply_damage(target: Node) — останавливает физику, вызывает родительский _apply_damage, при наличии метода apply_combat_damage_data у цели вызывает его, затем проигрывает анимацию/звук, создаёт hit_scene и удаляет снаряд
+
+________________________________________
+Hitbox.gd
+Назначение: Область удара (Hitbox) для ближних атак. Подвешивается к сущности через HitboxComponent, настраивает слой по источнику и отслеживает пересечения с Hurtbox.
+Переменные:
+•	damage_data: DamageData — наносимый урон
+•	direction: Vector2 — направление
+•	lifetime: float — время жизни
+Методы:
+•	_ready() — проверка damage_data, один кадр ожидания, обновление слоёв через _update_layers_from_source, подписка на area_entered, удаление через lifetime
+•	_update_layers_from_source() — ставит collision_layer в зависимости от группы источника (player/enemies)
+•	_on_area_entered(area: Area2D) — если это Hurtbox и не свой owner, отключает мониторинг
+•	get_damage_data(), set_damage_data(data: DamageData)
+
+________________________________________
+Hurtbox.gd
+Назначение: Область получения урона (Hurtbox). Принимает Hitbox/AreaEffect/Projectile и эмитит локальный сигнал damage_taken для боевых компонентов.
+Сигналы:
+•	damage_taken(damage_data: DamageData, source: Node)
+Переменные:
+•	entity_owner: Node — владелец Hurtbox
+Методы:
+•	set_entity_owner(owner_node: Node)
+•	_ready() — подписка на area_entered, DISABLE_MODE_REMOVE
+•	update_layer_from_owner() — настраивает collision_mask по группе владельца (player/enemies/friendlies)
+•	_on_hitbox_entered(area: Area2D) — если объект имеет get_damage_data(), получает DamageData и эмитит damage_taken
+
+________________________________________
+HitboxComponent.gd
+Назначение: Компонент спавна Hitbox-ов для сущности (удары, area-атомы). Оборачивает создание Hitbox, формирование DamageData и управление их жизненным циклом.
+Сигналы:
+•	hit_enemy(enemy: Node, damage: int, is_critical: bool) — зарезервирован под более сложную обработку
+Экспорт:
+•	hitbox_scene: PackedScene — префаб Hitbox
+•	default_lifetime: float — стандартное время жизни
+Переменные:
+•	owner_node: Node — владелец (get_parent())
+•	_active_hitboxes: Array[Hitbox] — активные хитбоксы
+Методы:
+•	_ready() — проверяет наличие сцены
+•	spawn_hitbox(position, damage_amount, damage_type, is_critical, direction, lifetime) -> Hitbox — создаёт Hitbox, заполняет DamageData и добавляет в текущую сцену
+•	spawn_attack_hitbox(position, direction, base_damage, damage_multiplier, is_critical) -> Hitbox — удобный метод для атак
+•	spawn_area_hitbox(center, radius, damage_amount, damage_type, duration) -> Hitbox — area-вариант с CircleShape2D
+•	clear_hitboxes() — удаляет все активные Hitbox
+•	_on_hitbox_removed(hitbox: Hitbox) — убирает Hitbox из списка при выходе из дерева
+
+________________________________________
+CombatConfig.gd
+Назначение: Ресурс конфигурации боевой системы. Определяет параметры атак, уворотов, блока, стана и движения в бою.
+Экспорт:
+•	attack_combo_damage: Array[float] — множители для шагов комбо
+•	attack_combo_window: float — окно для ввода следующей атаки
+•	attack_duration: float — длительность анимации атаки
+•	cancel_window_start: float — когда можно отменять/комбить
+•	dodge_distance: float, dodge_duration: float, dodge_collider_radius: float, dodge_stamina_cost: int
+•	attack_idle_inside_duration: float — время до падения в Idle
+•	move_speed, acceleration, friction — параметры движения в бою
+•	block_damage_reduction: float
+•	block_base_stamina_cost: int
+•	block_stamina_damage_factor: float — стоимость стамины от урона
+•	stun_duration: float
+•	attack_hitbox_offset: float — смещение спавна Hitbox от сущности
+
+________________________________________
+CombatComponent.gd
+Назначение: Общий боевой компонент для сущностей. Настраивает FSM, HitboxComponent, связь с ресурсами и обрабатывает урон (включая блок).
+Экспорт:
+•	combat_config: CombatConfig
+•	owner_entity: Entity
+•	stats_provider: ProgressionComponent
+•	ability_component: AbilityComponent
+•	stamina_component: ResourceComponent
+Ссылки:
+•	fsm: EntityCombatFSM
+•	hitbox_component: HitboxComponent
+Методы:
+•	_ready() — находит компоненты, настраивает FSM, подключается к EventBus.Game.state_changed и Hurtbox.damage_taken, откладывает настройку AbilityComponent
+•	_late_setup_ability_component() — вызывает ability_component.setup(owner_entity) при готовности
+•	_find_components() — поиск FSM, HitboxComponent, ProgressionComponent, ResourceComponent, AbilityComponent
+•	_setup_fsm() — передаёт контекст в FSM и отключает её обработку до входа в бой
+•	_setup_connections() — подписка на Game.state_changed и Hurtbox.damage_taken
+Параметры:
+•	get_attack_params() / get_dodge_params() — словари для состояний
+Ввод:
+•	_on_attack_requested(), _on_dodge_requested(direction), _on_block_started(), _on_block_ended(), _on_ability_slot_pressed(slot_index) — оборачивают команды во fsm.send_command и проверки стамины/ресурсов
+Получение урона:
+•	_on_hurtbox_damage(damage_data, source) — решает, блокируется ли урон; если в BlockState, обрабатывает блок, иначе вызывает health.take_damage
+•	_handle_blocked_damage(damage_data, source) — расчёт уменьшенного урона и стоимости стамины, отправка команды в блок
+•	_calculate_block_stamina_cost(incoming_damage) — использует block_base_stamina_cost и block_stamina_damage_factor
+FSM и состояние игры:
+•	_on_game_state_changed(new_state, _old_state) — включает/выключает FSM в зависимости от STATE_BATTLE, сбрасывает состояние в Idle при выходе из боя
+
+________________________________________
+ActorCombatComponent.gd
+Назначение: Специализированный боевой компонент для акторов. Наследуется от CombatComponent, добавляет привязку к ActorData и логику входа/выхода из боя.
+Переменные:
+•	actor_data: ActorData
+•	_in_combat: bool
+•	_combat_start_time: float
+Методы:
+•	setup(actor: Entity, data: ActorData) — заполняет owner_entity/actor_data, настраивает компоненты, подключает Hurtbox, настраивает FSM
+•	enter_combat()/exit_combat() — включает/выключает FSM, помечает флаг состояния боя
+•	set_active(value: bool) — включает process/physics_process FSM, при активации переводит в Idle
+•	is_in_combat() -> bool
+Обработка урона:
+•	_on_hurtbox_damage(damage_data, source) — при активном бое считает финальный урон и вызывает take_damage у HealthComponent
+•	_calculate_damage(damage_data) -> int — учитывает крит, тип урона и защиту из ActorData
+AI:
+•	use_ability(slot_index, target_position) — интерфейс для ИИ, вызывает AbilityComponent.cast_ability при доступности
+
+________________________________________
+EntityCombatFSM.gd
+Назначение: FSM боевых состояний сущности (Idle, Walk, Attack, Dodge, Block, Aim, Cast, Stun). Управляет переходами, комбо и контекстом способностей.
+Сигналы:
+•	state_changed(old_state: String, new_state: String)
+Переменные:
+•	states: Dictionary — имя состояния → CombatState
+•	current_state: CombatState
+•	attack_combo_step, combo_window_timer
+•	last_dodge_direction, last_movement_direction
+•	entity, stats_provider, combat_component, combat_config
+•	current_slot_index, current_ability, cast_target_position, cast_target_data
+•	combo_input_received: bool
+Методы:
+•	setup(entity, stats, component, config) — инициализирует все дочерние CombatState: задаёт им контекст и подписку на transition_requested, запускает Idle
+•	change_state(state_name: String) — проверяет наличие, can_exit() и get_allowed_transitions() текущего состояния, вызывает exit/enter и эмитит state_changed
+•	send_command(command: String, data: Dictionary) — обновляет поля (ability_selected, cast, aim_cancel, combo_input) и делегирует в текущее состояние
+•	request_stun() — форсирует переход в Stun, если текущее состояние не Cast
+•	_on_transition_requested(state_name) — обёртка над change_state
+•	_process/_physics_process — делегируют в текущее состояние
+•	get_current_state_name(), is_in_state(), get_state_object()
+•	update_facing_direction(direction: Vector2) — обновляет last_movement_direction и вызывает set_last_horizontal_direction у entity
+
+________________________________________
+CombatState.gd
+Назначение: Базовый класс для всех боевых состояний (Idle, Walk, Attack, Dodge, Block, Aim, Cast, Stun). Хранит общий контекст и вспомогательные методы.
+Сигнал:
+•	transition_requested(state_name: String)
+Переменные:
+•	entity: Entity
+•	stats_provider: ProgressionComponent
+•	combat_component: CombatComponent
+•	combat_config: CombatConfig
+•	fsm: EntityCombatFSM
+•	command_data: Dictionary — данные команды при входе
+•	attack_params, dodge_params: Dictionary — кэш параметров
+Методы:
+•	setup_params() — читает параметры из CombatComponent
+•	enter(), exit(), process(delta), physics_process(delta), can_exit(), get_allowed_transitions(), handle_command() — виртуальные
+Вспомогательные:
+•	set_battle_velocity(v: Vector2) — меняет velocity у CharacterBody2D
+•	apply_movement() — move_and_slide()
+•	get_attack_direction() -> Vector2 — определяет горизонтальное направление удара (из Entity, last_movement_direction или last_dodge_direction)
+
+________________________________________
+IdleState.gd
+Назначение: Базовое боевое состояние покоя. Обнуляет скорость, проигрывает idle-анимацию и ожидает ввода.
+Методы:
+•	enter() — ставит скорость 0, проигрывает idle_X по последнему направлению из FSM
+•	physics_process(delta) — проверяет глобальный ввод движения и переводит в Walk при наличии
+•	handle_command(command, data) — реагирует на attack/dodge/block_start/ability_selected и переводит в Attack/Dodge/Block/Aim
+•	get_allowed_transitions() — список допустимых переходов
+
+________________________________________
+WalkState.gd
+Назначение: Боевой режим ходьбы. Обрабатывает движение по Input, обновляет facing и анимации, позволяет переходы в боевые действия.
+Методы:
+•	physics_process(delta) — читает ввод, обновляет facing, двигает CharacterBody2D с параметрами из CombatConfig, проигрывает walk_X анимацию через EventBus.Animations
+•	handle_command(command, data) — обрабатывает attack/dodge/block_start/ability_selected и переводит в соответствующие состояния
+•	get_allowed_transitions() — Idle, Attack, Dodge, Block, Aim, Stun
+
+________________________________________
+DodgeState.gd
+Назначение: Состояние уворота. Двигает сущность в выбранном направлении с повышенной скоростью в течение ограниченного времени.
+Переменные:
+•	dodge_timer, dodge_direction, dodge_speed
+Методы:
+•	enter() — берёт направление из fsm.last_dodge_direction, рассчитывает скорость по distance/duration, задаёт velocity, проигрывает анимацию "dodge", эмитит EventBus.Combat.dodge.started
+•	physics_process(delta) — продолжает движение
+•	process(delta) — уменьшает таймер и по окончании переводит в Idle
+•	handle_command("stun") — переход в Stun
+•	exit() — останавливает движение, эмитит EventBus.Combat.dodge.completed
+•	can_exit(), get_allowed_transitions()
+
+________________________________________
+AttackState.gd
+Назначение: Состояние атаки в бою. Управляет шагами комбо, спавном Hitbox, окнами для продолжения комбо, переходами в другие состояния.
+Переменные:
+•	combo_step: int — текущий шаг комбо
+•	attack_timer: float — оставшееся время атаки
+•	can_combo_or_cancel: bool — открыт ли ввод комбо/отмены
+•	hitbox_spawned: bool
+•	hitbox_component: HitboxComponent
+Логика:
+•	enter() — находит HitboxComponent, выбирает combo_step, настраивает attack_timer, запускает анимацию attack_X через EventBus.Animations, открывает окно комбо через await_open_combo_window()
+•	process(delta) — уменьшает таймер, спавнит Hitbox при достижении нужного момента, завершает атаку по окончании таймера
+•	physics_process(delta) — обнуляет скорость, двигает тело (move_and_slide)
+•	_spawn_attack_hitbox() — рассчитывает итоговый урон по base_damage и combo_multipliers, использует get_attack_direction() и CombatConfig.attack_hitbox_offset, вызывает hitbox_component.spawn_attack_hitbox и эмитит EventBus.Combat.attack.basic_hit
+•	await_open_combo_window() — через таймер открывает окно для продолжения комбо (EventBus.Combat.attack.combo_window_opened)
+•	_finish_attack() — закрывает окно комбо и возвращает в Idle
+•	handle_command(command, data) — в окне комбо позволяет:
+	- "attack" — если combo_step < max_combo_steps, увеличивает шаг и перезапускает Attack
+	- "dodge"/"block_start"/"ability_selected" — сбрасывает комбо и переходит в Dodge/Block/Aim
+•	_reset_combo() — обнуляет шаг и таймер комбо, эмитит combo_window_closed
+•	can_exit() — можно выйти, если окно открыто или таймер <= 0
+•	exit() — закрывает окно комбо и очищает Hitbox-ы
+•	get_allowed_transitions() — пока окно закрыто, только "Attack"; при открытом — набор боевых состояний
+
+________________________________________
+StunState.gd
+Назначение: Состояние стана. Сущность не может действовать, проигрывается анимация «stun», по окончании времени — возврат в Idle.
+Переменные:
+•	stun_duration, stun_timer
+Методы:
+•	enter() — сбрасывает скорость, проигрывает анимацию stun, эмитит EventBus.Combat.entity_stunned(entity, true)
+•	process(delta) — уменьшает таймер, по окончании запрашивает Idle
+•	physics_process(delta) — держит скорость 0
+•	handle_command() — игнорирует любой ввод
+•	exit() — эмитит EventBus.Combat.entity_stunned(entity, false)
+•	can_exit(), get_allowed_transitions()
+
+________________________________________
+PlayerAimState.gd
+Назначение: Состояние прицеливания игрока перед кастом способности. Создаёт визуал прицеливания и, в зависимости от подтверждения/отмены, запускает Cast или возвращается в Idle.
+Переменные:
+•	ability: AbilityResource
+•	slot_index: int
+•	aiming_visual: BaseAimingVisual
+Методы:
+•	enter() — читает current_ability и current_slot_index из FSM, создаёт визуал (кроме INSTANT/SELF_TARGET), настраивает его и блокирует движение игрока, эмитит EventBus.Combat.ability.aiming_started
+•	_create_aiming_visual() — получает сцену из AbilityResource.get_aiming_visual_scene(), создаёт и возвращает BaseAimingVisual
+•	_on_target_confirmed(target_data) — при подтверждении посылает команду "cast" в FSM и переводит в Cast
+•	_on_target_cancelled() — при отмене возвращается в Idle
+•	_confirm_immediate() — для self/instant способностей сразу шлёт cast с типом "self"
+•	exit() — удаляет визуал, разблокирует движение
+•	handle_command("cancel_aim") — обрабатывает отмену
+•	get_allowed_transitions() — Cast, Idle, Stun
+
+________________________________________
+PlayerCastState.gd
+Назначение: Состояние каста способности игроком. Тратит ресурсы, проигрывает анимацию, по окончании времени создаёт эффект способности и запускает кулдауны.
+Переменные:
+•	ability: AbilityResource
+•	slot_index: int
+•	target_data: Dictionary — данные от прицеливания
+•	cast_timer: float
+•	is_channeling: bool
+Методы:
+•	enter() — выбирает ability/slot из command_data или FSM, проверяет возможность каста, устанавливает таймер, тратит ресурсы, запускает анимацию и эмитит EventBus.Combat.ability.cast_started
+•	process(delta) — счётчик каста, при 0 вызывает _finish_cast()
+•	_finish_cast() — создаёт эффект (_spawn_effect), запускает cooldown в AbilityComponent, эмитит cast_completed и возвращает в Idle
+•	_spawn_effect() — выбирает по AbilityType: _spawn_projectile, _spawn_area_effect, _perform_instant_effect, _apply_self_effect
+•	_spawn_projectile() — создаёт снаряд из projectile_scene, передаёт старт/цель/направление и параметры
+•	_spawn_area_effect() — создаёт AreaEffect или fallback сцены, настраивает через setup с DamageData/радиусом/длительностью
+•	_perform_instant_effect() — находит Hitbox у игрока, временно включает monitoring для нанесения урона в ближней зоне
+•	_apply_self_effect() — лечение через HealthComponent
+•	_can_cast() — проверка кулдауна и ресурсов через AbilityComponent
+•	_spend_resources() — тратит ресурсы в AbilityComponent
+•	_get_player_hitbox() — поиск Hitbox среди дочерних узлов
+•	exit() — возвращает анимацию в idle и вызывает super.exit()
+•	get_allowed_transitions() — Idle, Stun
+
+________________________________________
+GameFlags.gd
+Назначение: Простая глобальная система флагов. Хранит Dictionary флагов и ретранслирует изменения через EventBus.Flags.
+Переменные:
+•	flags: Dictionary — имя → значение
+Методы:
+•	_ready() — после одного кадра эмитит flag_changed для всех текущих флагов
+•	set_flag(flag_name, value) — записывает значение и эмитит EventBus.flag_changed (в коде есть потенциальная опечатка, логически должно быть EventBus.Flags.flag_changed)
+•	get_flag(flag_name, default) -> Variant
+•	has_flag(flag_name) -> bool
+•	clear_flag(flag_name) -> void
+•	get_all_flags() -> Dictionary
+
+________________________________________
+RelationshipData.gd
+Назначение: Ресурс, описывающий параметры отношений (доверие, Воля) и флаги персонажа.
+Сигналы:
+•	trust_changed(new_value, delta)
+•	will_changed(new_value, delta)
+Экспорт:
+•	character_flags: Array[String] — флаги состояния персонажа
+•	trust_level: int (-100..100) — с сеттером, эмитящим trust_changed
+•	will_power: int (0..10) — с сеттером, эмитящим will_changed
+•	character_name: String
+•	relationship_description: String
+Методы:
+•	get_trust_percentage() -> float
+•	is_trust_positive()/is_trust_negative()
+•	has_flag/add_flag/remove_flag
+
+________________________________________
+RelationshipManager.gd
+Назначение: Менеджер отношений. Работает поверх RelationshipData, оборачивает операции с доверием/Волей и транслирует изменения в EventBus.Relationship.*.
+Сигналы:
+•	trust_changed, will_changed — внутренние, внешние подписчики должны использовать EventBus
+Переменные:
+•	relationship_data: RelationshipData — текущие игровые данные (копия default_relationship_data)
+•	force_action_trust_penalty: int — штраф доверия за «принуждение»
+•	default_relationship_data: RelationshipData — шаблон
+Методы:
+•	_ready() — создаёт копию RelationshipData, подключает сигналы, эмитит начальные trust_changed/will_changed через EventBus
+•	can_force_action() / use_will(amount) / force_action() — работа с Волей и штрафами доверия
+•	add_will(amount), change_trust(amount, source)
+Боевые модификаторы:
+•	get_combat_modifier("damage_multiplier"/"ability_cost_multiplier") -> float
+•	get_refusal_chance() -> float — шанс отказа подчинённого
+Геттеры и утилиты:
+•	get_trust_level(), get_will_power(), get_trust_status(), has_enough_trust(required_trust)
+Обработчики RelationshipData:
+•	_on_data_trust_changed() — транслирует в EventBus.Relationship.trust_changed, при больших изменениях эмитит trust_effect_applied
+•	_on_data_will_changed() — транслирует в EventBus.Relationship.will_changed и will_used
+Сохранение:
+•	save_data()/load_data() — сохраняют trust_level, will_power и character_flags
+
+________________________________________
+DialogicBridge.gd
+Назначение: Мост между Dialogic 2.0 и игровой логикой. Кэширует данные (доверие, Воля, флаги, уровень игрока, статы) и обрабатывает сигналы из диалогов, транслируя их в EventBus.
+Экспорт:
+•	debug_mode: bool
+Кэш:
+•	_cached_trust_level, _cached_will_power, _cached_flags, _cached_player_level, _cached_player_stats
+Ссылки:
+•	eb = EventBus
+Основное:
+•	_ready() — сбрасывает кэш, подключается к EventBus и Dialogic
+•	_setup_event_bus_connections() — подписка на Relationship.trust_changed/will_changed, Flags.flag_changed, Player.level_up/equipment_changed, Game.dialogue_requested
+•	_setup_dialogic_connections() — подписка на Dialogic.signal_event
+•	_on_transition_to_dialogue_requested(timeline_name) — запуск Dialogic.start(timeline_name)
+Обновление кэша:
+•	_on_trust_changed, _on_will_changed, _on_flag_changed, _on_player_level_up, _on_player_equipment_changed
+Методы для Dialogic expressions:
+•	get_trust_level()/get_will_power()/can_afford_will(amount)/check_flag(flag_name)/get_player_level()/get_player_stat(stat_name)
+Обработка сигналов Dialogic:
+•	_on_dialogic_signal(argument: String) — парсит "тип:значение" и эмитит:
+	- start_battle → EventBus.Dialogue.start_battle
+	- to_combat/to_world/end_dialogue/game_over → соответствующие события Game/Combat.decision
+	- use_will/trust/flag/quest_* → события Dialogue и Flags
+Утилиты:
+•	_reset_to_defaults(), force_dialogue_end(), is_dialogue_active(), get_cache_status()
+
+________________________________________
+DecisionTrigger.gd
+Назначение: Ресурс-триггер для точки решения в бою (по времени или по проценту HP). Используется DecisionSystem/CombatComponent.
+Экспорт:
+•	trigger_type: TriggerType (TIME/HP)
+•	value: float — время (сек) или процент HP
+•	dialogue_timeline: String — timeline диалога для точки решения
+•	one_shot: bool — одноразовый триггер
+Методы:
+•	get_trigger_key() -> String — строковый ключ (например, "time_10.0" или "hp_0.3")
+
+________________________________________
+DecisionManager.gd (DecisionSystem)
+Назначение: Система точек решения в бою. Обрабатывает запросы на активацию, замедляет время, запускает диалоги и применяет последствия выбора.
+Сигналы:
+•	decision_point_triggered(enemy, trigger_type, trigger_data)
+•	decision_made(enemy, choice)
+Экспорт:
+•	debug_mode: bool
+•	decision_cooldown: float — минимальное время между точками
+Переменные:
+•	is_decision_active: bool
+•	current_decision: Dictionary — enemy, trigger_data, time_triggered
+•	last_decision_time: float
+Методы:
+•	_ready()/_setup_connections() — подписка на EventBus.Combat.decision.point_requested и dialogic_made
+•	force_end_decision_point(), is_decision_point_available()
+•	_on_decision_point_requested(enemy, trigger_data) — начало точки решения, если доступно
+•	_trigger_decision_point(enemy, trigger_data) — удаляет врага из группы enemies, запрашивает диалог через EventBus.Game.dialogue_requested, эмитит decision_point_triggered и Game.decision_point_activated
+•	_on_dialogic_decision_made(choice) — когда Dialogic сообщает результат, вызывает _handle_choice
+•	_handle_choice(enemy, choice) — маршрутизирует в _handle_attack_choice/_handle_dialogue_choice/_handle_spare_choice
+•	_handle_attack_choice() — возвращает врага в enemies и режим battle
+•	_handle_dialogue_choice() — эмитит Combat.decision.transition_to_dialogue для CombatManager
+•	_handle_spare_choice() — переводит врага в режим world, помечает "spared" и эмитит Combat.decision.enemy_spared
+•	_exit_decision_point() — сброс флагов, эмитит Game.decision_point_deactivated и Combat.decision.ui_closed
+
+________________________________________
+CombatManager.gd
+Назначение: Автозагрузка, управляющая боями: запуск/завершение, инициализация врагов, переходы в диалоги/мир, расчёт опыта.
+Сигналы:
+•	combat_started(enemies: Array)
+•	combat_ended(victory: bool, experience_gained: int)
+Экспорт:
+•	debug_mode: bool
+•	base_experience_per_enemy: int
+Переменные:
+•	active_enemies: Array
+•	is_combat_active: bool
+•	_enemies_count_at_start: int
+•	_initialized_enemies: Array
+Методы:
+•	_ready()/_setup_connections() — подписка на Combat.started, Dialogue.start_battle, Entity.died (игрок), Combat.decision.transition_to_dialogue/enemy_spared
+•	start_combat(enemies: Array) — инициализирует всех врагов, помечает их meta "in_combat", эмитит локальный и EventBus.Combat.started
+•	end_combat(victory: bool, transition_to_dialogue: bool, dialogue_target: Node) — очищает состояние, рассчитывает опыт, эмитит combat_ended и EventBus.Combat.ended, решает переход (WORLD/DIALOGUE/GAME_OVER)
+Работа с врагами:
+•	_initialize_enemy(enemy) — вызывает enter_combat/change_mode, подписывается на HealthComponent.died
+•	_on_enemy_died(enemy) — удаляет врага из бойцов, эмитит Entity.died, при 0 врагов завершает бой победой
+•	_on_enemy_spared(enemy) — аналогично смерти, но без EventBus.Entity.died
+•	_on_transition_to_dialogue(enemy, timeline) — завершает бой с переходом в диалог
+Диалоги:
+•	_on_dialogue_start_battle(npc_id) — находит NPC по actor_id/display_name и запускает бой
+Утилиты:
+•	_calculate_experience(victory) — считает опыт
+•	_on_entity_died(entity) — если умер игрок, завершает бой поражением
+•	is_in_combat(), get_active_enemies()
+
+________________________________________
+PlayerManager.gd
+Назначение: Автозагрузка-обёртка над компонентами игрока. Даёт централизованный доступ к PlayerData, компонентам здоровья/ресурсов/прогрессии/способностей и кэширует модификаторы от доверия.
+Переменные:
+•	player_data: PlayerData
+•	_trust_damage_multiplier, _trust_cost_multiplier
+•	health_component, stamina_component, mana_component, progression_component, ability_component
+Методы:
+•	_ready() — ждёт один кадр, находит игрока и его компоненты, подбирает PlayerData (из Player или ProgressionComponent.entity_data, либо создаёт новую)
+•	_setup_connections() — подписка на EventBus.Relationship.trust_changed
+•	_on_trust_changed(new_value, delta) — обновляет мультипликаторы урона/стоимости
+API:
+•	add_experience(amount, source)
+•	heal(amount, source)
+•	get_effective_stat(stat_name) — возвращает стат с учётом доверия (если нет ProgressionComponent)
+Сохранение:
+•	save_player_data() — сохраняет назначения способностей через AbilityComponent
+•	load_player_data(data) — восстанавливает данные и обновляет компоненты
+
+________________________________________
+BalanceConfig.gd
+Назначение: Ресурс глобального баланса игры. Содержит настройки доверия, перемещения, боя и прогрессии.
+Секции:
+01. Система доверия:
+•	initial_trust, initial_will, force_action_trust_penalty, trust_damage_multiplier, trust_dodge_chance, min_refusal_chance, max_refusal_chance
+02. Перемещение:
+•	walk_speed, run_speed, acceleration, friction
+03. Бой:
+•	attack_cooldown, dodge_cooldown, max_stamina, stamina_regen, base_physical_defense, base_magic_defense
+04. Прогрессия:
+•	level_exp_multiplier, hp_per_level, mp_per_level, stats_per_level (словарь), base_experience (по типам врагов)
+
+________________________________________
+ActorInteractionComponent.gd
+Назначение: Компонент зоны взаимодействия актора. Следит за входом/выходом игрока в радиус и шлёт сигналы актору.
+Сигналы:
+•	player_entered_range
+•	player_exited_range
+Экспорт:
+•	interaction_radius: float
+Переменные:
+•	_actor: Actor
+•	_player_in_range: bool
+Методы:
+•	setup(actor: Actor) — связывает с актором, настраивает CollisionShape2D и collision_mask для слоя игрока
+•	_on_body_entered/_on_body_exited — обновляют _player_in_range и эмитят сигналы
+•	is_player_in_range() -> bool
+
+________________________________________
+VisionComponent.gd
+Назначение: Компонент «зрения» актора. Обнаруживает цели вокруг и ведёт их список.
+Сигналы:
+•	target_entered(target: Node)
+•	target_exited(target: Node)
+Экспорт:
+•	vision_radius: float
+•	target_groups: Array[String] — группы для отслеживания (по умолчанию player/enemies)
+Переменные:
+•	_actor: Actor
+•	_targets_in_range: Array[Node]
+Методы:
+•	setup(actor: Actor) — настройка CollisionShape2D и слоёв, подписка на body/area_entered/exited
+•	get_closest_target() / get_all_targets()
+•	_add_target/_remove_target — управление списком целей и эмит сигналов
+
+________________________________________
+AIPerception.gd
+Назначение: Компонент восприятия AI. Периодически сканирует позицию/дистанцию до игрока, запоминает последнюю видимую позицию и время последнего обнаружения.
+Экспорт:
+•	sight_range: float
+•	update_interval: float
+Переменные:
+•	actor: Actor
+•	player: Node2D
+•	distance_to_player, player_position, can_see_player, last_seen_position, time_since_last_seen
+•	update_timer
+Методы:
+•	setup(actor: Actor) — находит игрока
+•	update(delta) — периодический вызов для обновления восприятия
+•	_perform_scan() — рассчитывает дистанцию, видимость и память
+API:
+•	is_player_detected() -> bool
+•	get_player_distance() -> float
+•	get_player_position() -> Vector2 — текущая или последняя видимая позиция
+•	has_memory() -> bool — есть ли ещё память о позиции игрока
+
+________________________________________
+AIBrain.gd
+Назначение: Высокоуровневый «мозг» врага. Использует данные AIPerception для принятия решения — двигаться ли к игроку или атаковать.
+Экспорт:
+•	attack_range: float
+•	memory_time: float (зарезервировано)
+Ссылки:
+•	actor: Actor
+•	perception: AIPerception
+Методы:
+•	setup(actor, perception)
+•	should_move_to_player() -> bool — true, если игрок обнаружен и находится дальше attack_range
+•	should_attack() -> bool — true, если игрок близко и в зоне обнаружения
+•	get_target_position() -> Vector2 — позиция, к которой стоит двигаться
+•	get_attack_range() -> float
+
+________________________________________
+AIController.gd
+Назначение: Простая реализация контроллера движения для врага. Управляет ACTOR.velocity в зависимости от состояния (IDLE/CHASE).
+Экспорт:
+•	move_speed: float
+Переменные:
+•	_actor: Actor
+•	_state: State (IDLE/CHASE)
+•	_target: Node
+•	_is_active: bool
+Методы:
+•	setup(actor: Actor)
+•	set_active(active: bool) — включает/выключает process/physics_process, сбрасывает состояние
+•	_physics_process(delta) — если активен и в режиме BATTLE, ищет цель и вызывает _process_idle/_process_chase
+•	_find_target() — выбирает первого игрока из группы "player"
+•	_process_idle/_process_chase — затухание скорости или движение к цели
+
+________________________________________
+AICommand.gd
+Назначение: Шаблонный узел для команд AI (пока заглушка от Godot-шаблона). Не содержит логики и может быть удалён или расширен позже.
+Методы:
+•	_ready(), _process(delta) — пустые
+
+________________________________________
+AnimationComponent.gd
+Назначение: Компонент анимаций для актора. Оборачивает AnimationPlayer и Sprite2D, хранит текущее направление и упрощает проигрывание анимаций.
+Переменные:
+•	actor: Node
+•	sprite: Sprite2D
+•	animation_player: AnimationPlayer
+•	current_animation: String
+•	last_facing_direction: String
+Методы:
+•	setup(actor: Node) — ищет Sprite2D/AnimationPlayer
+•	play_animation(anim_name, force) -> bool — безопасное проигрывание анимации
+•	update_facing_direction(velocity: Vector2) -> String — переводит в один из восьми направлений
+•	get_cardinal_direction() -> String — up/down/left/right
+•	play_movement_animation(velocity) — выбор walk/idle в зависимости от скорости
+
+________________________________________
+PlayerInteractionDetector.gd
+Назначение: Детектор взаимодействий вокруг игрока. Через Area2D отмечает, какие акторы в зоне интерракции.
+Методы:
+•	_ready() — подписка на body_entered/exited
+•	_on_body_entered(body) — если body — Actor, вызывает body.set_player_in_range(true)
+•	_on_body_exited(body) — аналогично, но с false
+
+
+Дисклеймер: Данные скрипты --- сокращённое представление архитектуры проекта, созданное для быстрого ознакомления ИИ с общей структурой. Фактическая реализация может отличаться, файлы постоянно обновляются. Если для выполнения задачи требуется точное описание конкретного скрипта или его методов --- явно запроси уточнение.

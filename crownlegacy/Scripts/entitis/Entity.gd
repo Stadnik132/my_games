@@ -126,6 +126,11 @@ func _on_interaction_ended() -> void:
 	"""Вызывается при завершении взаимодействия"""
 	EventBus.Entity.interaction_ended.emit(self)
 
+func get_horizontal_facing_direction() -> Vector2:
+	"""Виртуальный метод - возвращает горизонтальное направление (вправо/влево).
+	Должен быть переопределён в наследниках (Player, Actor)"""
+	return Vector2.RIGHT  # значение по умолчанию
+
 # ==================== СОХРАНЕНИЕ ====================
 func get_save_data() -> Dictionary:
 	"""Сохранить состояние сущности"""

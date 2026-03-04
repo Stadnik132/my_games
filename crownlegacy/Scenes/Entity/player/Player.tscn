@@ -24,6 +24,16 @@
 [ext_resource type="Script" uid="uid://bxganyhns4nhp" path="res://Scripts/entitis/HitboxComponent.gd" id="21_1ke25"]
 [ext_resource type="PackedScene" uid="uid://chn4kenaj7cp3" path="res://Scenes/Entity/Hitbox.tscn" id="22_p5au2"]
 
+[sub_resource type="Resource" id="Resource_fc8im"]
+script = ExtResource("17_r5m3b")
+base_stats = {
+"agility": 5,
+"attack": 1,
+"defense": 5,
+"speed": 5
+}
+metadata/_custom_type_script = "uid://rix2axybkxut"
+
 [sub_resource type="Animation" id="Animation_gpg7s"]
 length = 0.001
 tracks/0/type = "value"
@@ -198,27 +208,14 @@ metadata/_custom_type_script = "uid://todvfrjyk52p"
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_kk05o"]
 radius = 12.0
-height = 46.0
-
-[sub_resource type="Resource" id="Resource_0otme"]
-script = ExtResource("17_r5m3b")
-metadata/_custom_type_script = "uid://rix2axybkxut"
-
-[sub_resource type="Resource" id="Resource_sy2hw"]
-script = ExtResource("17_r5m3b")
-metadata/_custom_type_script = "uid://rix2axybkxut"
-
-[sub_resource type="Resource" id="Resource_cba8u"]
-script = ExtResource("17_r5m3b")
-metadata/_custom_type_script = "uid://rix2axybkxut"
-
-[sub_resource type="Resource" id="Resource_iqiq2"]
-script = ExtResource("17_r5m3b")
-metadata/_custom_type_script = "uid://rix2axybkxut"
+height = 50.0
 
 [node name="Player" type="CharacterBody2D" unique_id=591630021 groups=["player"]]
-disable_mode = 1
+collision_layer = 2
+collision_mask = 5
+motion_mode = 1
 script = ExtResource("1_sy2hw")
+player_data = SubResource("Resource_fc8im")
 
 [node name="PlayerController" type="Node" parent="." unique_id=1081099668]
 script = ExtResource("1_jnk8a")
@@ -234,12 +231,11 @@ zoom = Vector2(2, 2)
 libraries/ = SubResource("AnimationLibrary_r5va5")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2009194619]
-visible = false
 position = Vector2(0, 3)
 shape = SubResource("CapsuleShape2D_gpg7s")
 
 [node name="InteractionArea" type="Area2D" parent="." unique_id=1010194255]
-collision_layer = 2
+collision_layer = 0
 collision_mask = 2
 monitorable = false
 script = ExtResource("3_gpg7s")
@@ -249,7 +245,7 @@ visible = false
 position = Vector2(0.5, 0.5)
 shape = SubResource("CircleShape2D_gpg7s")
 
-[node name="CombatComponent" type="Node" parent="." unique_id=1755444022 node_paths=PackedStringArray("owner_entity", "stats_provider", "ability_component", "stamina_component")]
+[node name="PlayerCombatComponent" type="Node" parent="." unique_id=1755444022 node_paths=PackedStringArray("owner_entity", "stats_provider", "ability_component", "stamina_component")]
 script = ExtResource("5_iqiq2")
 combat_config = SubResource("Resource_c1ec4")
 owner_entity = NodePath("..")
@@ -257,37 +253,40 @@ stats_provider = NodePath("../ProgressionComponent")
 ability_component = NodePath("AbilityComponent")
 stamina_component = NodePath("../StaminaComponent")
 
-[node name="EntityCombatFSM" type="Node" parent="CombatComponent" unique_id=1522005388]
+[node name="EntityCombatFSM" type="Node" parent="PlayerCombatComponent" unique_id=1522005388]
 script = ExtResource("6_8hdke")
 
-[node name="IdleState" type="Node" parent="CombatComponent/EntityCombatFSM" unique_id=393093788]
+[node name="IdleState" type="Node" parent="PlayerCombatComponent/EntityCombatFSM" unique_id=393093788]
 script = ExtResource("7_3tjkw")
 
-[node name="WalkState" type="Node" parent="CombatComponent/EntityCombatFSM" unique_id=1666216293]
+[node name="WalkState" type="Node" parent="PlayerCombatComponent/EntityCombatFSM" unique_id=1666216293]
 script = ExtResource("13_kk05o")
 
-[node name="AttackState" type="Node" parent="CombatComponent/EntityCombatFSM" unique_id=654976383]
+[node name="AttackState" type="Node" parent="PlayerCombatComponent/EntityCombatFSM" unique_id=654976383]
 script = ExtResource("8_kk05o")
 
-[node name="DodgeState" type="Node" parent="CombatComponent/EntityCombatFSM" unique_id=1632555998]
+[node name="DodgeState" type="Node" parent="PlayerCombatComponent/EntityCombatFSM" unique_id=1632555998]
 script = ExtResource("9_irnrt")
 
-[node name="BlockState" type="Node" parent="CombatComponent/EntityCombatFSM" unique_id=388277455]
+[node name="BlockState" type="Node" parent="PlayerCombatComponent/EntityCombatFSM" unique_id=388277455]
 script = ExtResource("10_r5m3b")
 
-[node name="AimState" type="Node" parent="CombatComponent/EntityCombatFSM" unique_id=911304856]
+[node name="AimState" type="Node" parent="PlayerCombatComponent/EntityCombatFSM" unique_id=911304856]
 script = ExtResource("11_0otme")
 
-[node name="CastState" type="Node" parent="CombatComponent/EntityCombatFSM" unique_id=250965523]
+[node name="CastState" type="Node" parent="PlayerCombatComponent/EntityCombatFSM" unique_id=250965523]
 script = ExtResource("12_sy2hw")
 
-[node name="StunState" type="Node" parent="CombatComponent/EntityCombatFSM" unique_id=1920234075]
+[node name="StunState" type="Node" parent="PlayerCombatComponent/EntityCombatFSM" unique_id=1920234075]
 script = ExtResource("14_irnrt")
 
-[node name="AbilityComponent" type="Node" parent="CombatComponent" unique_id=289853833]
+[node name="AbilityComponent" type="Node" parent="PlayerCombatComponent" unique_id=289853833]
 script = ExtResource("16_iqiq2")
 
 [node name="Hurtbox" type="Area2D" parent="." unique_id=123066687]
+visible = false
+collision_layer = 0
+collision_mask = 0
 script = ExtResource("16_r5m3b")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox" unique_id=1412551780]
@@ -295,20 +294,20 @@ shape = SubResource("CapsuleShape2D_kk05o")
 
 [node name="HealthComponent" type="Node" parent="." unique_id=1123221362]
 script = ExtResource("16_kk05o")
-entity_data = SubResource("Resource_0otme")
+entity_data = SubResource("Resource_fc8im")
 
 [node name="ManaComponent" type="Node" parent="." unique_id=1260620814]
 script = ExtResource("17_irnrt")
-entity_data = SubResource("Resource_sy2hw")
+entity_data = SubResource("Resource_fc8im")
 
 [node name="StaminaComponent" type="Node" parent="." unique_id=1096230619]
 script = ExtResource("17_irnrt")
 resource_type = 1
-entity_data = SubResource("Resource_cba8u")
+entity_data = SubResource("Resource_fc8im")
 
 [node name="ProgressionComponent" type="Node" parent="." unique_id=1183340671]
 script = ExtResource("20_cba8u")
-entity_data = SubResource("Resource_iqiq2")
+entity_data = SubResource("Resource_fc8im")
 
 [node name="HitboxComponent" type="Node" parent="." unique_id=603886526]
 script = ExtResource("21_1ke25")

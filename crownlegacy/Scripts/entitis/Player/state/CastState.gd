@@ -123,13 +123,20 @@ func _spawn_area_effect() -> void:
 	get_tree().current_scene.add_child(area_effect)
 	area_effect.global_position = target_pos
 	
+	# У эффекта области свой setup, не связанный с AimingVisual
 	if area_effect.has_method("setup"):
-		area_effect.setup({
-			"caster": entity,
-			"damage_data": ability.get_damage_data(),
-			"radius": ability.effect_radius,
-			"duration": ability.effect_duration
-		})
+		# Проверяем, какой именно метод ожидается
+		if area_effect is AreaEffect:
+			# Для AreaEffect используем словарь
+			area_effect.setup({
+				"caster": entity,
+				"damage_data": ability.get_damage_data(),
+				"radius": ability.effect_radius,
+				"duration": ability.effect_duration
+			})
+		else:
+			# Fallback
+			area_effect.setup(ability, entity.global_position)
 
 func _perform_instant_effect() -> void:
 	print("PlayerCastState: мгновенный эффект")

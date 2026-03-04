@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://dnhhhjwdtye3o"]
 
 [ext_resource type="Texture2D" uid="uid://cabygo0kafipr" path="res://icon.svg" id="1_qnawv"]
-[ext_resource type="Script" uid="uid://ob8xbt7ys4rc" path="res://Scripts/core/battle/Ability/aiming_visuals/projectile_aiming_visual.gd" id="1_ug6vf"]
+[ext_resource type="Script" uid="uid://1reswx77chic" path="res://Scripts/Ability/AbilityVisual/ProjectileAimingVisual.gd" id="1_ug6vf"]
 [ext_resource type="Texture2D" uid="uid://5qqbbsii4eij" path="res://Assets/UI/Exclamation mark.png" id="2_ubjma"]
 
 [node name="ProjectileAimingVisual" type="Node2D" unique_id=1133895707]

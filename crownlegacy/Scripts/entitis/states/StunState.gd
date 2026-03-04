@@ -12,7 +12,7 @@ func enter() -> void:
 	set_battle_velocity(Vector2.ZERO)
 	
 	# Анимация
-	EventBus.Animation.requested.emit(entity, "stun", stun_duration)
+	EventBus.Animations.requested.emit(entity, "stun", stun_duration)
 	
 	# Общий сигнал о начале стана
 	EventBus.Combat.entity_stunned.emit(entity, true)
@@ -30,7 +30,7 @@ func physics_process(_delta: float) -> void:
 	set_battle_velocity(Vector2.ZERO)
 	apply_movement()
 
-func handle_command(command: String, data: Dictionary = {}) -> void:
+func handle_command(_command: String, _data: Dictionary = {}) -> void:
 	# В стане игнорируем все команды
 	pass
 

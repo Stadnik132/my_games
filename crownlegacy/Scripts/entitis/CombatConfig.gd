@@ -17,3 +17,4 @@ class_name CombatConfig
 @export var block_base_stamina_cost: int = 5
 @export var block_stamina_damage_factor: float = 0.2
 @export var stun_duration: float = 0.5
+@export var attack_hitbox_offset: float = 15.0  # дистанция спавна хитбокса

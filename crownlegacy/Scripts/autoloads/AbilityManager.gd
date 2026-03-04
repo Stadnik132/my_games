@@ -12,7 +12,7 @@ var unlocked_abilities: Array[String] = []
 
 # ==================== ИНИЦИАЛИЗАЦИЯ ====================
 func _ready():
-	load_abilities_from_json("res://Scripts/core/battle/Ability/abilities.json")
+	load_abilities_from_json("res://Scripts/Ability/abilities.json")
 	
 	# ВРЕМЕННО: разблокировать все способности для теста
 	# После отладки заменить на нормальную систему разблокировки

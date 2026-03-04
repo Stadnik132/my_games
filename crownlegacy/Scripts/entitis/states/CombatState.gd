@@ -52,3 +52,26 @@ func set_battle_velocity(v: Vector2) -> void:
 func apply_movement() -> void:
 	if entity is CharacterBody2D:
 		entity.move_and_slide()
+
+# CombatState.gd
+func get_attack_direction() -> Vector2:
+	
+	# 1. Пробуем получить от entity
+	if entity and entity.has_method("get_horizontal_facing_direction"):
+		var dir = entity.get_horizontal_facing_direction()
+		if dir != Vector2.ZERO:
+			return dir
+	
+	# 2. Пробуем из последнего движения FSM
+	if fsm and fsm.last_movement_direction.length() > 0:
+		if abs(fsm.last_movement_direction.x) > 0:
+			var dir = Vector2(sign(fsm.last_movement_direction.x), 0)
+			return dir
+	
+	# 3. Пробуем из последнего уворота
+	if fsm and fsm.last_dodge_direction.length() > 0:
+		if abs(fsm.last_dodge_direction.x) > 0:
+			var dir = Vector2(sign(fsm.last_dodge_direction.x), 0)
+			return dir
+	
+	return Vector2.RIGHT

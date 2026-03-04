@@ -8,6 +8,7 @@ var color: Color = Color(1, 0, 0, 0.3)
 @onready var circle_sprite: Sprite2D = $CircleSprite
 @onready var blocker: Sprite2D = $Blocker
 
+
 func _ready_setup() -> void:
 	if ability:
 		radius = ability.effect_radius

@@ -33,6 +33,9 @@ func _apply_damage(target: Node) -> void:
 	# Останавливаем движение
 	set_physics_process(false)
 	
+	# Наносим урон через родительский метод
+	super._apply_damage(target)
+	
 	# ВАЖНО: Наносим урон СРАЗУ при попадании, до анимации
 	if target and target.has_method("apply_combat_damage_data"):
 		target.apply_combat_damage_data(damage_data, caster)

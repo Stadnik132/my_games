@@ -160,7 +160,7 @@ func cast_ability(slot_index: int, target_position: Vector2 = Vector2.ZERO) -> b
 	
 	# Анимация каста (если есть)
 	if ability.cast_animation != "" and entity:
-		EventBus.Animation.requested.emit(entity, ability.cast_animation, ability.cast_time)
+		EventBus.Animations.requested.emit(entity, ability.cast_animation, ability.cast_time)
 	
 	# Применение эффекта
 	_apply_ability_effect(ability, target_position)

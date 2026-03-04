@@ -34,11 +34,13 @@ func setup(params: Dictionary) -> void:
 	collision_layer = 0
 	
 	if caster and caster.is_in_group("player"):
-		collision_mask = 4
-		print("Projectile: стреляет игрок, ищем врагов (слой 4)")
+		collision_layer = 4  # 👈 ВАЖНО! Быть на слое 3
+		collision_mask = 4   # искать слой 3 (хертбоксы врагов)
+		print("Projectile: игрок, на слое 4, ищу слой 4")
 	elif caster and caster.is_in_group("enemies"):
-		collision_mask = 2
-		print("Projectile: стреляет враг, ищем игрока (слой 2)")
+		collision_layer = 2  # 👈 ВАЖНО! Быть на слое 2
+		collision_mask = 2   # искать слой 2 (хертбокс игрока)
+		print("Projectile: враг, на слое 2, ищу слой 2")
 	else:
 		collision_mask = 0
 		print("Projectile: неизвестный стрелок, никого не ищем")
@@ -78,5 +80,14 @@ func _on_area_entered(area: Area2D) -> void:
 		queue_free()
 
 func _apply_damage(target: Node) -> void:
-	if target and target.has_method("apply_combat_damage_data"):
-		target.apply_combat_damage_data(damage_data, caster)
+	if not target or not damage_data:
+		return
+	
+	# Ищем Hurtbox у цели
+	var hurtbox = target.get_node_or_null("Hurtbox") as Hurtbox
+	if hurtbox:
+		# Испускаем сигнал напрямую в хертбокс
+		hurtbox.damage_taken.emit(damage_data, caster)
+		print("Projectile: урон нанесён через hurtbox")
+	else:
+		print("Projectile: у цели нет Hurtbox!")

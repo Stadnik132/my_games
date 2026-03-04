@@ -39,7 +39,8 @@ directories/dch_directory={
 }
 directories/dtl_directory={
 "enemy_surrender": "res://dialogic/timelines/enemy_surrender.dtl",
-"guard_encounter": "res://dialogic/timelines/guard_encounter.dtl"
+"guard_encounter": "res://dialogic/timelines/guard_encounter.dtl",
+"guard_timeline 2": "res://guard_timeline 2.dtl"
 }
 layout/style_directory={}
 glossary/default_case_sensitive=true
@@ -253,6 +254,12 @@ ability_4={
 [internationalization]
 
 locale/test="ru"
+
+[layer_names]
+
+2d_physics/layer_1="Стены"
+2d_physics/layer_2="Игрок"
+2d_physics/layer_3="Актёр"
 
 [rendering]
 

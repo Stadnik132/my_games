@@ -7,6 +7,14 @@ class_name EntityData
 @export var experience: int = 0
 @export var experience_to_next_level: int = 100
 
+# Базовые характеристики (расширяемый словарь)
+@export var base_stats: Dictionary = {
+	"attack": 5,
+	"defense": 5,
+	"speed": 5,
+	"agility": 5
+}
+
 # Здоровье
 @export_range(1, 9999) var max_hp: int = 100
 @export_range(0, 9999) var current_hp: int = 100
@@ -21,13 +29,7 @@ class_name EntityData
 @export_range(0, 9999) var current_stamina: int = 100
 @export var stamina_regen_per_second: float = 0.0
 
-# Базовые характеристики (расширяемый словарь)
-@export var base_stats: Dictionary = {
-	"attack": 5,
-	"defense": 5,
-	"speed": 5,
-	"agility": 5
-}
+
 
 # Активные эффекты (баффы/дебаффы)
 @export var active_effects: Array[Dictionary] = []

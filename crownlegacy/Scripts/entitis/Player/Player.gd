@@ -7,6 +7,7 @@ class_name Player
 @export var sprint_speed: float = 350.0
 @export var acceleration: float = 15.0
 @export var friction: float = 20.0
+var last_horizontal_direction: Vector2 = Vector2.RIGHT
 
 # ==================== КОНСТАНТЫ СОСТОЯНИЙ ====================
 const STATE_WORLD = 0
@@ -20,7 +21,16 @@ const STATE_GAME_OVER = 5
 @onready var animation_player: AnimationPlayer = $AnimationPlayer
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var controller: PlayerController = $PlayerController
-@onready var combat_component: CombatComponent = $CombatComponent
+@onready var combat_component: PlayerCombatComponent = $PlayerCombatComponent
+@export var player_data: PlayerData
+
+# Совместимость для кода, который ожидает свойство `entity_data` у Entity.
+# (например `AbilityComponent` делает `entity.get("entity_data")`)
+var entity_data: EntityData:
+	get:
+		return player_data
+	set(value):
+		player_data = value as PlayerData
 
 # ==================== ПЕРЕМЕННЫЕ СОСТОЯНИЯ ====================
 var current_animation: String = "idle_down"
@@ -84,9 +94,21 @@ func _handle_movement(input_vector: Vector2, delta: float) -> void:
 	var target_velocity = input_vector * target_speed
 	velocity = velocity.lerp(target_velocity, acceleration * delta)
 	
+	if abs(input_vector.x) > 0:
+		last_horizontal_direction = Vector2(sign(input_vector.x), 0)
+	
 	var anim_direction = _get_animation_direction(input_vector)
 	_play_walk_animation(anim_direction)
 	current_animation = "walk_" + anim_direction
+
+func get_horizontal_facing_direction() -> Vector2:
+	"""Возвращает последнее горизонтальное направление игрока"""
+	# Если есть движение, используем его
+	if abs(velocity.x) > 10:
+		return Vector2(sign(velocity.x), 0)
+	
+	# Иначе возвращаем последнее сохранённое
+	return last_horizontal_direction
 
 func _handle_stop_movement(delta: float) -> void:
 	velocity = velocity.lerp(Vector2.ZERO, friction * delta)
@@ -130,7 +152,7 @@ func _play_idle_animation() -> void:
 		animation_player.play(idle_name)
 
 # ==================== ОБРАБОТЧИКИ СОСТОЯНИЙ ====================
-func _on_game_state_changed(new_state: int, old_state: int) -> void:
+func _on_game_state_changed(new_state: int, _old_state: int) -> void:
 	# Сбрасываем флаги
 	_can_move_in_world = false
 	_in_combat_mode = false
@@ -140,6 +162,7 @@ func _on_game_state_changed(new_state: int, old_state: int) -> void:
 		STATE_WORLD:
 			_can_move_in_world = true
 			interaction_locked = false
+			_in_combat_mode = false
 			print_debug("Player: WORLD")
 		
 		STATE_DIALOGUE:
@@ -160,7 +183,7 @@ func _on_game_state_changed(new_state: int, old_state: int) -> void:
 func _on_level_up(new_level: int, stat_increases: Dictionary) -> void:
 	EventBus.Player.level_up.emit(new_level, stat_increases)
 
-func _on_experience_gained(amount: int, new_total: int, next_level: int) -> void:
+func _on_experience_gained(amount: int, new_total: int, _next_level: int) -> void:
 	EventBus.Player.experience_gained.emit(amount, new_total)
 
 # ==================== ПУБЛИЧНЫЕ МЕТОДЫ ====================
@@ -171,11 +194,14 @@ func force_stop() -> void:
 	movement_locked = true
 	interaction_locked = true
 
-func teleport(new_position: Vector2, fade_effect: bool = true) -> void:
+func teleport(new_position: Vector2, _fade_effect: bool = true) -> void:
 	print_debug("Player: телепортация в ", new_position)
 	global_position = new_position
 	velocity = Vector2.ZERO
 	_play_idle_animation()
+
+func set_last_horizontal_direction(dir: Vector2) -> void:
+	last_horizontal_direction = dir
 
 # ==================== СОХРАНЕНИЕ ====================
 func get_save_data() -> Dictionary:

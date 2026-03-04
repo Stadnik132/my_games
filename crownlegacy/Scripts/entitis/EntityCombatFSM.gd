@@ -130,3 +130,11 @@ func is_in_state(state_name: String) -> bool:
 
 func get_state_object(state_name: String) -> CombatState:
 	return states.get(state_name)
+
+func update_facing_direction(direction: Vector2) -> void:
+	"""Обновляет направление взгляда для атак"""
+	if abs(direction.x) > 0:
+		last_movement_direction = direction
+		# Важно: сохраняем горизонтальное направление
+		if entity and entity.has_method("set_last_horizontal_direction"):
+			entity.set_last_horizontal_direction(Vector2(sign(direction.x), 0))

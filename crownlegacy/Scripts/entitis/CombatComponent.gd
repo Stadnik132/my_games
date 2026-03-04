@@ -18,6 +18,22 @@ func _ready() -> void:
 	_find_components()
 	_setup_fsm()
 	_setup_connections()
+	
+	# AbilityComponent зависит от компонентов сущности (HP/MP/статы),
+	# которые заполняются в Entity._ready() (у родителя). Поэтому инициализируем
+	# способности отложенно, когда владелец точно "готов".
+	call_deferred("_late_setup_ability_component")
+
+func _late_setup_ability_component() -> void:
+	if not owner_entity or not ability_component:
+		return
+	
+	# Не переинициализируем, если уже настроено на этого владельца
+	if "entity" in ability_component and ability_component.entity == owner_entity:
+		return
+	
+	if ability_component.has_method("setup"):
+		ability_component.setup(owner_entity)
 
 func _find_components() -> void:
 	fsm = get_node_or_null("EntityCombatFSM") as EntityCombatFSM
@@ -42,7 +58,6 @@ func _setup_fsm() -> void:
 func _setup_connections() -> void:
 	EventBus.Game.state_changed.connect(_on_game_state_changed)
 	
-	# Hurtbox
 	var hurtbox = owner_entity.get_node_or_null("Hurtbox")
 	if hurtbox:
 		hurtbox.damage_taken.connect(_on_hurtbox_damage)
@@ -174,7 +189,7 @@ func _calculate_block_stamina_cost(incoming_damage: int) -> int:
 	return base_cost + damage_cost
 
 # ==================== УПРАВЛЕНИЕ FSM ====================
-func _on_game_state_changed(new_state: int, old_state: int) -> void:
+func _on_game_state_changed(new_state: int, _old_state: int) -> void:
 	var is_battle = (new_state == 2)  # STATE_BATTLE
 	
 	if fsm:

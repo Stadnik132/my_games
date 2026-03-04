@@ -44,6 +44,7 @@ func physics_process(_delta: float) -> void:
 	apply_movement()
 
 func _spawn_attack_hitbox() -> void:
+	
 	if not hitbox_component:
 		return
 	
@@ -52,14 +53,10 @@ func _spawn_attack_hitbox() -> void:
 	var idx = mini(combo_step - 1, combo_multipliers.size() - 1)
 	var multiplier = combo_multipliers[idx] if idx >= 0 else 1.0
 	var final_damage = int(base_damage * multiplier)
-	
-	var direction = fsm.last_movement_direction
-	if direction == Vector2.ZERO:
-		direction = fsm.last_dodge_direction
-		if direction == Vector2.ZERO:
-			direction = Vector2.DOWN
-	
-	var spawn_pos = entity.global_position + direction * 50.0
+	var direction = get_attack_direction()
+		# Получаем дистанцию спавна из конфига
+	var offset = combat_config.attack_hitbox_offset if combat_config else 15.0
+	var spawn_pos = entity.global_position + direction * offset
 	
 	hitbox_component.spawn_attack_hitbox(
 		spawn_pos,

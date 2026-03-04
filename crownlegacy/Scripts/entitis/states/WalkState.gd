@@ -5,6 +5,7 @@ func physics_process(delta: float) -> void:
 	var input_vector = _get_input_vector()
 	
 	if input_vector != Vector2.ZERO:
+		fsm.update_facing_direction(input_vector)
 		# Двигаемся
 		_handle_movement(input_vector, delta)
 		

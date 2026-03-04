@@ -2,10 +2,14 @@
 
 [ext_resource type="Script" uid="uid://boukduxe4xvol" path="res://Scripts/entitis/Hitbox.gd" id="1_wb2ku"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_kvr1y"]
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_wb2ku"]
+radius = 14.0
+height = 56.0
 
 [node name="Hitbox" type="Area2D" unique_id=61864255]
+collision_layer = 0
+collision_mask = 0
 script = ExtResource("1_wb2ku")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1209008589]
-shape = SubResource("RectangleShape2D_kvr1y")
+shape = SubResource("CapsuleShape2D_wb2ku")

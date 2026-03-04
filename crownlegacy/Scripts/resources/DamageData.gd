@@ -12,7 +12,7 @@ enum DamageType {
 # === ЭКСПОРТИРУЕМЫЕ ПАРАМЕТРЫ ===
 @export_category("Основные параметры")
 @export var damage_type: DamageType = DamageType.PHYSICAL
-@export_range(1, 999) var amount: int = 10
+@export_range(1, 999) var amount: int = 50
 @export var is_critical: bool = false
 var source: Node = null
 

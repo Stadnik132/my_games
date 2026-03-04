@@ -104,9 +104,9 @@ func _initialize_enemy(enemy: Node) -> void:
 		enemy.enter_combat(self)
 	
 	# Подписываемся на смерть
-	var combat_comp = enemy.get_node_or_null("CombatComponent")
-	if combat_comp and combat_comp.has_signal("died"):
-		combat_comp.died.connect(_on_enemy_died.bind(enemy))
+	var health_comp = enemy.get_node_or_null("HealthComponent")
+	if health_comp and health_comp.has_signal("died"):
+		health_comp.died.connect(_on_enemy_died.bind(enemy))
 	
 	# Помечаем
 	enemy.set_meta("in_combat", true)

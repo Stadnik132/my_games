@@ -1,4 +1,3 @@
-# DialogicBridge.gd
 extends Node
 
 # ==================== НАСТРОЙКИ ====================
@@ -46,7 +45,6 @@ func _setup_event_bus_connections() -> void:
 	# === Диалоги ===
 	eb.Game.dialogue_requested.connect(_on_transition_to_dialogue_requested)
 
-	
 	if debug_mode:
 		print_debug("DialogicBridge: подключено к EventBus для кэширования данных")
 
@@ -63,7 +61,6 @@ func _on_transition_to_dialogue_requested(timeline_name: String = "") -> void:
 		push_warning("DialogicBridge: timeline_name пустой!")
 		return
 	
-	
 	# Запускаем Dialogic
 	print_debug("DialogicBridge: запускаю Dialogic с timeline '", timeline_name, "'")
 	Dialogic.start(timeline_name)
@@ -79,7 +76,6 @@ func _setup_dialogic_connections() -> void:
 		Dialogic.signal_event.connect(_on_dialogic_signal)
 	else:
 		push_warning("Dialogic.signal_event не найден")
-
 
 # ==================== ОБРАБОТЧИКИ EVENTBUS (ОБНОВЛЕНИЕ КЭША) ====================
 func _on_trust_changed(new_value: int, delta: int) -> void:
@@ -115,7 +111,6 @@ func _on_player_equipment_changed(slot: String, old_item: String, new_item: Stri
 	"""При изменении снаряжения (можно обновить кэш статов)"""
 	if debug_mode:
 		print_debug("DialogicBridge: снаряжение изменилось: ", slot, " ", old_item, " -> ", new_item)
-	# Здесь можно обновить кэш характеристик, если нужно
 
 # ==================== МЕТОДЫ ДЛЯ DIALOGIC EXPRESSIONS (СИНХРОННЫЕ) ====================
 func get_trust_level() -> int:
@@ -143,18 +138,6 @@ func get_player_stat(stat_name: String) -> int:
 	return _cached_player_stats.get(stat_name, 0)
 
 # ==================== ОБРАБОТЧИКИ DIALOGIC ====================
-func _on_dialogue_requested(timeline_name: String, npc_id: String) -> void:
-	"""Обработчик запроса диалога от NPC через EventBus"""
-	if debug_mode:
-		print_debug("DialogicBridge: запрос диалога '", timeline_name, "' от NPC '", npc_id, "'")
-	
-	if not Dialogic:
-		push_error("Dialogic не доступен для запроса от NPC!")
-		return
-		
-	# Запускаем Dialogic
-	Dialogic.start(timeline_name)
-
 func _on_dialogic_signal(argument: String) -> void:
 	"""Обрабатывает сигналы из timeline Dialogic"""
 	if debug_mode:
@@ -177,45 +160,38 @@ func _on_dialogic_signal(argument: String) -> void:
 			EventBus.Combat.decision.dialogic_made.emit("to_combat")
 		
 		"to_world":
-			# Вернуться в мир после боя/диалога
 			if debug_mode:
 				print_debug("DialogicBridge: запрос перехода в WORLD")
 			EventBus.Game.world_requested.emit()
 			EventBus.Combat.decision.dialogic_made.emit("to_world")
 		
 		"end_dialogue":
-			# Вернуться в мир после диалога
 			if debug_mode:
 				print_debug("DialogicBridge: запрос окончания диалога")
 			EventBus.Game.world_requested.emit()
-		
+			EventBus.Dialogue.ended.emit()
 		
 		"game_over":
-			# Конец игры
 			if debug_mode:
 				print_debug("DialogicBridge: запрос GAME_OVER")
 			EventBus.Game.game_over_requested.emit()
 		
 		"use_will":
-			# Использовать Волю
 			var amount = int(signal_value) if signal_value.is_valid_int() else 1
 			EventBus.Dialogue.use_will.emit(amount)
 			if debug_mode:
 				print_debug("Диалог запросил использование Воли: ", amount)
 		
 		"trust":
-			# Изменить доверие
 			if signal_value.is_valid_int():
 				var amount = int(signal_value)
 				EventBus.Dialogue.change_trust.emit(amount)
 		
 		"flag":
-			# Установить флаг
 			if signal_value:
 				EventBus.Dialogue.set_flag.emit(signal_value, true)
 		
 		"quest":
-			# Обновить квест
 			if signal_value:
 				var quest_parts = signal_value.split(",", true, 1)
 				if quest_parts.size() == 2:
@@ -232,7 +208,6 @@ func _on_dialogic_signal(argument: String) -> void:
 				if amount_str.is_valid_int():
 					var amount = int(amount_str)
 					EventBus.Dialogue.change_trust.emit(amount)
-
 
 # ==================== УТИЛИТЫ ====================
 func _reset_to_defaults() -> void:
@@ -265,7 +240,6 @@ func force_dialogue_end() -> void:
 
 func is_dialogue_active() -> bool:
 	"""Проверяет, активен ли диалог в данный момент"""
-	# Простая проверка - ищем CanvasLayer Dialogic
 	for node in get_tree().root.get_children():
 		if node is CanvasLayer and "Dialogic" in node.name:
 			return true

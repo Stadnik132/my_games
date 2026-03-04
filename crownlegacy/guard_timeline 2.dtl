@@ -1,0 +1,3 @@
+join Guard center
+Guard: Че тебе надо?
+[signal arg="end_dialogue"]
