@@ -11,16 +11,16 @@ signal decision_made(enemy: Node, choice: String)
 # ==================== ПЕРЕМЕННЫЕ СОСТОЯНИЯ ====================
 var is_decision_active: bool = false
 var current_decision: Dictionary = {}  # {enemy, trigger_data, time}
-var last_decision_time: float = 0.0
+var last_decision_time: float = -9999.0  # Инициализируем отрицательным для первого срабатывания
 
 # ==================== ИНИЦИАЛИЗАЦИЯ ====================
 func _ready() -> void:
 	_setup_connections()
 	if debug_mode:
-		print_debug("DecisionSystem загружен")
+		print_debug("DecisionSystem загружен, last_decision_time = ", last_decision_time)
 
 func _setup_connections() -> void:
-	# Слушаем запросы на точки решения от CombatComponent
+	# Слушаем запросы на точки решения от DecisionTriggerComponent
 	EventBus.Combat.decision.point_requested.connect(_on_decision_point_requested)
 	# Слушаем выбор из диалога
 	EventBus.Combat.decision.dialogic_made.connect(_on_dialogic_decision_made)
@@ -34,29 +34,46 @@ func force_end_decision_point() -> void:
 func is_decision_point_available() -> bool:
 	"""Можно ли активировать новую точку решения?"""
 	if is_decision_active:
+		if debug_mode:
+			print_debug("DecisionSystem: точка решения НЕ доступна - уже активна")
 		return false
 	
 	var current_time = Time.get_ticks_msec() / 1000.0
+	
+	if debug_mode:
+		print_debug("DecisionSystem: проверка доступности")
+		print_debug("  current_time: ", current_time)
+		print_debug("  last_decision_time: ", last_decision_time)
+		print_debug("  decision_cooldown: ", decision_cooldown)
+		print_debug("  time_since_last: ", current_time - last_decision_time)
+	
 	if current_time - last_decision_time < decision_cooldown:
+		if debug_mode:
+			print_debug("DecisionSystem: точка решения НЕ доступна - кулдаун (", 
+					   decision_cooldown - (current_time - last_decision_time), " сек осталось)")
 		return false
 	
+	if debug_mode:
+		print_debug("DecisionSystem: точка решения ДОСТУПНА")
 	return true
 
 # ==================== ВНУТРЕННИЕ МЕТОДЫ ====================
 func _on_decision_point_requested(enemy: Node, trigger_data: Dictionary) -> void:
-	"""Запрос точки решения от CombatComponent актора"""
+	"""Запрос точки решения от DecisionTriggerComponent актора"""
+	if debug_mode:
+		print_debug("DecisionSystem: получен запрос точки решения от ", enemy.name if enemy else "unknown")
+	
 	if not is_decision_point_available():
 		if debug_mode:
 			print_debug("DecisionSystem: точка решения отклонена (кулдаун или уже активна)")
 		return
 	
-	if debug_mode:
-		print_debug("DecisionSystem: получен запрос точки решения от ", enemy.name)
-	
 	_trigger_decision_point(enemy, trigger_data)
 
 func _trigger_decision_point(enemy: Node, trigger_data: Dictionary) -> void:
-	print_debug("=== ТОЧКА РЕШЕНИЯ АКТИВИРОВАНА ===")
+	print_debug("=== ТОЧКА РЕШЕНИЯ АКТИВИРОВАНА (DecisionManager) ===")
+	print_debug("  enemy: ", enemy.name if enemy else "unknown")
+	print_debug("  trigger_data: ", trigger_data)
 	
 	# Сохраняем данные
 	current_decision = {
@@ -65,10 +82,27 @@ func _trigger_decision_point(enemy: Node, trigger_data: Dictionary) -> void:
 		"time_triggered": Time.get_ticks_msec()
 	}
 	
-	# Временно удаляем врага из группы врагов (чтобы не атаковал)
-	if enemy.is_in_group("enemies"):
+	# Временно отключаем врага
+	if enemy and enemy.is_in_group("enemies"):
 		enemy.remove_from_group("enemies")
 		print_debug("DecisionSystem: враг удалён из группы 'enemies'")
+	
+	# Переводим врага в режим WORLD (чтобы не атаковал)
+	if enemy and enemy.has_method("change_mode"):
+		enemy.change_mode("world")
+		print_debug("DecisionSystem: враг переведён в режим WORLD")
+	
+	# Останавливаем движение и AI
+	if enemy and enemy.has_method("stop_ai"):
+		enemy.stop_ai()
+		print_debug("DecisionSystem: AI врага остановлен")
+	
+	# Обновляем время
+	last_decision_time = Time.get_ticks_msec() / 1000.0
+	is_decision_active = true
+	
+	print_debug("DecisionSystem: last_decision_time обновлён до ", last_decision_time)
+	print_debug("DecisionSystem: is_decision_active = true")
 	
 	# Запрашиваем диалог
 	var timeline_name = trigger_data.get("dialogue_timeline", "")
@@ -77,11 +111,9 @@ func _trigger_decision_point(enemy: Node, trigger_data: Dictionary) -> void:
 		_exit_decision_point()
 		return
 	
-	# Обновляем время
-	last_decision_time = Time.get_ticks_msec() / 1000.0
-	is_decision_active = true
+	print_debug("DecisionSystem: запускаю диалог '", timeline_name, "'")
 	
-	# Замедляем время (GameStateManager сделает это)
+	# Замедляем время
 	EventBus.Game.decision_point_activated.emit()
 	
 	# Запускаем диалог
@@ -130,12 +162,14 @@ func _handle_attack_choice(enemy: Node) -> void:
 	print_debug("DecisionSystem: выбор -> ПРОДОЛЖИТЬ БОЙ")
 	
 	# Возвращаем врага в группу врагов
-	if not enemy.is_in_group("enemies"):
+	if enemy and not enemy.is_in_group("enemies"):
 		enemy.add_to_group("enemies")
+		print_debug("DecisionSystem: враг возвращён в группу 'enemies'")
 	
 	# Переводим в боевой режим
-	if enemy.has_method("change_mode"):
+	if enemy and enemy.has_method("change_mode"):
 		enemy.change_mode("battle")
+		print_debug("DecisionSystem: враг переведён в режим BATTLE")
 	
 	_exit_decision_point()
 
@@ -157,15 +191,23 @@ func _handle_spare_choice(enemy: Node) -> void:
 	print_debug("DecisionSystem: выбор -> ПОЩАДИТЬ")
 	
 	# Переводим в мирный режим
-	if enemy.has_method("change_mode"):
+	if enemy and enemy.has_method("change_mode"):
 		enemy.change_mode("world")
+		print_debug("DecisionSystem: враг переведён в режим WORLD")
+	
+	# Сбрасываем состояние актора для возможности нового диалога
+	if enemy and enemy.has_method("reset_after_spare"):
+		enemy.reset_after_spare()
+		print_debug("DecisionSystem: состояние актора сброшено после пощады")
 	
 	# Помечаем как пощажённого
-	enemy.set_meta("spared", true)
+	if enemy:
+		enemy.set_meta("spared", true)
 	
 	# Удаляем из группы врагов
-	if enemy.is_in_group("enemies"):
+	if enemy and enemy.is_in_group("enemies"):
 		enemy.remove_from_group("enemies")
+		print_debug("DecisionSystem: враг удалён из группы 'enemies'")
 	
 	# Сообщаем CombatManager, что враг пощажён
 	EventBus.Combat.decision.enemy_spared.emit(enemy)
@@ -176,7 +218,7 @@ func _exit_decision_point() -> void:
 	"""Выход из точки решения"""
 	print_debug("DecisionSystem: выход из точки решения")
 	
-	# Возвращаем нормальное время (GameStateManager сделает это)
+	# Возвращаем нормальное время
 	EventBus.Game.decision_point_deactivated.emit()
 	
 	# Сбрасываем флаги

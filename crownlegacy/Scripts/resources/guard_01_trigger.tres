@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="DecisionTrigger" format=3 uid="uid://xncrtxea1nk8"]
+
+[ext_resource type="Script" uid="uid://ssoy2ikaytj6" path="res://Scripts/resources/DecisionTrigger.gd" id="1_wmf6x"]
+
+[resource]
+script = ExtResource("1_wmf6x")
+dialogue_timeline = "enemy_surrender"
+metadata/_custom_type_script = "uid://ssoy2ikaytj6"

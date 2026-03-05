@@ -17,6 +17,8 @@ const MODE_BATTLE = "battle"
 @onready var interaction_component: ActorInteractionComponent = $ActorInteractionComponent
 @onready var combat_component: ActorCombatComponent = $ActorCombatComponent
 @onready var ai_controller: AIController = $AIController
+@onready var decision_trigger_component: DecisionTriggerComponent = $DecisionTriggerComponent
+
 
 # Совместимость для кода, который ожидает свойство `entity_data` у Entity.
 var entity_data: EntityData:
@@ -55,6 +57,11 @@ func _ready() -> void:
 	# Настраиваем AI
 	if ai_controller:
 		ai_controller.setup(self)
+	
+	# Настраиваем DecisionTriggerComponent
+	if decision_trigger_component and actor_data and not actor_data.decision_triggers.is_empty():
+		decision_trigger_component.setup(self, actor_data.decision_triggers)
+		print_debug("Actor ", actor_id, ": DecisionTriggerComponent настроен")
 	
 	# Подписываемся на события
 	EventBus.Dialogue.started.connect(_on_dialogue_started)
@@ -137,6 +144,14 @@ func change_mode(new_mode: String) -> void:
 	
 	EventBus.Actors.mode_changed.emit(self, new_mode, old_mode)
 
+func stop_ai() -> void:
+	"""Останавливает AI и движение во время точки решения"""
+	if ai_controller:
+		ai_controller.set_active(false)
+	velocity = Vector2.ZERO
+	move_and_slide()
+	_play_idle_animation()
+
 func _apply_mode() -> void:
 	match current_mode:
 		MODE_BATTLE:
@@ -207,6 +222,21 @@ func _on_dialogue_started(timeline_name: String) -> void:
 func _on_dialogue_ended() -> void:
 	_is_in_dialogue = false
 	print_debug(actor_id, ": диалог закончен, можно взаимодействовать снова")
+
+func reset_after_spare() -> void:
+	"""Сбрасывает состояние актора после пощады для возможности нового диалога"""
+	# Сбрасываем флаг диалога
+	_is_in_dialogue = false
+	
+	# Убеждаемся, что режим WORLD
+	if current_mode != MODE_WORLD:
+		change_mode(MODE_WORLD)
+	
+	interaction_locked = false
+	
+	if ai_controller:
+		ai_controller.set_active(false)  # В мире AI не активен	
+	print_debug(actor_id, ": сброшен после пощады")
 
 # ==================== БОЙ ====================
 func _on_combat_started(enemies: Array) -> void:

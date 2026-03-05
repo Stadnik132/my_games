@@ -38,6 +38,7 @@ func enter_combat() -> void:
 func exit_combat() -> void:
 	_in_combat = false
 	set_active(false)
+	print_debug("ActorCombatComponent: вышел из боя")
 
 func set_active(value: bool) -> void:
 	if fsm:

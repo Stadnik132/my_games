@@ -40,7 +40,7 @@
 	  "channeled": false,
 	  "damage_data": {
 		"damage_type": 1,
-		"amount": 100,
+		"amount": 70,
 		"penetration": 0.2,
 		"can_crit": true,
 		"crit_multiplier": 1.8
@@ -68,7 +68,7 @@
 	  "channeled": false,
 	  "damage_data": {
 		"damage_type": 1,
-		"amount": 100,
+		"amount": 150,
 		"penetration": 0.3,
 		"can_crit": false,
 		"crit_multiplier": 1.0

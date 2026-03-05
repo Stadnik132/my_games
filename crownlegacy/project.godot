@@ -28,6 +28,7 @@ GameFlags="*res://Scripts/autoloads/GameFlags.gd"
 PlayerManager="*res://Scripts/autoloads/PlayerManager.gd"
 CombatManager="*res://Scripts/autoloads/CombatManager.gd"
 AbilityManager="*res://Scripts/autoloads/AbilityManager.gd"
+DecisionManager="*uid://dck4g01scyvwb"
 DialogicBridge="*res://Scripts/autoloads/DialogicBridge.gd"
 Dialogic="*res://addons/dialogic/Core/DialogicGameHandler.gd"
 
