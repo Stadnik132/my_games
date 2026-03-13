@@ -40,22 +40,29 @@ func start_combat(enemies: Array) -> void:
 	if debug_mode:
 		print_debug("CombatManager: начало боя с ", enemies.size(), " врагами")
 	
-	# Очищаем предыдущее состояние
+	# Если бой уже идет - добавляем врагов к существующему
+	if is_combat_active:
+		print_debug("CombatManager: добавляем врагов в текущий бой")
+		for enemy in enemies:
+			if enemy not in active_enemies:
+				print_debug("  добавляем: ", enemy.name)
+				active_enemies.append(enemy)
+				_initialize_enemy(enemy)
+			else:
+				print_debug("  уже в бою: ", enemy.name)
+		return
+	
+	# Новый бой
 	_initialized_enemies.clear()
 	active_enemies = enemies.duplicate()
 	_enemies_count_at_start = enemies.size()
 	is_combat_active = true
 	
-	# Инициализируем каждого врага
 	for enemy in enemies:
 		_initialize_enemy(enemy)
 	
-	# Уведомляем всех
 	combat_started.emit(enemies)
 	EventBus.Combat.started.emit(enemies)
-	
-	if debug_mode:
-		print_debug("CombatManager: бой начался")
 
 func end_combat(victory: bool, transition_to_dialogue: bool = false, dialogue_target: Node = null) -> void:
 	if debug_mode:
@@ -92,16 +99,21 @@ func end_combat(victory: bool, transition_to_dialogue: bool = false, dialogue_ta
 
 # ==================== ОБРАБОТКА ВРАГОВ ====================
 func _initialize_enemy(enemy: Node) -> void:
-	"""Инициализация врага для участия в бою"""
+	print_debug("CombatManager: _initialize_enemy для ", enemy.name)
+	
 	if enemy.has_meta("in_combat"):
+		print_debug("  уже в бою, пропускаем")
 		return
 	
 	if debug_mode:
 		print_debug("CombatManager: инициализация врага ", enemy.name)
 	
 	# Уведомляем врага о начале боя
-	if enemy.has_method("enter_combat"):
+	if enemy.has_method("enter_combat"):  # ← проверь, есть ли такой метод
+		print_debug("  вызываем enter_combat()")
 		enemy.enter_combat(self)
+	else:
+		print_debug("  ❌ у врага нет метода enter_combat!")
 	
 	# Подписываемся на смерть
 	var health_comp = enemy.get_node_or_null("HealthComponent")
@@ -113,6 +125,14 @@ func _initialize_enemy(enemy: Node) -> void:
 	_initialized_enemies.append(enemy)
 
 func _on_enemy_died(enemy: Node) -> void:
+	print_debug("CombatManager: враг умер: ", enemy.name)
+	print_debug("  active_enemies до: ", active_enemies)
+	
+	_initialized_enemies.erase(enemy)
+	active_enemies.erase(enemy)
+	
+	print_debug("  active_enemies после: ", active_enemies)
+	print_debug("  размер: ", active_enemies.size())
 	if debug_mode:
 		print_debug("CombatManager: враг умер: ", enemy.name)
 	

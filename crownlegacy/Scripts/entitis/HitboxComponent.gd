@@ -50,23 +50,6 @@ func spawn_hitbox(
 	
 	return hitbox
 
-func spawn_attack_hitbox(
-	position: Vector2,
-	direction: Vector2,
-	base_damage: int,
-	damage_multiplier: float = 1.0,
-	is_critical: bool = false
-) -> Hitbox:
-	var total_damage = int(base_damage * damage_multiplier)
-	return spawn_hitbox(
-		position,
-		total_damage,
-		0,
-		is_critical,
-		direction,
-		default_lifetime
-	)
-
 func spawn_area_hitbox(
 	center: Vector2,
 	radius: float,
@@ -92,3 +75,24 @@ func clear_hitboxes() -> void:
 
 func _on_hitbox_removed(hitbox: Hitbox) -> void:
 	_active_hitboxes.erase(hitbox)
+
+func spawn_hitbox_with_damage(position: Vector2, direction: Vector2, damage_data: DamageData) -> Hitbox:
+	if not hitbox_scene:
+		return null
+	
+	var hitbox = hitbox_scene.instantiate() as Hitbox
+	if not hitbox:
+		push_error("HitboxComponent: сцена не содержит Hitbox!")
+		return null
+	
+	hitbox.set_damage_data(damage_data)
+	hitbox.direction = direction
+	hitbox.lifetime = default_lifetime
+	hitbox.global_position = position
+	
+	get_tree().current_scene.add_child(hitbox)
+	
+	_active_hitboxes.append(hitbox)
+	hitbox.tree_exited.connect(_on_hitbox_removed.bind(hitbox))
+	
+	return hitbox

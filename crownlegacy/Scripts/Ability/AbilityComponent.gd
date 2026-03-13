@@ -110,19 +110,20 @@ func set_ability_in_slot(slot_index: int, ability_id: String) -> bool:
 	return true
 
 func can_cast_ability(slot_index: int) -> bool:
-	"""Можно ли использовать способность в слоте"""
 	var ability = get_ability_in_slot(slot_index)
 	if not ability:
+		print("  ❌ нет способности в слоте")
 		return false
 	
-	# Проверка кулдауна
 	if is_on_cooldown(slot_index):
+		print("  ❌ на кулдауне, осталось: ", cooldowns[slot_index])
 		return false
 	
-	# Проверка ресурсов
 	if not has_resources(slot_index):
+		print("  ❌ не хватает ресурсов")
 		return false
 	
+	print("  ✅ можно кастовать")
 	return true
 
 func is_on_cooldown(slot_index: int) -> bool:
@@ -220,100 +221,113 @@ func _apply_ability_effect(ability: AbilityResource, target_position: Vector2):
 	"""Применяет эффект способности"""
 	match ability.ability_type:
 		AbilityResource.AbilityType.INSTANT:
-			_apply_instant_effect(ability, target_position)
-		
+			_spawn_effect_scene(ability, target_position)
 		AbilityResource.AbilityType.PROJECTILE:
-			_spawn_projectile(ability, target_position)
-		
+			_spawn_effect_scene(ability, target_position)
 		AbilityResource.AbilityType.AREA:
-			_create_area_effect(ability, target_position)
-		
+			_spawn_effect_scene(ability, target_position)
 		AbilityResource.AbilityType.SELF_TARGET:
 			_apply_self_effect(ability)
 
-func _apply_instant_effect(ability: AbilityResource, target_position: Vector2):
-	"""Мгновенный эффект (урон по области)"""
-	var damage_data = ability.get_damage_data()
-	if not damage_data:
+func _spawn_effect_scene(ability: AbilityResource, target_position: Vector2):
+	"""Единый метод для спавна сцены эффекта (снаряд/область/удар)"""
+	ability.load_assets()
+	
+	if not ability.effect_scene:
+		print("AbilityComponent: нет сцены эффекта для ", ability.ability_name)
 		return
 	
-	# Используем HitboxComponent если есть
-	var hitbox_comp = entity.get_node_or_null("HitboxComponent") as HitboxComponent
-	if hitbox_comp:
-		# Создаём хитбокс в целевой позиции
-		hitbox_comp.spawn_area_hitbox(
-			target_position,
-			ability.effect_radius,
-			damage_data.amount,
-			damage_data.damage_type,
-			0.1  # короткое время жизни
-		)
-	else:
-		# Временное решение: ищем врагов через группу
-		_find_enemies_in_area(target_position, ability.effect_radius, damage_data)
-
-func _spawn_projectile(ability: AbilityResource, target_position: Vector2):
-	"""Создаёт снаряд"""
-	var projectile_scene = ability.projectile_scene
-	if not projectile_scene and ability.projectile_scene_path:
-		projectile_scene = load(ability.projectile_scene_path)
+	var effect = ability.effect_scene.instantiate()
 	
-	if not projectile_scene:
-		print("AbilityComponent: нет сцены снаряда для ", ability.ability_name)
-		return
+	# Сначала устанавливаем позицию в зависимости от типа
+	match ability.ability_type:
+		AbilityResource.AbilityType.INSTANT, AbilityResource.AbilityType.PROJECTILE:
+			effect.global_position = entity.global_position
+		AbilityResource.AbilityType.AREA:
+			effect.global_position = target_position
 	
-	var projectile = projectile_scene.instantiate()
+	# Добавляем в дерево
+	get_tree().current_scene.add_child(effect)
 	
-	if projectile.has_method("setup"):
-		# Направление от владельца к цели
-		var direction = (target_position - entity.global_position).normalized()
-		
-		projectile.setup({
-			"caster": entity,
-			"damage_data": ability.get_damage_data(),
-			"start_position": entity.global_position,
-			"target_position": target_position,
-			"direction": direction,
-			"speed": ability.projectile_speed,
-			"max_distance": ability.max_cast_range
-		})
-		
-		get_tree().current_scene.add_child(projectile)
-	else:
-		projectile.queue_free()
-
-func _create_area_effect(ability: AbilityResource, target_position: Vector2):
-	"""Создаёт зону поражения"""
-	var area_scene = ability.area_effect_scene
-	if not area_scene and ability.area_effect_scene_path:
-		area_scene = load(ability.area_effect_scene_path)
+	# Подготавливаем общие параметры
+	var params = {
+		"caster": entity,
+		"damage_data": ability.get_damage_data(),
+		"start_position": entity.global_position,
+		"target_position": target_position,
+		"direction": (target_position - entity.global_position).normalized(),
+		"speed": ability.projectile_speed,
+		"radius": ability.effect_radius,
+		"duration": ability.effect_duration
+	}
 	
-	if not area_scene:
-		print("AbilityComponent: нет сцены области для ", ability.ability_name)
-		return
+	# Добавляем специфичные параметры
+	match ability.ability_type:
+		AbilityResource.AbilityType.INSTANT:
+			params["attack_direction"] = _get_attack_direction()
+		AbilityResource.AbilityType.PROJECTILE:
+			params["max_distance"] = ability.max_cast_range
+		AbilityResource.AbilityType.AREA:
+			params["stay_at_target"] = true
 	
-	var area_effect = area_scene.instantiate()
-	
-	if area_effect.has_method("setup"):
-		get_tree().current_scene.add_child(area_effect)
-		area_effect.global_position = target_position
-		
-		area_effect.setup({
-			"caster": entity,
-			"damage_data": ability.get_damage_data(),
-			"radius": ability.effect_radius,
-			"duration": ability.effect_duration
-		})
-	else:
-		area_effect.queue_free()
+	# Вызываем setup
+	if effect.has_method("setup"):
+		effect.setup(params)
 
 func _apply_self_effect(ability: AbilityResource):
 	"""Эффект на себя (лечение/бафф)"""
+	# Лечение
 	if ability.heal_amount > 0 and health_component:
 		health_component.heal(ability.heal_amount)
-		print("AbilityComponent: вылечено ", ability.heal_amount, " HP")
 	
-	# TODO: Баффы через ProgressionComponent
+	# Баффы
+	if ability.buff_duration > 0 and not ability.buff_stats.is_empty():
+		_apply_buff(ability)
+	
+	# Визуальный эффект
+	if ability.effect_scene:
+		_spawn_buff_effect(ability)
+
+func _apply_buff(ability: AbilityResource):
+	"""Применяет временные баффы"""
+	if not entity.progression_component:
+		return
+	
+	var buff_id = "ability_" + ability.ability_id
+	
+	# Добавляем модификаторы для каждой характеристики
+	for stat_name in ability.buff_stats:
+		var value = ability.buff_stats[stat_name]
+		entity.progression_component.add_modifier(stat_name, value, buff_id)
+	
+	# Удаляем через duration
+	await get_tree().create_timer(ability.buff_duration).timeout
+	_remove_buff(buff_id)
+
+func _spawn_buff_effect(ability: AbilityResource):
+	"""Спавнит визуальный эффект баффа"""
+	ability.load_assets()
+	
+	if not ability.effect_scene:
+		return
+	
+	var effect = ability.effect_scene.instantiate()
+	if effect.has_method("setup"):
+		effect.setup({
+			"caster": entity,
+			"duration": ability.buff_duration
+		})
+	
+	# Добавляем как дочерний, чтобы эффект следовал за сущностью
+	entity.add_child(effect)
+
+func _remove_buff(buff_id: String):
+	"""Удаляет бафф по ID"""
+	if not entity.progression_component:
+		return
+	
+	entity.progression_component.remove_modifier_by_id(buff_id)
+
 
 # ==================== ВРЕМЕННЫЙ ПОИСК ВРАГОВ (ЗАГЛУШКА) ====================
 func _find_enemies_in_area(center: Vector2, radius: float, damage_data: DamageData):
@@ -364,3 +378,14 @@ func load_assignments(saved_assignments: Array[String]):
 	if saved_assignments.size() == slot_assignments.size():
 		slot_assignments = saved_assignments.duplicate()
 		_initialize_slots()
+
+func _get_attack_direction() -> Vector2:
+	"""Возвращает направление атаки для INSTANT способностей"""
+	if not entity:
+		return Vector2.RIGHT
+	
+	if entity.has_method("get_horizontal_facing_direction"):
+		return entity.get_horizontal_facing_direction()
+	
+	# По умолчанию - вправо
+	return Vector2.RIGHT

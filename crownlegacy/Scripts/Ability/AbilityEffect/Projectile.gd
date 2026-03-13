@@ -31,19 +31,18 @@ func setup(params: Dictionary) -> void:
 	global_position = start_position
 	
 	# Настройка слоёв коллизий
-	collision_layer = 0
-	
 	if caster and caster.is_in_group("player"):
-		collision_layer = 4  # 👈 ВАЖНО! Быть на слое 3
-		collision_mask = 4   # искать слой 3 (хертбоксы врагов)
+		collision_layer = 4
+		collision_mask = 4
 		print("Projectile: игрок, на слое 4, ищу слой 4")
 	elif caster and caster.is_in_group("enemies"):
-		collision_layer = 2  # 👈 ВАЖНО! Быть на слое 2
-		collision_mask = 2   # искать слой 2 (хертбокс игрока)
+		collision_layer = 2
+		collision_mask = 2
 		print("Projectile: враг, на слое 2, ищу слой 2")
 	else:
+		collision_layer = 0
 		collision_mask = 0
-		print("Projectile: неизвестный стрелок, никого не ищем")
+		print("Projectile: неизвестный стрелок")
 	
 	# Подключаем сигналы
 	body_entered.connect(_on_body_entered)
@@ -54,40 +53,31 @@ func _physics_process(delta: float) -> void:
 	position += motion
 	distance_traveled += motion.length()
 	
-	# Удаляем, если пролетел максимальную дистанцию
 	if distance_traveled >= max_distance:
 		queue_free()
 
-# При столкновении с телом (например, стена)
 func _on_body_entered(body: Node) -> void:
-	# Не наносим урон тому, кто стрелял
 	if body == caster:
 		return
-	
-	# Применяем урон, если это враг
 	_apply_damage(body)
-	
-	# Удаляем снаряд при столкновении с ЛЮБЫМ телом
 	queue_free()
 
-# При столкновении с областью (Hurtbox)
 func _on_area_entered(area: Area2D) -> void:
-	# Проверяем, что это Hurtbox и принадлежит не стрелку
-	if area is Hurtbox and area.owner != caster:
-		_apply_damage(area.owner)
-		
-		# Удаляем снаряд при попадании
+	if area is Hurtbox:
+		# Проверяем владельца хертбокса
+		if area.entity_owner == caster:
+			return
+		_apply_damage_to_hurtbox(area)
 		queue_free()
 
 func _apply_damage(target: Node) -> void:
 	if not target or not damage_data:
 		return
 	
-	# Ищем Hurtbox у цели
 	var hurtbox = target.get_node_or_null("Hurtbox") as Hurtbox
 	if hurtbox:
-		# Испускаем сигнал напрямую в хертбокс
-		hurtbox.damage_taken.emit(damage_data, caster)
-		print("Projectile: урон нанесён через hurtbox")
-	else:
-		print("Projectile: у цели нет Hurtbox!")
+		_apply_damage_to_hurtbox(hurtbox)
+
+func _apply_damage_to_hurtbox(hurtbox: Hurtbox) -> void:
+	hurtbox.damage_taken.emit(damage_data, caster)
+	print("Projectile: урон нанесён через hurtbox")

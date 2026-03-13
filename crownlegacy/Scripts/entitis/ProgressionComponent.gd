@@ -160,6 +160,27 @@ func add_modifier(stat_name: String, value: float, modifier_id: String = "") -> 
 	# Инвалидируем кэш для этого стата
 	_cached_stats.erase(stat_name)
 
+func remove_modifier_by_id(modifier_id: String) -> void:
+	"""Удаляет все модификаторы с указанным ID"""
+	for stat_name in _stat_modifiers.keys():
+		var modifiers = _stat_modifiers[stat_name]
+		var i = 0
+		while i < modifiers.size():
+			if modifiers[i].id == modifier_id:
+				modifiers.remove_at(i)
+				_cached_stats.erase(stat_name)  # инвалидируем кэш
+			else:
+				i += 1
+	
+	# Если после удаления массив пуст - убираем ключ
+	var empty_stats = []
+	for stat_name in _stat_modifiers.keys():
+		if _stat_modifiers[stat_name].is_empty():
+			empty_stats.append(stat_name)
+	
+	for stat_name in empty_stats:
+		_stat_modifiers.erase(stat_name)
+
 func remove_modifier(stat_name: String, modifier_id: String) -> void:
 	"""Удалить модификатор по ID"""
 	if not _stat_modifiers.has(stat_name):

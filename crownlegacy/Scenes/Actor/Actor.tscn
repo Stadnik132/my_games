@@ -7,12 +7,32 @@
 [ext_resource type="Script" uid="uid://cprrclxegvl7f" path="res://Scripts/entitis/Actors/Components/ActorInteractionComponent.gd" id="2_tm1wl"]
 [ext_resource type="Script" uid="uid://bowg23nj8eakw" path="res://Scripts/entitis/HealthComponent.gd" id="4_625mo"]
 [ext_resource type="Script" uid="uid://baarqgcghdftt" path="res://Scripts/entitis/Actors/Components/ActorCombatComponent.gd" id="5_okbp1"]
+[ext_resource type="Script" uid="uid://i8anyeyqqjcc" path="res://Scripts/entitis/ResourceComponent.gd" id="6_a5ne0"]
 [ext_resource type="Script" uid="uid://duijk3xsl0n36" path="res://Scripts/entitis/Hurtbox.gd" id="6_tsjs1"]
 [ext_resource type="Script" uid="uid://bjrcji1t2ifi" path="res://Scripts/entitis/Actors/Components/AI/AIController.gd" id="7_4pigi"]
+[ext_resource type="Script" uid="uid://c363kao1437mm" path="res://Scripts/entitis/ProgressionComponent.gd" id="8_kkn7e"]
+[ext_resource type="Script" uid="uid://bxganyhns4nhp" path="res://Scripts/entitis/HitboxComponent.gd" id="9_nfxev"]
+[ext_resource type="Script" uid="uid://bghkf61ukvvnf" path="res://Scripts/Ability/AbilityComponent.gd" id="9_o07q7"]
 [ext_resource type="Script" uid="uid://degbyvgd487of" path="res://Scripts/entitis/DecisionTriggerComponent.gd" id="9_xj2rw"]
+[ext_resource type="Script" uid="uid://cpud8hdv0qkko" path="res://Scripts/entitis/EntityCombatFSM.gd" id="10_is3bj"]
+[ext_resource type="PackedScene" uid="uid://chn4kenaj7cp3" path="res://Scenes/Entity/Hitbox.tscn" id="10_oy37a"]
+[ext_resource type="Script" uid="uid://6tmd2w4u00ic" path="res://Scripts/entitis/states/IdleState.gd" id="11_leyws"]
+[ext_resource type="Script" uid="uid://dffiglh5cnj5w" path="res://Scripts/entitis/states/WalkState.gd" id="12_usxai"]
+[ext_resource type="Script" uid="uid://7cuvsmdalifd" path="res://Scripts/entitis/states/AttackState.gd" id="13_30cfq"]
+[ext_resource type="Script" uid="uid://todvfrjyk52p" path="res://Scripts/entitis/CombatConfig.gd" id="14_p25mq"]
+[ext_resource type="Script" uid="uid://b8ub0047ey4u8" path="res://Scripts/entitis/Actors/Components/State/CastState.gd" id="14_r262f"]
+[ext_resource type="Script" uid="uid://cf2tiqncq8vgo" path="res://Scripts/entitis/Actors/Components/AI/AIPerception.gd" id="15_is3bj"]
+[ext_resource type="Script" uid="uid://bohemxes4bdbx" path="res://Scripts/entitis/Actors/Components/AI/AIBrain.gd" id="16_leyws"]
 
-[sub_resource type="Resource" id="Resource_8u4of"]
+[sub_resource type="Resource" id="Resource_s7a7g"]
 script = ExtResource("2_is3bj")
+ability_slot_assignments = Array[String](["fireball"])
+base_stats = {
+"agility": 5,
+"attack": 1,
+"defense": 5,
+"speed": 5
+}
 metadata/_custom_type_script = "uid://b1braurhti7u8"
 
 [sub_resource type="Animation" id="Animation_gpg7s"]
@@ -180,27 +200,28 @@ _data = {
 radius = 11.0
 height = 50.0
 
-[sub_resource type="Resource" id="Resource_625mo"]
-script = ExtResource("2_is3bj")
-metadata/_custom_type_script = "uid://b1braurhti7u8"
-
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_hepnu"]
-radius = 13.0
-height = 50.0
+radius = 20.0
+height = 60.0
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_343dn"]
 radius = 34.525352
 
+[sub_resource type="Resource" id="Resource_2j8bb"]
+script = ExtResource("14_p25mq")
+move_speed = 30.0
+metadata/_custom_type_script = "uid://todvfrjyk52p"
+
 [node name="Actor" type="CharacterBody2D" unique_id=1897500711]
 collision_layer = 4
-collision_mask = 3
+collision_mask = 7
 motion_mode = 1
 slide_on_ceiling = false
 floor_stop_on_slope = false
 floor_block_on_wall = false
 script = ExtResource("1_vpcky")
 actor_id = "guard_01"
-actor_data = SubResource("Resource_8u4of")
+actor_data = SubResource("Resource_s7a7g")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1565869217]
 texture = ExtResource("2_aiuxd")
@@ -215,7 +236,19 @@ shape = SubResource("CapsuleShape2D_8u4of")
 
 [node name="HealthComponent" type="Node" parent="." unique_id=161703574]
 script = ExtResource("4_625mo")
-entity_data = SubResource("Resource_625mo")
+entity_data = SubResource("Resource_s7a7g")
+
+[node name="ManaComponent" type="Node" parent="." unique_id=1146426474]
+script = ExtResource("6_a5ne0")
+entity_data = SubResource("Resource_s7a7g")
+
+[node name="ProgressionComponent" type="Node" parent="." unique_id=1629912881]
+script = ExtResource("8_kkn7e")
+entity_data = SubResource("Resource_s7a7g")
+
+[node name="HitboxComponent" type="Node" parent="." unique_id=876405761]
+script = ExtResource("9_nfxev")
+hitbox_scene = ExtResource("10_oy37a")
 
 [node name="Hurtbox" type="Area2D" parent="." unique_id=1762253308]
 collision_layer = 0
@@ -235,11 +268,46 @@ script = ExtResource("2_tm1wl")
 visible = false
 shape = SubResource("CircleShape2D_343dn")
 
-[node name="ActorCombatComponent" type="Node" parent="." unique_id=199198654]
+[node name="ActorCombatComponent" type="Node" parent="." unique_id=199198654 node_paths=PackedStringArray("stats_provider", "ability_component", "stamina_component")]
 script = ExtResource("5_okbp1")
+combat_config = SubResource("Resource_2j8bb")
+stats_provider = NodePath("../ProgressionComponent")
+ability_component = NodePath("../AbilityComponent")
+stamina_component = NodePath("../ManaComponent")
+
+[node name="AbilityComponent" type="Node" parent="." unique_id=1527726465]
+script = ExtResource("9_o07q7")
+initial_slot_assignments = Array[String](["fireball"])
+metadata/_custom_type_script = "uid://bghkf61ukvvnf"
+
+[node name="EntityCombatFSM" type="Node" parent="." unique_id=733169550]
+script = ExtResource("10_is3bj")
+metadata/_custom_type_script = "uid://cpud8hdv0qkko"
+
+[node name="IdleState" type="Node" parent="EntityCombatFSM" unique_id=1714294120]
+script = ExtResource("11_leyws")
+metadata/_custom_type_script = "uid://6tmd2w4u00ic"
+
+[node name="WalkState" type="Node" parent="EntityCombatFSM" unique_id=15517843]
+script = ExtResource("12_usxai")
+metadata/_custom_type_script = "uid://dffiglh5cnj5w"
+
+[node name="AttackState" type="Node" parent="EntityCombatFSM" unique_id=1463467342]
+script = ExtResource("13_30cfq")
+metadata/_custom_type_script = "uid://7cuvsmdalifd"
+
+[node name="CastState" type="Node" parent="EntityCombatFSM" unique_id=1179946338]
+script = ExtResource("14_r262f")
 
 [node name="AIController" type="Node" parent="." unique_id=830493773]
 script = ExtResource("7_4pigi")
+
+[node name="AIPerception" type="Node" parent="." unique_id=784958562]
+script = ExtResource("15_is3bj")
+
+[node name="AIBrain" type="Node" parent="." unique_id=1333867606]
+script = ExtResource("16_leyws")
+attack_range = 50.0
 
 [node name="DecisionTriggerComponent" type="Node" parent="." unique_id=1966857627]
 script = ExtResource("9_xj2rw")

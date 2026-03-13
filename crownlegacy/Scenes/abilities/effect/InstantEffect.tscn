@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://bq7hex48qdhbf"]
+
+[ext_resource type="Script" uid="uid://cmarx3mr6peca" path="res://Scripts/Ability/AbilityEffect/InstantEffect.gd" id="1_cwe6t"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_cwe6t"]
+
+[node name="InstantEffect" type="Area2D" unique_id=498828390]
+script = ExtResource("1_cwe6t")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=150983312]
+shape = SubResource("CapsuleShape2D_cwe6t")

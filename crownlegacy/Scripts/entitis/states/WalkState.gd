@@ -1,17 +1,18 @@
 class_name WalkState extends CombatState
 
+
 func physics_process(delta: float) -> void:
-	# Получаем ввод
-	var input_vector = _get_input_vector()
+	# Получаем вектор движения из компонента
+	var move_vector = combat_component.get_move_vector()
 	
-	if input_vector != Vector2.ZERO:
-		fsm.update_facing_direction(input_vector)
+	if move_vector != Vector2.ZERO:
+		fsm.update_facing_direction(move_vector)
 		# Двигаемся
-		_handle_movement(input_vector, delta)
+		_handle_movement(move_vector, delta)
 		
 		# Запоминаем направления
-		entity.last_movement_direction = input_vector
-		fsm.last_dodge_direction = input_vector
+		entity.last_movement_direction = move_vector
+		fsm.last_dodge_direction = move_vector
 	else:
 		# Нет ввода - возвращаемся в Idle
 		_handle_stop_movement(delta)
@@ -30,23 +31,18 @@ func handle_command(command: String, data: Dictionary = {}) -> void:
 			transition_requested.emit("Dodge")
 		"block_start":
 			transition_requested.emit("Block")
-		"ability_selected":  # было aiming_start
-			# Сохраняем выбранную способность
+		"ability_selected":
 			if data.has("ability"):
 				fsm.current_ability = data["ability"]
 				fsm.current_slot_index = data.get("slot_index", -1)
 			transition_requested.emit("Aim")
 
 func get_allowed_transitions() -> Array[String]:
-	return ["Idle", "Attack", "Dodge", "Block", "Aim", "Stun"]
+	return ["Idle", "Attack", "Dodge", "Block", "Aim", "Stun", "Cast"]
 
 # ==================== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ====================
-func _get_input_vector() -> Vector2:
-	var input = Vector2(
-		Input.get_action_strength("move_right") - Input.get_action_strength("move_left"),
-		Input.get_action_strength("move_down") - Input.get_action_strength("move_up")
-	)
-	return input.normalized() if input.length() > 0 else Vector2.ZERO
+# Вспомогательный метод УДАЛЯЕТСЯ
+# func _get_input_vector() -> Vector2: ...
 
 func _handle_movement(input_vector: Vector2, delta: float) -> void:
 	if not entity is CharacterBody2D:

@@ -136,50 +136,56 @@ func _on_hurtbox_damage(damage_data: DamageData, source: Node) -> void:
 	if not health:
 		return
 	
-	# Проверяем, в блоке ли мы
+	# Копируем данные, чтобы не изменять оригинал
+	var final_damage = damage_data.amount
+	
+	# Шаг 1: Применяем блок, если в состоянии блока
+	var was_blocked = false
 	if fsm and fsm.get_current_state_name() == "Block":
-		_handle_blocked_damage(damage_data, source)
-	else:
-		# Обычное получение урона
-		health.take_damage(
-			damage_data.amount,
-			damage_data.damage_type,
-			source,
-			damage_data.is_critical
-		)
-
-func _handle_blocked_damage(damage_data: DamageData, source: Node) -> void:
-	"""Обработка урона во время блока"""
-	if not stamina_component:
-		# Если нет стамины, просто принимаем урон
-		owner_entity.health_component.take_damage(
-			damage_data.amount,
-			damage_data.damage_type,
-			source,
-			damage_data.is_critical
-		)
-		return
+		var block_result = _apply_block(damage_data)
+		final_damage = block_result.damage
+		was_blocked = true
+		
+		# Тратим стамину за блок
+		if stamina_component and block_result.stamina_cost > 0:
+			stamina_component.use(block_result.stamina_cost)
 	
-	# Рассчитываем уменьшенный урон (из конфига)
-	var reduction = combat_config.block_damage_reduction
-	var damage_after_block = int(damage_data.amount * (1.0 - reduction))
+	# Шаг 2: Применяем защиту цели
+	final_damage = _apply_defense(final_damage, damage_data)
 	
-	# Рассчитываем стоимость выносливости (зависит от силы удара)
-	var stamina_cost = _calculate_block_stamina_cost(damage_data.amount)
-	
-	# Отправляем команду в состояние блока
-	fsm.send_command("damage_blocked", {
-		"damage_after_block": damage_after_block,
-		"stamina_cost": stamina_cost
-	})
-	
-	# Применяем уменьшенный урон
-	owner_entity.health_component.take_damage(
-		damage_after_block,
+	# Шаг 3: Наносим урон
+	health.take_damage(
+		final_damage,
 		damage_data.damage_type,
 		source,
 		damage_data.is_critical
 	)
+	
+	# Шаг 4: Стан (только если не в блоке)
+	if fsm and not was_blocked:
+		fsm.request_stun()
+
+func _apply_block(damage_data: DamageData) -> Dictionary:
+
+	if not combat_config:
+		return {"damage": damage_data.amount, "stamina_cost": 0}
+	
+	# Уменьшаем урон
+	var reduction = combat_config.block_damage_reduction
+	var damage_after_block = int(damage_data.amount * (1.0 - reduction))
+	
+	# Рассчитываем стоимость стамины
+	var stamina_cost = combat_config.block_base_stamina_cost
+	stamina_cost += int(damage_data.amount * combat_config.block_stamina_damage_factor)
+	
+	return {
+		"damage": damage_after_block,
+		"stamina_cost": stamina_cost
+	}
+
+func _apply_defense(damage: int, damage_data: DamageData) -> int:
+
+	return damage
 
 func _calculate_block_stamina_cost(incoming_damage: int) -> int:
 	"""Рассчитывает стоимость выносливости за блокированный удар"""

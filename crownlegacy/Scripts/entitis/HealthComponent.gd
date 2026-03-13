@@ -40,8 +40,17 @@ func take_damage(amount: int, damage_type: int, source: Node = null, is_critical
 		health_changed.emit(entity_data.current_hp, old_hp, entity_data.max_hp)
 		damage_taken.emit(amount, damage_type, source, is_critical)
 		
+		# Визуальный эффект получения урона
+		_apply_damage_flash(damage_type)
+		
 		if entity_data.current_hp <= 0:
 			died.emit()
+
+func _apply_damage_flash(damage_type: int) -> void:
+	var owner = get_parent()
+	
+	if owner and owner.has_method("apply_damage_flash"):
+		owner.apply_damage_flash(damage_type)
 
 func heal(amount: int) -> void:
 	"""Лечение сущности"""

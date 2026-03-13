@@ -10,15 +10,18 @@ const MODE_BATTLE = "battle"
 @export var actor_id: String = "Actor"
 @export var initial_mode: String = MODE_WORLD
 @export var actor_data: ActorData
-
+# ==================== ПАРАМЕТРЫ ДВИЖЕНИЯ ====================
+var last_movement_direction: Vector2 = Vector2.DOWN
 # ==================== ССЫЛКИ ====================
+@export_category("Ссылки")
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var animation_player: AnimationPlayer = $AnimationPlayer
 @onready var interaction_component: ActorInteractionComponent = $ActorInteractionComponent
 @onready var combat_component: ActorCombatComponent = $ActorCombatComponent
 @onready var ai_controller: AIController = $AIController
+@onready var perception_component: AIPerception = $AIPerception  # НОВОЕ
+@onready var brain_component: AIBrain = $AIBrain  # НОВОЕ
 @onready var decision_trigger_component: DecisionTriggerComponent = $DecisionTriggerComponent
-
 
 # Совместимость для кода, который ожидает свойство `entity_data` у Entity.
 var entity_data: EntityData:
@@ -37,11 +40,19 @@ var dialogue_used: bool = false
 func _ready() -> void:
 	super._ready()
 	
+		# Создаем уникальную копию данных для этого экземпляра
+	if actor_data and actor_data is Resource:
+		var new_data = actor_data.duplicate(true)
+		actor_data = new_data
+
+		_update_component_data(new_data)
+	
 	current_mode = initial_mode
 	add_to_group("actors")
 	
 	# Настраиваем hurtbox
 	if hurtbox:
+		hurtbox.set_entity_owner(self)
 		hurtbox.update_layer_from_owner()
 	
 	# Настраиваем взаимодействие
@@ -54,9 +65,30 @@ func _ready() -> void:
 	if combat_component:
 		combat_component.setup(self, actor_data)
 	
-	# Настраиваем AI
+	if ability_component and actor_data and not actor_data.ability_slot_assignments.is_empty():
+		print_debug("Actor: инициализация AbilityComponent со слотами: ", actor_data.ability_slot_assignments)
+		ability_component.initial_slot_assignments = actor_data.ability_slot_assignments
+		ability_component.setup(self)
+		print_debug("Actor ", actor_id, ": AbilityComponent настроен")
+	else:
+		print_debug("Actor: AbilityComponent не инициализирован")
+		
+	if not ability_component:
+		print_debug("  ability_component = null")
+	if not actor_data:
+		print_debug("  actor_data = null")
+	if actor_data and actor_data.ability_slot_assignments.is_empty():
+		print_debug("  ability_slot_assignments пуст")
+
+	# Инициализация AI
 	if ai_controller:
 		ai_controller.setup(self)
+
+	if perception_component:
+		perception_component.setup(self)
+
+	if brain_component and perception_component and combat_component:
+		brain_component.setup(self, perception_component, combat_component)
 	
 	# Настраиваем DecisionTriggerComponent
 	if decision_trigger_component and actor_data and not actor_data.decision_triggers.is_empty():
@@ -239,8 +271,14 @@ func reset_after_spare() -> void:
 	print_debug(actor_id, ": сброшен после пощады")
 
 # ==================== БОЙ ====================
+func enter_combat(combat_manager: Node = null) -> void:
+	"""Вызывается CombatManager при начале боя"""
+	change_mode(MODE_BATTLE)
+	if combat_component:
+		combat_component.enter_combat()
+
 func _on_combat_started(enemies: Array) -> void:
-	if self in enemies or (actor_data and actor_data.actor_id in enemies):
+	if self in enemies:
 		change_mode(MODE_BATTLE)
 		if combat_component:
 			combat_component.enter_combat()
@@ -250,8 +288,8 @@ func _on_health_changed(new_value: int, _old_value: int, max_value: int) -> void
 	print_debug(actor_id, " здоровье: ", new_value, "/", max_value)
 
 func _on_died() -> void:
-	super._on_died()
-	print_debug(actor_id, " умер")
+	is_dead = true
+	EventBus.Entity.died.emit(self)
 	_play_death_effect()
 
 func _play_death_effect() -> void:
@@ -277,6 +315,30 @@ func get_horizontal_facing_direction() -> Vector2:
 				return Vector2(sign(velocity.x), 0)
 			return Vector2.RIGHT
 
+func get_sprite() -> Sprite2D:
+	return sprite
+
+func _update_component_data(new_data: ActorData) -> void:
+	"""Обновляет ссылки на данные во всех компонентах"""
+	# HealthComponent
+	if health_component and health_component.entity_data:
+		health_component.entity_data = new_data
+	
+	# ProgressionComponent
+	if progression_component and progression_component.entity_data:
+		progression_component.entity_data = new_data
+	
+	# ResourceComponent (мана/стамина)
+	for child in get_children():
+		if child is ResourceComponent:
+			if child.entity_data:
+				child.entity_data = new_data
+	
+	# Другие компоненты, которые используют entity_data
+	if ability_component and ability_component.entity_data:
+		ability_component.entity_data = new_data
+
+	
 # ==================== СОХРАНЕНИЕ ====================
 func get_save_data() -> Dictionary:
 	var data = super.get_save_data()

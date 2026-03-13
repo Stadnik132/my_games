@@ -2,7 +2,7 @@ class_name EntityCombatFSM extends Node
 
 signal state_changed(old_state: String, new_state: String)
 
-# Состояния: Idle, Walk, Attack, Dodge, Block, Aim, Cast, Stun
+# Состояния: Idle, Walk, Attack, Dodge, Block, Aim(Player), Cast(Player/Actor), Stun
 var states: Dictionary = {}
 var current_state: CombatState = null
 
@@ -43,11 +43,17 @@ func setup(p_entity: Entity, p_stats: ProgressionComponent, p_component: CombatC
 			child.combat_config = p_config
 			child.fsm = self
 			child.setup_params()
+			
+			# Отключаем сигнал, если уже подключен
+			if child.transition_requested.is_connected(_on_transition_requested):
+				child.transition_requested.disconnect(_on_transition_requested)
 			child.transition_requested.connect(_on_transition_requested)
 
 	change_state("Idle")
 
 func change_state(state_name: String) -> void:
+	if not states.has(state_name):
+		return
 	if not states.has(state_name):
 		return
 
@@ -73,40 +79,74 @@ func change_state(state_name: String) -> void:
 
 func send_command(command: String, data: Dictionary = {}) -> void:
 	match command:
+		# ========== НОВЫЕ КОМАНДЫ ДЛЯ AI ==========
+		"walk":
+			if data.has("direction"):
+				last_movement_direction = data["direction"]
+				# Если мы в Idle - переходим в Walk
+				if get_current_state_name() == "Idle":
+					change_state("Walk")
+				# Если уже в Walk - направление обновится в physics_process
+		
+		"attack":
+			# Команда будет обработана состоянием (Idle/Walk)
+			# Просто передаём её дальше, не меняя состояние здесь
+			pass
+		
+		"cast":
+			if data.has("slot_index"):
+				current_slot_index = data["slot_index"]
+			if data.has("ability"):
+				current_ability = data["ability"]
+			if data.has("target_position"):
+				cast_target_position = data["target_position"]
+			if data.has("target_data"):
+				cast_target_data = data["target_data"]
+			
+			# Если способность не передали, пробуем получить из компонента
+			if not current_ability and current_slot_index >= 0:
+				if combat_component and combat_component.ability_component:
+					current_ability = combat_component.ability_component.get_ability_in_slot(current_slot_index)
+			
+			# Переходим в Cast, если мы в подходящем состоянии
+			if get_current_state_name() in ["Idle", "Walk"]:
+				change_state("Cast")
+		
+		# ========== СУЩЕСТВУЮЩИЕ КОМАНДЫ ==========
 		"ability_selected":
 			if data.has("slot_index"):
 				current_slot_index = data.slot_index
 			if data.has("ability"):
 				current_ability = data.ability
-		"cast":
-			if data.has("slot_index"):
-				current_slot_index = data.slot_index
-			if data.has("ability"):
-				current_ability = data.ability
-			if data.has("target_data"):
-				cast_target_data = data.target_data
+		
 		"aim_cancel":
 			cast_target_position = Vector2.ZERO
 			cast_target_data = {}
 			current_slot_index = -1
 			current_ability = null
-		"combo_input":  # Для отметки, что игрок нажал атаку во время окна
+		
+		"combo_input":
 			combo_input_received = true
 	
+	# Все команды передаём текущему состоянию
 	if current_state:
 		current_state.handle_command(command, data)
 
 func request_stun() -> void:
-	"""Вызов при получении урона: переход в Stun, если не в Cast."""
+	
 	if get_current_state_name() == "Cast":
 		return
+		
 	if not states.has("Stun"):
 		return
+		
 	var old_name = get_current_state_name()
 	if current_state:
 		current_state.exit()
+		
 	current_state = states["Stun"]
 	current_state.enter()
+	
 	state_changed.emit(old_name, "Stun")
 
 func _on_transition_requested(state_name: String) -> void:

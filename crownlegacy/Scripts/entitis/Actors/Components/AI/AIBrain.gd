@@ -1,44 +1,86 @@
-# ai_brain.gd
-class_name AIBrain extends Node
-## Мозг врага. Принимает решения на основе данных от Perception.
+# AIBrain.gd
+extends Node
+class_name AIBrain
 
-# Настраиваемые параметры
-@export var attack_range: float = 50.0  # Дистанция, с которой начинает атаку
-@export var memory_time: float = 3.0     # Сколько секунд помнит игрока после потери
+# ==================== ТИПЫ РЕШЕНИЙ ====================
+enum CombatDecision { 
+	IDLE,    # Ничего не делать
+	WALK,    # Двигаться к цели (было CHASE)
+	ATTACK,  # Атаковать
+	CAST     # Использовать способность (было ABILITY)
+}
 
-# Ссылки
+# ==================== ЭКСПОРТ ====================
+@export var attack_range: float = 30.0           # Дистанция для атаки
+@export var ability_usage_chance: float = 0.2    # Шанс использовать способность вместо атаки
+
+# ==================== ССЫЛКИ ====================
 var actor: Actor
 var perception: AIPerception
+var combat_component: ActorCombatComponent
 
-func setup(p_actor: Actor, p_perception: AIPerception) -> void:
-	actor = p_actor
-	perception = p_perception
+# ==================== ИНИЦИАЛИЗАЦИЯ ====================
+func setup(actor_node: Actor, perception_node: AIPerception, combat_node: ActorCombatComponent) -> void:
+	actor = actor_node
+	perception = perception_node
+	combat_component = combat_node
 
-func should_move_to_player() -> bool:
-	if not perception:
-		print_debug("AIBrain: perception is null")
-		return false
-	
+# ==================== ОСНОВНАЯ ЛОГИКА ====================
+func decide() -> Dictionary:
+	"""
+	Принимает решение на основе текущей ситуации.
+	Возвращает словарь с полем "type" и дополнительными данными.
+	"""
+	# Если игрок не обнаружен - стоим
 	if not perception.is_player_detected():
-		print_debug("AIBrain: player not detected")
-		return false
+		return {"type": CombatDecision.IDLE}
 	
-	var dist = perception.get_player_distance()
-	var result = dist > attack_range
-	print_debug("AIBrain: should_move_to_player? ", result, " (dist=", dist, " attack_range=", attack_range, ")")
-	return result
-
-func should_attack() -> bool:
-	if not perception:
-		return false
+	var dist = perception.get_distance_to_player()
+	var player_pos = perception.get_player_position()
 	
-	# Атакуем, если видим игрока и он достаточно близко
-	return perception.is_player_detected() and perception.get_player_distance() <= attack_range
+	# Если игрок дальше дистанции атаки - идем к нему
+	if dist > attack_range:
+		return {
+			"type": CombatDecision.WALK,
+			"target": player_pos
+		}
+	
+	# Если игрок в радиусе атаки - решаем, что делать
+	# Случайно выбираем: атака или способность
+	if randf() < ability_usage_chance and combat_component.ability_component:
+		# Пытаемся найти доступный слот со способностью
+		var slot = _get_available_ability_slot()
+		if slot >= 0:
+			# Нашли - используем способность
+			return {
+				"type": CombatDecision.CAST,
+				"slot": slot,
+				"target": player_pos
+			}
+	
+	# Если не выпала способность или нет доступных слотов - обычная атака
+	return {
+		"type": CombatDecision.ATTACK,
+		"target": player_pos
+	}
 
-func get_target_position() -> Vector2:
-	if perception:
-		return perception.get_player_position()
-	return actor.global_position  # Если ничего нет - остаёмся на месте
-
-func get_attack_range() -> float:
-	return attack_range
+# ==================== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ====================
+func _get_available_ability_slot() -> int:
+	if not combat_component.ability_component:
+		print_debug("AIBrain: нет ability_component")
+		return -1
+	
+	var ability_comp = combat_component.ability_component
+	var available = []
+	
+	for i in range(ability_comp.slots.size()):
+		var can_cast = ability_comp.can_cast_ability(i)
+		if can_cast:
+			available.append(i)
+	
+	if available.is_empty():
+		print_debug("AIBrain: нет доступных слотов")
+		return -1
+	
+	var chosen = available[randi() % available.size()]
+	return chosen

@@ -45,6 +45,7 @@ func _ready() -> void:
 	
 	# Настраиваем Hurtbox
 	if hurtbox:
+		hurtbox.set_entity_owner(self)
 		hurtbox.update_layer_from_owner()
 	
 	# Подключаем сигналы компонентов (специфичные для игрока)
@@ -202,6 +203,9 @@ func teleport(new_position: Vector2, _fade_effect: bool = true) -> void:
 
 func set_last_horizontal_direction(dir: Vector2) -> void:
 	last_horizontal_direction = dir
+
+func get_sprite() -> Sprite2D:
+	return sprite
 
 # ==================== СОХРАНЕНИЕ ====================
 func get_save_data() -> Dictionary:

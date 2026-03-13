@@ -11,8 +11,8 @@
 [ext_resource type="Script" uid="uid://7cuvsmdalifd" path="res://Scripts/entitis/states/AttackState.gd" id="8_kk05o"]
 [ext_resource type="Script" uid="uid://dsn4qgaebbeil" path="res://Scripts/entitis/states/DodgeState.gd" id="9_irnrt"]
 [ext_resource type="Script" uid="uid://be2grp5e7rmy4" path="res://Scripts/entitis/states/BlockState.gd" id="10_r5m3b"]
-[ext_resource type="Script" uid="uid://g68nw8vjvffk" path="res://Scripts/entitis/Player/state/AimState.gd" id="11_0otme"]
-[ext_resource type="Script" uid="uid://chfbbtqechx3d" path="res://Scripts/entitis/Player/state/CastState.gd" id="12_sy2hw"]
+[ext_resource type="Script" uid="uid://g68nw8vjvffk" path="res://Scripts/entitis/Player/state/PlayerAimState.gd" id="11_0otme"]
+[ext_resource type="Script" uid="uid://chfbbtqechx3d" path="res://Scripts/entitis/Player/state/PlayerCastState.gd" id="12_sy2hw"]
 [ext_resource type="Script" uid="uid://dffiglh5cnj5w" path="res://Scripts/entitis/states/WalkState.gd" id="13_kk05o"]
 [ext_resource type="Script" uid="uid://d7obpadyfu0r" path="res://Scripts/entitis/states/StunState.gd" id="14_irnrt"]
 [ext_resource type="Script" uid="uid://bghkf61ukvvnf" path="res://Scripts/Ability/AbilityComponent.gd" id="16_iqiq2"]
@@ -28,10 +28,16 @@
 script = ExtResource("17_r5m3b")
 base_stats = {
 "agility": 5,
-"attack": 1,
+"attack": 10,
 "defense": 5,
 "speed": 5
 }
+max_mp = 1000
+current_mp = 1000
+mp_regen_per_second = 5.0
+max_stamina = 1000
+current_stamina = 1000
+stamina_regen_per_second = 5.0
 metadata/_custom_type_script = "uid://rix2axybkxut"
 
 [sub_resource type="Animation" id="Animation_gpg7s"]
@@ -204,11 +210,12 @@ radius = 26.87936
 
 [sub_resource type="Resource" id="Resource_c1ec4"]
 script = ExtResource("6_iqiq2")
+dodge_distance = 150.0
 metadata/_custom_type_script = "uid://todvfrjyk52p"
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_kk05o"]
-radius = 12.0
-height = 50.0
+radius = 18.0
+height = 62.0
 
 [node name="Player" type="CharacterBody2D" unique_id=591630021 groups=["player"]]
 collision_layer = 2
@@ -231,6 +238,7 @@ zoom = Vector2(2, 2)
 libraries/ = SubResource("AnimationLibrary_r5va5")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2009194619]
+visible = false
 position = Vector2(0, 3)
 shape = SubResource("CapsuleShape2D_gpg7s")
 
@@ -284,7 +292,6 @@ script = ExtResource("14_irnrt")
 script = ExtResource("16_iqiq2")
 
 [node name="Hurtbox" type="Area2D" parent="." unique_id=123066687]
-visible = false
 collision_layer = 0
 collision_mask = 0
 script = ExtResource("16_r5m3b")

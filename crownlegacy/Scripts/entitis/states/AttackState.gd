@@ -44,30 +44,49 @@ func physics_process(_delta: float) -> void:
 	apply_movement()
 
 func _spawn_attack_hitbox() -> void:
-	
 	if not hitbox_component:
 		return
 	
-	var base_damage = attack_params.get("base_damage", 10)
+	# Базовый урон из характеристик атакующего
+	var base_damage = attack_params.get("base_damage", 1)
 	var combo_multipliers = attack_params.get("combo_damage", [1.0, 1.2, 1.5, 2.0])
 	var idx = mini(combo_step - 1, combo_multipliers.size() - 1)
 	var multiplier = combo_multipliers[idx] if idx >= 0 else 1.0
 	var final_damage = int(base_damage * multiplier)
+	
+	# Параметры крита (берутся из stats_provider или combat_config)
+	var can_crit = attack_params.get("can_crit", false)
+	var crit_chance = attack_params.get("crit_chance", 0.05)  # 5% базовый шанс
+	var crit_multiplier = attack_params.get("crit_multiplier", 2.0)
+	var penetration = attack_params.get("penetration", 0.0)  # пробивание защиты
+	
+	# Определяем крит
+	var is_critical = false
+	if can_crit and randf() < crit_chance:
+		is_critical = true
+		final_damage = int(final_damage * crit_multiplier)
+	
+	# Направление и позиция спавна
 	var direction = get_attack_direction()
-		# Получаем дистанцию спавна из конфига
 	var offset = combat_config.attack_hitbox_offset if combat_config else 15.0
 	var spawn_pos = entity.global_position + direction * offset
 	
-	hitbox_component.spawn_attack_hitbox(
-		spawn_pos,
-		direction,
-		final_damage,
-		multiplier,
-		false
-	)
+	# Создаем DamageData с полной информацией
+	var damage_data = DamageData.new()
+	damage_data.amount = final_damage
+	damage_data.damage_type = 0  # PHYSICAL (можно позже сделать настраиваемым)
+	damage_data.is_critical = is_critical
+	damage_data.penetration = penetration
+	damage_data.source = entity
+	
+	# Опционально: сохраняем множитель крита для эффектов
+	if is_critical:
+		damage_data.crit_multiplier = crit_multiplier
+	
+	# Спавним хитбокс с готовыми данными
+	hitbox_component.spawn_hitbox_with_damage(spawn_pos, direction, damage_data)
 	
 	EventBus.Combat.attack.basic_hit.emit(combo_step, 1)
-
 func await_open_combo_window() -> void:
 	await get_tree().create_timer(attack_params.get("cancel_window_start", 0.1)).timeout
 	if attack_timer > 0:

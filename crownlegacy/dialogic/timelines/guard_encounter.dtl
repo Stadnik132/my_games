@@ -6,6 +6,7 @@ Guard: Стой, ё-маё
 		[signal arg="trust-10"]
 		Klous: Тестик
 		[signal arg="start_battle:guard_01"]
+		[signal arg="start_battle:guard_02"]
 	else:
 		Klous: Не, не буду
 		if DialogicBridge.can_afford_will(1):

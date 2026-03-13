@@ -4,6 +4,7 @@ class_name BlockState extends CombatState
 # Стамина тратится за каждый полученный удар, урон снижается.
 
 var is_blocking: bool = false
+var _is_ending: bool = false
 
 func enter() -> void:
 	super.enter()
@@ -76,7 +77,9 @@ func _break_block() -> void:
 	transition_requested.emit("Stun")  # Оглушение при сломанном блоке
 
 func _end_block() -> void:
-	"""Нормальное завершение блока"""
+	if _is_ending:
+		return
+	_is_ending = true
 	is_blocking = false
 	EventBus.Combat.block.ended.emit()
 	transition_requested.emit("Idle")

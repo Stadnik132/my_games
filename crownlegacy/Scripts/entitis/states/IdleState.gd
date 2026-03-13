@@ -16,15 +16,13 @@ func _get_animation_direction_from_fsm() -> String:
 		return "down" if dir.y > 0 else "up"
 
 func physics_process(_delta: float) -> void:
-	# В Idle проверяем ввод движения только если мы в бою
-	# (в WORLD движением управляет Player.gd, не FSM)
+	# Получаем вектор движения из компонента (Input для Player, AI для Actor)
+	var move_vector = combat_component.get_move_vector()
 	
-	# Получаем ввод через Input (глобально)
-	var input_vector = _get_input_vector()
-	if input_vector != Vector2.ZERO:
+	if move_vector != Vector2.ZERO:
 		# Запоминаем направление для уворота/анимаций
-		fsm.last_movement_direction = input_vector
-		fsm.last_dodge_direction = input_vector
+		fsm.last_movement_direction = move_vector
+		fsm.last_dodge_direction = move_vector
 		transition_requested.emit("Walk")
 		return
 	
@@ -35,22 +33,13 @@ func handle_command(command: String, data: Dictionary = {}) -> void:
 		"attack":
 			transition_requested.emit("Attack")
 		"dodge":
-			# Направление для уворота может прийти из data
 			if data.has("direction"):
 				fsm.last_dodge_direction = data["direction"]
 			transition_requested.emit("Dodge")
 		"block_start":
 			transition_requested.emit("Block")
-		"ability_selected":  # было "aiming_start"
+		"ability_selected":
 			transition_requested.emit("Aim")
 
 func get_allowed_transitions() -> Array[String]:
-	return ["Walk", "Attack", "Dodge", "Block", "Aim", "Stun"]
-
-# Вспомогательный метод для получения ввода
-func _get_input_vector() -> Vector2:
-	var input = Vector2(
-		Input.get_action_strength("move_right") - Input.get_action_strength("move_left"),
-		Input.get_action_strength("move_down") - Input.get_action_strength("move_up")
-	)
-	return input.normalized() if input.length() > 0 else Vector2.ZERO
+	return ["Walk", "Attack", "Dodge", "Block", "Aim", "Stun", "Cast"]

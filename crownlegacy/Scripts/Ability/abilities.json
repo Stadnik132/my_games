@@ -22,6 +22,7 @@
 	  },
 	  "effect_radius": 80.0,
 	  "max_cast_range": 80.0,
+	  "effect_scene": "res://Scenes/abilities/effect/InstantEffect.tscn",
 	  "cast_animation": "attack_special",
 	  "sound_effect": "res://assets/sounds/abilities/slash.wav"
 	},
@@ -40,17 +41,17 @@
 	  "channeled": false,
 	  "damage_data": {
 		"damage_type": 1,
-		"amount": 70,
+		"amount": 80,
 		"penetration": 0.2,
 		"can_crit": true,
 		"crit_multiplier": 1.8
 	  },
-	  "projectile_speed": 300.0,
+	  "projectile_speed": 100.0,
 	  "max_cast_range": 500.0,
 	  "effect_radius": 100.0,
 	  "effect_duration": 0.3,
 	  "cast_animation": "cast_fire",
-	  "projectile_scene": "res://Scenes/abilities/fireball.tscn",
+	  "effect_scene": "res://Scenes/abilities/fireball.tscn",
 	  "sound_effect": "res://assets/sounds/abilities/fireball_cast.wav"
 	},
 	{
@@ -68,38 +69,34 @@
 	  "channeled": false,
 	  "damage_data": {
 		"damage_type": 1,
-		"amount": 150,
+		"amount": 30,
 		"penetration": 0.3,
 		"can_crit": false,
 		"crit_multiplier": 1.0
 	  },
-	  "effect_radius": 50.0,
+	  "effect_radius": 150.0,
 	  "max_cast_range": 200.0,
 	  "effect_duration": 0.5,
 	  "cast_animation": "cast_ice",
-	  "area_effect_scene": "res://Scenes/abilities/effect/area_effect.tscn",
+	  "effect_scene": "res://Scenes/abilities/effect/area_effect.tscn",
 	  "sound_effect": "res://assets/sounds/abilities/frost_cast.wav"
 	},
 	{
-	  "id": "berserk",
-	  "name": "Берсерк",
-	  "description": "Увеличивает силу атаки и скорость на короткое время.",
-	  "icon_path": "res://assets/icons/abilities/berserk.png",
-	  "type": 3,
-	  "unlock_level": 2,
-	  "mana_cost": 10,
-	  "stamina_cost": 20,
-	  "health_cost": 5,
-	  "cast_time": 1.0,
-	  "cooldown": 20.0,
-	  "channeled": false,
-	  "damage_data": {},
-	  "heal_amount": 0,
-	  "buff_duration": 10.0,
-	  "effect_radius": 0.0,
-	  "max_cast_range": 0.0,
-	  "cast_animation": "cast_buff",
-	  "sound_effect": "res://assets/sounds/abilities/berserk_cast.wav"
+  	"id": "berserk",
+  	"name": "Берсерк",
+  	"type": 3,
+  	"cast_time": 1.0,
+	"duration": 10.0,
+  	"cooldown": 20.0,
+  	"stamina_cost": 20,
+  	"mana_cost": 10,
+  	"health_cost": 5,
+  	"buff_stats": {
+		"attack": 20,
+		"speed": 50
+  },
+  	"effect_scene": "res://Scenes/abilities/effect/BerserkEffect.tscn",
+  	"cast_animation": "cast_buff"
 	}
   ]
 }

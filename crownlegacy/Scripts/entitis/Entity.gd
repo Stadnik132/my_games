@@ -9,10 +9,15 @@ var progression_component: ProgressionComponent
 var ability_component: AbilityComponent
 var hurtbox: Hurtbox
 
+
 # ==================== СОСТОЯНИЕ ====================
 var is_dead: bool = false
 var movement_locked: bool = false
 var interaction_locked: bool = false
+
+var _flash_tween: Tween
+var _death_tween: Tween
+var _stun_tween: Tween
 
 # ==================== ВСТРОЕННЫЕ МЕТОДЫ ====================
 func _ready() -> void:
@@ -55,7 +60,65 @@ func _on_health_changed(new_value: int, old_value: int, max_value: int) -> void:
 func _on_died() -> void:
 	is_dead = true
 	EventBus.Entity.died.emit(self)
-	_disable_entity()
+	_play_death_effect()
+
+func _play_death_effect() -> void:
+	var sprite = get_sprite()
+	if sprite:
+		_death_tween = create_tween()
+		_death_tween.set_parallel(true)
+		_death_tween.tween_property(sprite, "modulate", Color(0.3, 0.3, 0.3), 0.3)
+		_death_tween.tween_property(sprite, "modulate:a", 0.0, 0.5)
+		await _death_tween.finished
+		hide()
+	else:
+		hide()
+	
+	set_physics_process(false)
+	set_process(false)
+
+func apply_damage_flash(damage_type: int) -> void:
+	var sprite = get_sprite()
+	
+	if not sprite:
+		return
+	
+	var flash_color: Color
+	match damage_type:
+		0:
+			flash_color = Color.RED
+		1:
+			flash_color = Color.BLUE
+		_:
+			flash_color = Color.WHITE
+	
+	if _flash_tween and _flash_tween.is_running():
+		_flash_tween.kill()
+	
+	_flash_tween = create_tween()
+	_flash_tween.tween_property(sprite, "modulate", flash_color, 0.05)
+	_flash_tween.tween_property(sprite, "modulate", Color.WHITE, 0.1)
+
+func apply_stun_effect() -> void:
+	var sprite = get_sprite()
+	if not sprite:
+		return
+	
+	if _stun_tween and _stun_tween.is_running():
+		_stun_tween.kill()
+	
+	_stun_tween = create_tween()
+	_stun_tween.tween_property(sprite, "modulate", Color.WHITE, 0.1)
+
+func clear_stun_effect() -> void:
+	var sprite = get_sprite()
+	if not sprite:
+		return
+	
+	if _stun_tween:
+		_stun_tween.kill()
+	sprite.modulate = Color.WHITE
+
 
 func _on_damage_taken(amount: int, damage_type: int, source: Node, is_critical: bool) -> void:
 	EventBus.Entity.damage_taken.emit(self, amount, damage_type, source, is_critical)
@@ -76,12 +139,10 @@ func _on_experience_gained(amount: int, new_total: int, next_level: int) -> void
 
 # ==================== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ====================
 func _disable_entity() -> void:
-	"""Отключает сущность при смерти"""
 	movement_locked = true
 	interaction_locked = true
 	set_physics_process(false)
 	set_process(false)
-	hide()  # или проиграть анимацию смерти
 
 # ==================== ПУБЛИЧНЫЕ МЕТОДЫ ====================
 func take_damage(amount: int, damage_type: int, source: Node = null, is_critical: bool = false) -> void:
@@ -130,6 +191,9 @@ func get_horizontal_facing_direction() -> Vector2:
 	"""Виртуальный метод - возвращает горизонтальное направление (вправо/влево).
 	Должен быть переопределён в наследниках (Player, Actor)"""
 	return Vector2.RIGHT  # значение по умолчанию
+
+func get_sprite() -> Sprite2D:
+	return null
 
 # ==================== СОХРАНЕНИЕ ====================
 func get_save_data() -> Dictionary:

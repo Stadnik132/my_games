@@ -62,9 +62,7 @@ class CombatSignals:
 	signal started(enemies: Array)
 	signal ended(victory: bool)
 	signal combat_state_changed(old_state: String, new_state: String)
-	
-	# Состояния игрока в бою
-	signal player_stunned(is_stunned: bool)
+	signal entity_stunned(entity: Node, is_stunned: bool)
 	
 	# Враги
 	class EnemySignals:

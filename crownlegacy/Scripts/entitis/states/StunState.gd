@@ -5,19 +5,25 @@ class_name StunState extends CombatState
 
 @export var stun_duration: float = 0.5
 var stun_timer: float = 0.0
+var _stun_tween: Tween
 
 func enter() -> void:
 	super.enter()
-	stun_timer = stun_duration
+	
+	# Отключаем движение
 	set_battle_velocity(Vector2.ZERO)
 	
-	# Анимация
-	EventBus.Animations.requested.emit(entity, "stun", stun_duration)
+	# Эффект стана (белый цвет)
+	_apply_stun_effect()
 	
-	# Общий сигнал о начале стана
+	# Запускаем таймер стана
+	stun_timer = combat_config.stun_duration
+	
+	# Анимация стана (если есть)
+	EventBus.Animations.requested.emit(entity, "stun", stun_timer)
+	
+	# Сигнал о начале стана
 	EventBus.Combat.entity_stunned.emit(entity, true)
-	
-	print_debug("StunState: вход, длительность ", stun_duration)
 
 func process(delta: float) -> void:
 	super.process(delta)
@@ -35,11 +41,35 @@ func handle_command(_command: String, _data: Dictionary = {}) -> void:
 	pass
 
 func exit() -> void:
-	super.exit()
+	# Возвращаем нормальный цвет
+	_clear_stun_effect()
 	EventBus.Combat.entity_stunned.emit(entity, false)
+	super.exit()
 
 func can_exit() -> bool:
 	return stun_timer <= 0.0
 
 func get_allowed_transitions() -> Array[String]:
 	return ["Idle"]
+
+# ==================== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ====================
+func _apply_stun_effect() -> void:
+	var sprite = entity.get_sprite()
+	
+	if not sprite:
+		return
+	
+	if _stun_tween and _stun_tween.is_running():
+		_stun_tween.kill()
+	
+	_stun_tween = create_tween()
+	_stun_tween.tween_property(sprite, "modulate", Color.WHITE, 0.1)
+
+func _clear_stun_effect() -> void:
+	var sprite = entity.get_sprite()
+	if not sprite:
+		return
+	
+	if _stun_tween:
+		_stun_tween.kill()
+	sprite.modulate = Color.WHITE

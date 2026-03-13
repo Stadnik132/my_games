@@ -12,23 +12,37 @@ func _ready():
 	disable_mode = DISABLE_MODE_REMOVE
 
 func update_layer_from_owner() -> void:
+	
 	if not owner:
 		collision_layer = 0
 		collision_mask = 0
-		return	
+		return
+	
 	if owner.is_in_group("player"):
-		collision_mask = 2 # Слой 2
+		collision_layer = 2
+		collision_mask = 4
+		
 	elif owner.is_in_group("enemies"):
-		collision_mask = 4 # Слой 3
+		collision_layer = 4
+		collision_mask = 2
+		
 	elif owner.is_in_group("friendlies"):
-		collision_mask = 2 # Слой 2
+		collision_layer = 2
+		collision_mask = 2
 	else:
 		collision_layer = 0
 		collision_mask = 0
+		print_debug("  unknown: layer=0 mask=0")
 
+func _on_hitbox_entered(area: Area2D):
 
-func _on_hitbox_entered(area: Area2D):	# Проверяем, что это Hitbox (у него есть get_damage_data)
+	
+	# Проверяем, что это Hitbox, а не другой Hurtbox
+	if not area is Hitbox:
+		return
+	
 	if area.has_method("get_damage_data"):
 		var damage_data = area.get_damage_data()
+		print_debug("  damage_data получен: ", damage_data != null)
 		if damage_data:
 			damage_taken.emit(damage_data, damage_data.source)

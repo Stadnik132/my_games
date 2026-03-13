@@ -4,18 +4,36 @@ class_name Hitbox
 var damage_data: DamageData
 var direction: Vector2 = Vector2.ZERO
 var lifetime: float = 0.1
+var _damage_applied: bool = false
 
 func _ready():
-	
-	# Проверяем damage_data
 	if damage_data:
 		print("    🔴УРОН! : ", damage_data.amount)
 	
-	await get_tree().process_frame
 	_update_layers_from_source()
 	area_entered.connect(_on_area_entered)
+	
+	# ВАЖНО: ждём один кадр после добавления в дерево
+	await get_tree().process_frame
+	
+	# Теперь можно проверять пересечения
+	_apply_damage_to_overlapping()
+	
+	# Ждём оставшееся время жизни
 	await get_tree().create_timer(lifetime).timeout
 	queue_free()
+
+func _apply_damage_to_overlapping() -> void:
+	if _damage_applied:
+		return
+	_damage_applied = true  # Сразу ставим флаг ДО нанесения урона
+	
+	var overlapping_areas = get_overlapping_areas()
+	for area in overlapping_areas:
+		if area is Hurtbox and area.entity_owner != damage_data.source:
+			area.damage_taken.emit(damage_data, damage_data.source)
+			break  # Только один раз
+
 
 func _update_layers_from_source():
 	var source = damage_data.source if damage_data else null
@@ -28,19 +46,25 @@ func _update_layers_from_source():
 	print("    source группы: ", source.get_groups())
 	
 	if source.is_in_group("player"):
-		collision_layer = 4 # Слой 3
-
+		# Хитбокс игрока
+		collision_layer = 2
+		collision_mask = 4
+		
 	elif source.is_in_group("enemies"):
-		collision_layer = 2 # Слой 2
+		# Хитбокс врага
+		collision_layer = 4
+		collision_mask = 2
 	else:
 		collision_layer = 0
 		collision_mask = 0
 
 func _on_area_entered(area: Area2D):
-	if area is Hurtbox:
-		# Проверяем, что это не свой хертбокс
-		if area.entity_owner == damage_data.source:
-			return
+	if _damage_applied:
+		return
+	_damage_applied = true  # Сразу ставим флаг
+	
+	if area is Hurtbox and area.entity_owner != damage_data.source:
+		area.damage_taken.emit(damage_data, damage_data.source)
 		set_deferred("monitoring", false)
 
 func get_damage_data() -> DamageData:

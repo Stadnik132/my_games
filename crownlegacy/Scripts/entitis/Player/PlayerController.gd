@@ -4,6 +4,8 @@ class_name PlayerController
 # ==================== ССЫЛКИ ====================
 @onready var player: Player = get_parent()
 
+var _was_blocking: bool = false
+
 # ==================== ВВОД ====================
 func _input(event: InputEvent) -> void:
 	if _handle_global_input(event):

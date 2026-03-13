@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://sny6ylm10lvv"]
+
+[ext_resource type="Script" uid="uid://c3oo3xq0icvvp" path="res://Scripts/Ability/AbilityEffect/BerserkEffect.gd" id="1_vscr7"]
+
+[node name="BerserkEffect" type="Node2D" unique_id=1735830583]
+script = ExtResource("1_vscr7")
+
+[node name="GPUParticles2D" type="GPUParticles2D" parent="." unique_id=1137962997]

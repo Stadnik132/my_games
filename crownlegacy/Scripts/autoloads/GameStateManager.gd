@@ -28,7 +28,7 @@ func _setup_event_bus_connections() -> void:
 	eb.Game.menu_requested.connect(_on_transition_to_menu_requested)
 	eb.Game.cutscene_requested.connect(_on_transition_to_cutscene_requested)
 	eb.Game.game_over_requested.connect(_on_transition_to_game_over_requested)
-	eb.Entity.died.connect(_on_entiry_died)
+	eb.Entity.died.connect(_on_entity_died)
 	eb.Combat.decision.dialogic_made.connect(_on_dialogic_decision_made)
 	
 	print_debug("GameStateManager подключён к EventBus")
@@ -130,7 +130,7 @@ func _on_dialogic_decision_made(choice: String) -> void:
 			change_state(GameState.WORLD)
 
 # ---------- ОБРАБОТЧИКИ ИГРОВЫХ СОБЫТИЙ ----------
-func _on_entiry_died(entity: Node) -> void:
+func _on_entity_died(entity: Node) -> void:
 	# Реагируем только на смерть игрока
 	if not entity or not entity.is_in_group("player"):
 		return
