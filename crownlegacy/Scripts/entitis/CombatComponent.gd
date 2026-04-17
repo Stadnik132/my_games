@@ -141,29 +141,48 @@ func _on_hurtbox_damage(damage_data: DamageData, source: Node) -> void:
 	
 	# Шаг 1: Применяем блок, если в состоянии блока
 	var was_blocked = false
+	var block_stamina_cost = 0
+	
 	if fsm and fsm.get_current_state_name() == "Block":
 		var block_result = _apply_block(damage_data)
 		final_damage = block_result.damage
+		block_stamina_cost = block_result.stamina_cost
 		was_blocked = true
 		
-		# Тратим стамину за блок
-		if stamina_component and block_result.stamina_cost > 0:
-			stamina_component.use(block_result.stamina_cost)
+		# Тратим стамину за блок (ЗДЕСЬ а не в BlockState)
+		if stamina_component and block_stamina_cost > 0:
+			stamina_component.use(block_stamina_cost)
+			
+			# Проверяем не закончилась ли стамина
+			if stamina_component.get_current() < 5:
+				# Блок сломан - переводим в стан
+				fsm.request_stun(Vector2.ZERO, 0)
+				return  # Выходим - стан применится, урон всё равно наносится
 	
 	# Шаг 2: Применяем защиту цели
 	final_damage = _apply_defense(final_damage, damage_data)
 	
-	# Шаг 3: Наносим урон
-	health.take_damage(
-		final_damage,
-		damage_data.damage_type,
-		source,
-		damage_data.is_critical
-	)
-	
-	# Шаг 4: Стан (только если не в блоке)
+	# Шаг 3: Наносим урон (только если цель жива)
+	if health.is_alive():
+		health.take_damage(
+			final_damage,
+			damage_data.damage_type,
+			source,
+			damage_data.is_critical
+		)
+		
+		# Проверяем не умерла ли цель
+		if not health.is_alive():
+			# Сущность мертва - не применяем стан/отбрасывание
+			return
+
+	# Шаг 4: Стан (только если не в блоке и цель жива)
 	if fsm and not was_blocked:
-		fsm.request_stun()
+		# Передаём данные об отбрасывании
+		var knockback_distance = damage_data.knockback_distance
+		# Направление ОТ атакующего К цели
+		var knockback_direction = owner_entity.global_position - source.global_position if source else Vector2.RIGHT
+		fsm.request_stun(knockback_direction, knockback_distance)
 
 func _apply_block(damage_data: DamageData) -> Dictionary:
 

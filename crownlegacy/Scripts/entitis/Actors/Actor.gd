@@ -19,9 +19,10 @@ var last_movement_direction: Vector2 = Vector2.DOWN
 @onready var interaction_component: ActorInteractionComponent = $ActorInteractionComponent
 @onready var combat_component: ActorCombatComponent = $ActorCombatComponent
 @onready var ai_controller: AIController = $AIController
-@onready var perception_component: AIPerception = $AIPerception  # НОВОЕ
-@onready var brain_component: AIBrain = $AIBrain  # НОВОЕ
+@onready var perception_component: AIPerception = $AIPerception
+@onready var brain_component: AIBrain = $AIBrain
 @onready var decision_trigger_component: DecisionTriggerComponent = $DecisionTriggerComponent
+@onready var position_guard_component: ActorPositionGuardComponent = $ActorPositionGuardComponent
 
 # Совместимость для кода, который ожидает свойство `entity_data` у Entity.
 var entity_data: EntityData:
@@ -35,6 +36,7 @@ var current_mode: String = MODE_WORLD
 var last_facing_direction: String = "down"
 var _is_in_dialogue: bool = false
 var dialogue_used: bool = false
+var _in_combat_mode: bool = false  # Для совместимости с системой боя
 
 # ==================== ИНИЦИАЛИЗАЦИЯ ====================
 func _ready() -> void:
@@ -60,7 +62,11 @@ func _ready() -> void:
 		interaction_component.setup(self)
 		interaction_component.player_entered_range.connect(_on_player_entered_range)
 		interaction_component.player_exited_range.connect(_on_player_exited_range)
-	
+
+	# Настраиваем компонент защиты позиции
+	if position_guard_component:
+		position_guard_component.setup(self)
+
 	# Настраиваем боевой компонент
 	if combat_component:
 		combat_component.setup(self, actor_data)
@@ -100,16 +106,32 @@ func _ready() -> void:
 	EventBus.Dialogue.ended.connect(_on_dialogue_ended)
 	EventBus.Actors.interaction_requested.connect(_on_interaction_requested)
 	EventBus.Combat.started.connect(_on_combat_started)
-	
+	EventBus.Animations.requested.connect(_on_animation_requested)
+
 	_play_idle_animation()
 	print_debug("Actor создан: ", actor_id, " (режим: ", current_mode, ")")
 
 # ==================== ФИЗИКА ====================
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
+	# В бою движение через FSM
+	if _in_combat_mode:
+		_update_animation()
+		return
+
 	move_and_slide()
+
+	# Проверка компонента защиты позиции (если есть)
+	if position_guard_component:
+		position_guard_component.process_physics(delta)
+
 	_update_animation()
 
 # ==================== АНИМАЦИИ ====================
+func _play_animation(anim_name: String) -> void:
+	"""Универсальный метод проигрывания анимации"""
+	if animation_player.has_animation(anim_name):
+		animation_player.play(anim_name)
+
 func _update_animation() -> void:
 	if velocity.length() > 10:
 		_update_facing_direction()
@@ -159,6 +181,15 @@ func _play_walk_animation() -> void:
 		animation_player.play(anim_name)
 
 func _play_idle_animation() -> void:
+	# В бою используем боевые анимации
+	if _in_combat_mode:
+		var dir = "right" if get_horizontal_facing_direction() == Vector2.RIGHT else "left"
+		var anim_name = "idle_battle_" + dir
+		if animation_player.has_animation(anim_name):
+			animation_player.play(anim_name)
+		return
+
+	# Вне боя - обычные idle анимации
 	var dir = get_cardinal_direction()
 	var anim_name = "idle_" + dir
 	if animation_player.has_animation(anim_name):
@@ -191,13 +222,15 @@ func _apply_mode() -> void:
 				add_to_group("enemies")
 			if ai_controller:
 				ai_controller.set_active(true)
-			
+			_in_combat_mode = true
+
 		MODE_WORLD:
 			if is_in_group("enemies"):
 				remove_from_group("enemies")
 			if ai_controller:
 				ai_controller.set_active(false)
-	
+			_in_combat_mode = false
+
 	if hurtbox:
 		hurtbox.update_layer_from_owner()
 
@@ -282,6 +315,34 @@ func _on_combat_started(enemies: Array) -> void:
 		change_mode(MODE_BATTLE)
 		if combat_component:
 			combat_component.enter_combat()
+		# Запускаем боевую idle анимацию
+		var dir = "right" if get_horizontal_facing_direction() == Vector2.RIGHT else "left"
+		_play_animation("idle_battle_" + dir)
+
+func _on_animation_requested(target: Node, animation_name: String, duration: float) -> void:
+	"""Проигрывает анимацию по запросу из EventBus"""
+	if target != self:
+		return
+
+	if not animation_player.has_animation(animation_name):
+		print_debug("Actor: анимация не найдена: ", animation_name)
+		return
+
+	var anim = animation_player.get_animation(animation_name)
+
+	# Для одноразовых анимаций (атаки) — отключаем зацикливание
+	if not animation_name.begins_with("walk") and not animation_name.begins_with("idle"):
+		anim.loop_mode = Animation.LOOP_NONE
+
+	_play_animation(animation_name)
+
+	if duration > 0:
+		# Устанавливаем speed_scale для нужной длительности
+		animation_player.speed_scale = animation_player.current_animation_length / duration
+
+		# Ждём указанную длительность через таймер
+		await get_tree().create_timer(duration).timeout
+		animation_player.speed_scale = 1.0
 
 # ==================== ЗДОРОВЬЕ И СМЕРТЬ ====================
 func _on_health_changed(new_value: int, _old_value: int, max_value: int) -> void:
@@ -317,6 +378,28 @@ func get_horizontal_facing_direction() -> Vector2:
 
 func get_sprite() -> Sprite2D:
 	return sprite
+
+# ==================== НАЧАЛО БОЯ ====================
+func combat_start_jump(direction: Vector2, distance: float, duration: float) -> void:
+	"""
+	Плавный отскок при начале боя.
+	Вызывается из CombatManager для Actor.
+	Если Actor — босс с marker_point, этот метод НЕ вызывается.
+	"""
+	_in_combat_mode = true  # Отключаем обычный physics_process
+	
+	var start_pos = global_position
+	var end_pos = start_pos + direction * distance
+	
+	# Плавная анимация через Tween
+	var tween = create_tween()
+	tween.set_trans(Tween.TRANS_QUAD)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.tween_property(self, "global_position", end_pos, duration)
+	tween.tween_callback(func():
+		velocity = Vector2.ZERO
+		print_debug("Actor: отскок завершён")
+	)
 
 func _update_component_data(new_data: ActorData) -> void:
 	"""Обновляет ссылки на данные во всех компонентах"""

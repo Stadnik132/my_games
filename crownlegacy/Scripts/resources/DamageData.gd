@@ -23,6 +23,9 @@ var source: Node = null
 @export var can_crit: bool = false
 @export_range(1.0, 3.0, 0.1) var crit_multiplier: float = 1.5
 
+@export_category("Отбрасывание")
+@export var knockback_distance: float = 0.0  # расстояние отбрасывания цели
+
 @export_category("Дополнительные эффекты")
 @export var status_effects: Array[Dictionary] = []  # Для будущего
 

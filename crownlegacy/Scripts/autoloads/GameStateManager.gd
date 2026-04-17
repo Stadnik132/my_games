@@ -76,7 +76,6 @@ func _handle_state_change_effects(new_state: GameState, old_state: GameState) ->
 	match new_state:
 		GameState.MENU, GameState.GAME_OVER:
 			# Полная пауза
-			Engine.time_scale = 0.0
 			get_tree().paused = true
 			EventBus.Game.paused.emit(true)
 		
@@ -86,7 +85,7 @@ func _handle_state_change_effects(new_state: GameState, old_state: GameState) ->
 		
 		GameState.CUTSCENE:
 			# Катсцена - замедленное время
-			Engine.time_scale = 0.5
+			Engine.time_scale = 0.9
 			EventBus.Game.paused.emit(false)
 		
 		GameState.WORLD, GameState.BATTLE:
@@ -113,7 +112,11 @@ func _on_transition_to_battle_requested(enemies: Array = []) -> void:
 		print_debug("Начало боя с ", enemies.size(), " врагами")
 		
 func _on_transition_to_menu_requested() -> void:
-	change_state(GameState.MENU)
+	# Если мы уже в MENU - возвращаемся в предыдущее состояние
+	if _current_state == GameState.MENU:
+		change_state(_previous_state)
+	else:
+		change_state(GameState.MENU)
 
 func _on_transition_to_cutscene_requested(cutscene_id: String) -> void:
 	change_state(GameState.CUTSCENE)

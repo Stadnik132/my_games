@@ -1,0 +1,121 @@
+[gd_scene format=3 uid="uid://d2qslph22io5v"]
+
+[ext_resource type="Script" uid="uid://c0p5ja2vakabj" path="res://Scripts/ui/SettingsMenu.gd" id="1_uhinl"]
+
+[node name="SettingMenu" type="Panel" unique_id=1520302432]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_uhinl")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=2095560052]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -126.0
+offset_top = -46.5
+offset_right = 126.0
+offset_bottom = 46.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Setting" type="Label" parent="VBoxContainer" unique_id=1687051925]
+layout_mode = 2
+text = "Настройки"
+
+[node name="TabContainer" type="TabContainer" parent="VBoxContainer" unique_id=1253750447]
+layout_mode = 2
+current_tab = 0
+
+[node name="GraphicsTab" type="Control" parent="VBoxContainer/TabContainer" unique_id=649665363]
+layout_mode = 2
+metadata/_tab_index = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/TabContainer/GraphicsTab" unique_id=1649713416]
+layout_mode = 0
+offset_left = 2.0
+offset_top = 39.0
+offset_right = 335.0
+offset_bottom = 297.0
+
+[node name="Label" type="Label" parent="VBoxContainer/TabContainer/GraphicsTab/VBoxContainer" unique_id=1569721917]
+layout_mode = 2
+text = "Разрешение"
+
+[node name="Resolution" type="OptionButton" parent="VBoxContainer/TabContainer/GraphicsTab/VBoxContainer" unique_id=902008817]
+layout_mode = 2
+
+[node name="Label2" type="Label" parent="VBoxContainer/TabContainer/GraphicsTab/VBoxContainer" unique_id=505785547]
+layout_mode = 2
+text = "Режим окна"
+
+[node name="WindowMode" type="OptionButton" parent="VBoxContainer/TabContainer/GraphicsTab/VBoxContainer" unique_id=2019046]
+layout_mode = 2
+
+[node name="VSync" type="CheckButton" parent="VBoxContainer/TabContainer/GraphicsTab/VBoxContainer" unique_id=329757627]
+layout_mode = 2
+text = "Вертикальная синхронизация"
+
+[node name="HSlider" type="HSlider" parent="VBoxContainer/TabContainer/GraphicsTab/VBoxContainer" unique_id=436558763]
+layout_mode = 2
+
+[node name="AudioTab" type="Control" parent="VBoxContainer/TabContainer" unique_id=12107329]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/TabContainer/AudioTab" unique_id=1690046976]
+layout_mode = 0
+offset_left = 3.0
+offset_top = 52.0
+offset_right = 252.0
+offset_bottom = 295.0
+
+[node name="Label" type="Label" parent="VBoxContainer/TabContainer/AudioTab/VBoxContainer" unique_id=1309889906]
+layout_mode = 2
+text = "Громкость"
+
+[node name="Master" type="HSlider" parent="VBoxContainer/TabContainer/AudioTab/VBoxContainer" unique_id=1910556842]
+layout_mode = 2
+
+[node name="Music" type="HSlider" parent="VBoxContainer/TabContainer/AudioTab/VBoxContainer" unique_id=755832572]
+layout_mode = 2
+
+[node name="SFX" type="HSlider" parent="VBoxContainer/TabContainer/AudioTab/VBoxContainer" unique_id=1372625355]
+layout_mode = 2
+
+[node name="ControlsTab" type="Control" parent="VBoxContainer/TabContainer" unique_id=826041550]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="VBoxContainer/TabContainer/ControlsTab" unique_id=8926273]
+layout_mode = 0
+offset_left = 1.0
+offset_top = 42.0
+offset_right = 252.0
+offset_bottom = 304.0
+
+[node name="Label" type="Label" parent="VBoxContainer/TabContainer/ControlsTab/VBoxContainer" unique_id=2037808769]
+layout_mode = 2
+text = "Управление"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer" unique_id=1543009095]
+layout_mode = 2
+
+[node name="ApplyButton" type="Button" parent="VBoxContainer/HBoxContainer" unique_id=1308745788]
+layout_mode = 2
+text = "Применить"
+
+[node name="ResetButton" type="Button" parent="VBoxContainer/HBoxContainer" unique_id=1515549955]
+layout_mode = 2
+text = "Сбросить"
+
+[node name="BackButton" type="Button" parent="VBoxContainer/HBoxContainer" unique_id=874817888]
+layout_mode = 2
+text = "Назад"

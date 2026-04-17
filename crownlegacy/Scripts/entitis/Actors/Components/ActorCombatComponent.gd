@@ -80,6 +80,9 @@ func is_in_combat() -> bool:
 func get_fsm() -> EntityCombatFSM:
 	return fsm
 
+func get_combat_config() -> CombatConfig:
+	return combat_config
+
 # ==================== ПОЛУЧЕНИЕ УРОНА ====================
 func _on_hurtbox_damage(damage_data: DamageData, source: Node) -> void:
 	super._on_hurtbox_damage(damage_data, source)

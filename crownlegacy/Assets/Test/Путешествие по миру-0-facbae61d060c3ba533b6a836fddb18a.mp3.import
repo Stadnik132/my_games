@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://shd4mai5nqca"
+path="res://.godot/imported/Путешествие по миру-0-facbae61d060c3ba533b6a836fddb18a.mp3-8052d822fa59551759b1fa6e41719bdd.mp3str"
+
+[deps]
+
+source_file="res://Assets/Test/Путешествие по миру-0-facbae61d060c3ba533b6a836fddb18a.mp3"
+dest_files=["res://.godot/imported/Путешествие по миру-0-facbae61d060c3ba533b6a836fddb18a.mp3-8052d822fa59551759b1fa6e41719bdd.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

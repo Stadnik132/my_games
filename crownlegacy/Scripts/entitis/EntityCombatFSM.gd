@@ -132,21 +132,29 @@ func send_command(command: String, data: Dictionary = {}) -> void:
 	if current_state:
 		current_state.handle_command(command, data)
 
-func request_stun() -> void:
-	
+func request_stun(knockback_direction: Vector2 = Vector2.ZERO, knockback_distance: float = 0.0) -> void:
+
+	# Уже в стане - не вызываем повторно
+	if get_current_state_name() == "Stun":
+		return
+
 	if get_current_state_name() == "Cast":
 		return
-		
+
 	if not states.has("Stun"):
 		return
-		
+
 	var old_name = get_current_state_name()
 	if current_state:
 		current_state.exit()
-		
+
 	current_state = states["Stun"]
 	current_state.enter()
-	
+
+	# Устанавливаем отбрасывание, если есть данные
+	if current_state.has_method("set_knockback") and knockback_distance > 0.0:
+		current_state.set_knockback(knockback_direction, knockback_distance)
+
 	state_changed.emit(old_name, "Stun")
 
 func _on_transition_requested(state_name: String) -> void:

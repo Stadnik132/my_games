@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ItemResource" format=3 uid="uid://t8m04yok4u78"]
+
+[ext_resource type="Script" uid="uid://b55edam2e5ook" path="res://Scripts/resources/ItemResource.gd" id="1_k4qpk"]
+
+[resource]
+script = ExtResource("1_k4qpk")
+id = "steel_sword"
+name = "Стальной меч"
+description = "Обычный стальной меч. +5 к атаке."
+value = 200
+item_type = 1
+metadata/_custom_type_script = "uid://b55edam2e5ook"

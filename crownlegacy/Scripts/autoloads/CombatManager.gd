@@ -36,10 +36,24 @@ func _setup_connections() -> void:
 	EventBus.Combat.decision.enemy_spared.connect(_on_enemy_spared)
 
 # ==================== УПРАВЛЕНИЕ БОЕМ ====================
-func start_combat(enemies: Array) -> void:
+func start_combat(enemies: Array, marker_point: Node = null) -> void:
+	"""
+	Начало боя с опциональным отскоком персонажей.
+	
+	Параметры:
+	- enemies: массив врагов (Actor) которые участвуют в бою
+	- marker_point: Node2D — точка куда Player прыгнет (для боссов).
+	  Если null — работает формула отскока по умолчанию.
+	
+	  Как использовать marker_point:
+	  1. В сцене создай Node2D (или Marker2D) рядом с боссом
+	  2. Назови его например "BossMarker"
+	  3. Передай в start_combat([boss_actor], $BossMarker)
+	  4. Player прыгнет к этой точке, босс НЕ прыгнет
+	"""
 	if debug_mode:
 		print_debug("CombatManager: начало боя с ", enemies.size(), " врагами")
-	
+
 	# Если бой уже идет - добавляем врагов к существующему
 	if is_combat_active:
 		print_debug("CombatManager: добавляем врагов в текущий бой")
@@ -51,18 +65,15 @@ func start_combat(enemies: Array) -> void:
 			else:
 				print_debug("  уже в бою: ", enemy.name)
 		return
-	
+
 	# Новый бой
 	_initialized_enemies.clear()
 	active_enemies = enemies.duplicate()
 	_enemies_count_at_start = enemies.size()
 	is_combat_active = true
-	
-	for enemy in enemies:
-		_initialize_enemy(enemy)
-	
-	combat_started.emit(enemies)
-	EventBus.Combat.started.emit(enemies)
+
+	# Запускаем отскок перед боем
+	_perform_combat_start_jump(enemies, marker_point)
 
 func end_combat(victory: bool, transition_to_dialogue: bool = false, dialogue_target: Node = null) -> void:
 	if debug_mode:
@@ -231,3 +242,75 @@ func is_in_combat() -> bool:
 
 func get_active_enemies() -> Array:
 	return active_enemies.duplicate()
+
+# ==================== ОТБАСЫВАНИЕ ПРИ НАЧАЛЕ БОЯ ====================
+func _perform_combat_start_jump(enemies: Array, marker_point: Node = null) -> void:
+	"""
+	Плавное расхождение Player и Actor при начале боя.
+	
+	Логика:
+	- Player прыгает в сторону ОТ первого врага (или к marker_point если задан)
+	- Actor прыгает в противоположную сторону от Player
+	- Если marker_point задан — Actor НЕ прыгает (босс стоит на месте)
+	- После задержки (combat_start_delay) начинается бой
+	"""
+	var player = get_tree().get_first_node_in_group("player")
+	if not player or enemies.is_empty():
+		# Нет игрока или врагов — сразу начинаем бой
+		_finalize_combat_start(enemies)
+		return
+
+	var enemy = enemies[0] as Node
+	var config = _get_combat_config_from_enemy(enemy)
+	
+	if not config:
+		_finalize_combat_start(enemies)
+		return
+
+	var jump_distance = config.combat_start_jump_distance
+	var jump_duration = config.combat_start_jump_duration
+	var delay = config.combat_start_delay
+
+	# Направление ОТ игрока К врагу (Player будет прыгать в противоположную сторону)
+	var player_to_enemy = (enemy.global_position - player.global_position).normalized()
+	
+	# Если направление слишком маленькое — используем дефолт (вправо)
+	if player_to_enemy.length() < 0.1:
+		player_to_enemy = Vector2.RIGHT
+
+	# Player прыгает в сторону ОТ врага (противоположное направление)
+	if marker_point:
+		# Босс с marker_point — Player прыгает к точке, Actor НЕ прыгает
+		if player.has_method("combat_start_jump"):
+			player.combat_start_jump(Vector2.ZERO, 0, jump_duration, marker_point)
+	else:
+		# Обычный бой — оба прыгают
+		# Player прыгает ОТ врага
+		if player.has_method("combat_start_jump"):
+			player.combat_start_jump(-player_to_enemy, jump_distance, jump_duration)
+		
+		# Actor прыгает в сторону ОТ игрока (противоположно Player)
+		if enemy.has_method("combat_start_jump"):
+			enemy.combat_start_jump(player_to_enemy, jump_distance * 0.7, jump_duration)
+
+	# Задержка перед началом боя
+	await get_tree().create_timer(delay).timeout
+	_finalize_combat_start(enemies)
+
+func _finalize_combat_start(enemies: Array) -> void:
+	"""Завершает начало боя — инициализирует врагов и эммитит сигналы"""
+	for enemy in enemies:
+		_initialize_enemy(enemy)
+	
+	combat_started.emit(enemies)
+	EventBus.Combat.started.emit(enemies)
+
+func _get_combat_config_from_enemy(enemy: Node) -> CombatConfig:
+	"""Получает CombatConfig из Actor"""
+	if enemy.has_node("ActorCombatComponent"):
+		var combat_comp = enemy.get_node("ActorCombatComponent")
+		if combat_comp.has_method("get_combat_config"):
+			return combat_comp.get_combat_config()
+		if "combat_config" in combat_comp:
+			return combat_comp.combat_config
+	return null

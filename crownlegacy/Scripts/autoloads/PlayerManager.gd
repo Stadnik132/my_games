@@ -53,6 +53,28 @@ func _bind_player_data() -> void:
 func _setup_connections() -> void:
 	EventBus.Relationship.trust_changed.connect(_on_trust_changed)
 
+func _restore_inventory_from_save(inventory_data: Array) -> void:
+	"""Восстанавливает инвентарь из сохранённых данных"""
+	var player = get_tree().get_first_node_in_group("player")
+	if not player:
+		return
+	
+	var inv = player.get_node("InventoryComponent") as InventoryComponent
+	if not inv:
+		return
+	
+	# Очищаем текущий инвентарь
+	inv.clear()
+	
+	# Загружаем предметы из сохранения
+	for slot_data in inventory_data:
+		if slot_data and slot_data.has("id"):
+			var item = ItemRegistry.get_item(slot_data.id)
+			if item:
+				inv.add_item(item, slot_data.quantity)
+			else:
+				push_warning("PlayerManager: предмет не найден в реестре: ", slot_data.id)
+
 # ==================== ОБРАБОТЧИКИ ====================
 func _on_trust_changed(new_value: int, _delta: int) -> void:
 	_trust_damage_multiplier = 1.0 + (new_value * 0.005)
@@ -72,6 +94,29 @@ func get_effective_stat(stat_name: String) -> int:
 		return progression_component.get_stat(stat_name)
 	return int(player_data.get_stat(stat_name) * _trust_damage_multiplier)
 
+func _load_inventory_from_data() -> void:
+	"""Восстанавливает инвентарь из сохранённых данных"""
+	var player = get_tree().get_first_node_in_group("player")
+	if not player:
+		return
+	
+	var inv = player.get_node("InventoryComponent") as InventoryComponent
+	if not inv:
+		return
+	
+	# Очищаем текущий инвентарь
+	inv.clear()
+	
+	# Загружаем предметы из player_data.inventory_data
+	for slot_data in player_data.inventory_data:
+		if slot_data and slot_data.has("id"):
+			var item = ItemRegistry.get_item(slot_data.id)  # Используем реестр!
+			if item:
+				inv.add_item(item, slot_data.quantity)
+			else:
+				push_warning("PlayerManager: предмет не найден в реестре: ", slot_data.id)
+
+
 # ==================== СОХРАНЕНИЕ ====================
 func save_player_data() -> Dictionary:
 	# Сохраняем назначения способностей
@@ -90,5 +135,9 @@ func load_player_data(data: Dictionary) -> void:
 	# Обновляем компоненты
 	if health_component and health_component.has_method("refresh_from_data"):
 		health_component.refresh_from_data()
+	_load_inventory_from_data()
+	
+	_restore_inventory_from_save(data.get("inventory", []))
+	
 	
 	print_debug("PlayerManager: данные загружены")

@@ -1,0 +1,33 @@
+[gd_scene format=3 uid="uid://cumjxxdh0s7mv"]
+
+[ext_resource type="Script" uid="uid://4g7ynxiqh453" path="res://Scripts/ui/Splash.gd" id="1_3n2ae"]
+[ext_resource type="Texture2D" uid="uid://7vk0fshso0mo" path="res://Assets/UI/Copilot_20260313_120123.png" id="2_kn3b8"]
+
+[sub_resource type="Animation" id="Animation_3n2ae"]
+resource_name = "fade_in"
+length = 0.5
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_kn3b8"]
+_data = {
+&"fade_in": SubResource("Animation_3n2ae")
+}
+
+[node name="Splash" type="CanvasLayer" unique_id=931085643]
+script = ExtResource("1_3n2ae")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=945596956]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 1)
+
+[node name="TextureRect" type="TextureRect" parent="ColorRect" unique_id=1871927694]
+layout_mode = 0
+offset_right = 1536.0
+offset_bottom = 1024.0
+texture = ExtResource("2_kn3b8")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="ColorRect" unique_id=1338643487]
+libraries/ = SubResource("AnimationLibrary_kn3b8")

@@ -1,6 +1,9 @@
 extends CombatComponent
 class_name PlayerCombatComponent
 
+var _combo_window_active: bool = false
+var _attack_request_pending: bool = false
+
 func _setup_connections() -> void:
 	super._setup_connections()
 	
@@ -10,6 +13,10 @@ func _setup_connections() -> void:
 	EventBus.Combat.dodge.requested.connect(_on_dodge_requested)
 	EventBus.Combat.block.started.connect(_on_block_started)
 	EventBus.Combat.block.ended.connect(_on_block_ended)
+	
+	# Подключаемся к окну комбо
+	EventBus.Combat.attack.combo_window_opened.connect(_on_combo_window_opened)
+	EventBus.Combat.attack.combo_window_closed.connect(_on_combo_window_closed)
 	
 	# Подключаемся к хертбоксу для получения урона
 	var hurtbox = owner_entity.get_node_or_null("Hurtbox")
@@ -24,6 +31,47 @@ func _setup_connections() -> void:
 		print("  ✅ slot_pressed connected")
 	else:
 		print("  ❌ slot_pressed connection failed: ", connected)
+
+func _on_combo_window_opened() -> void:
+	_combo_window_active = true
+
+func _on_combo_window_closed() -> void:
+	_combo_window_active = false
+
+func _on_attack_requested() -> void:
+	# Защита от спама
+	if _attack_request_pending:
+		return
+	
+	_attack_request_pending = true
+	
+	var current_state = fsm.get_current_state_name() if fsm else ""
+	
+	if current_state in ["Idle", "Walk"]:
+		# Используем send_command вместо прямого вызова
+		fsm.send_command("attack")
+	elif current_state == "Attack":
+		# В AttackState отправляем сигнал ТОЛЬКО если окно комбо активно
+		if _combo_window_active:
+			fsm.send_command("attack")
+			# После отправки закрываем окно, чтобы лишние сигналы не проходили
+			_combo_window_active = false
+	
+	# Сбрасываем блокировку в следующем кадре
+	await get_tree().process_frame
+	_attack_request_pending = false
+
+func _on_dodge_requested(direction: Vector2) -> void:
+	if fsm:
+		fsm.send_command("dodge", {"direction": direction})
+
+func _on_block_started() -> void:
+	if fsm:
+		fsm.send_command("block_start")
+
+func _on_block_ended() -> void:
+	if fsm:
+		fsm.send_command("block_end")
 
 # ==================== ОБРАБОТКА УРОНА ====================
 func _on_hurtbox_damage(damage_data: DamageData, source: Node) -> void:

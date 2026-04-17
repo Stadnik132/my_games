@@ -10,7 +10,7 @@ signal will_changed(new_value: int, delta: int)
 @export var character_flags: Array[String] = []
 
 # Экспортируемые параметры
-@export_range(-100, 100, 1) var trust_level: int = 50:
+@export_range(-100, 100, 1) var trust_level: int = 0:
 	set(value):
 		var clamped_value = clampi(value, -100, 100)
 		var delta = clamped_value - trust_level

@@ -5,6 +5,7 @@ class_name PlayerController
 @onready var player: Player = get_parent()
 
 var _was_blocking: bool = false
+var _can_attack: bool = true
 
 # ==================== ВВОД ====================
 func _input(event: InputEvent) -> void:
@@ -15,6 +16,10 @@ func _input(event: InputEvent) -> void:
 		_handle_combat_input(event)
 
 func _handle_global_input(event: InputEvent) -> bool:
+	# Отсекаем "повтор" на удержании клавиши (иначе меню может открываться/закрываться серией echo-событий)
+	if event is InputEventKey and event.echo:
+		return false
+	
 	# Взаимодействие
 	if event.is_action_pressed("interact") and not player.interaction_locked:
 		_handle_interaction()
@@ -22,7 +27,13 @@ func _handle_global_input(event: InputEvent) -> bool:
 		return true
 	
 	# Меню
-	if event.is_action_pressed("ui_cancel") and _can_open_menu():
+	if event.is_action_pressed("game_menu") and _can_open_menu():
+		EventBus.Game.menu_requested.emit()
+		get_viewport().set_input_as_handled()
+		return true
+
+# Закрытие меню по ESC (только если меню уже открыто)
+	if event.is_action_pressed("ui_cancel"):
 		EventBus.Game.menu_requested.emit()
 		get_viewport().set_input_as_handled()
 		return true
@@ -40,10 +51,18 @@ func _handle_combat_input(event: InputEvent) -> void:
 	
 	# ЛКМ
 	if event.is_action_pressed("basic_attack"):
-		if is_aiming:
-			_confirm_ability_cast()
-		else:
-			EventBus.Combat.attack.basic_requested.emit()
+		if _can_attack:
+			_can_attack = false
+			
+			if is_aiming:
+				_confirm_ability_cast()
+			else:
+				EventBus.Combat.attack.basic_requested.emit()
+			
+			# Блокируем следующие атаки на время анимации
+			await get_tree().create_timer(0.3).timeout
+			_can_attack = true
+		
 		get_viewport().set_input_as_handled()
 		return
 	
@@ -93,5 +112,6 @@ func _get_input_vector() -> Vector2:
 	return input.normalized() if input.length() > 0 else Vector2.ZERO
 
 func _can_open_menu() -> bool:
-	"""Меню доступно в WORLD и в BATTLE"""
-	return player._can_move_in_world or player._in_combat_mode
+	# Меню можно открыть, если игрок может двигаться или в бою
+	# (но точную проверку делает GameStateManager)
+	return true

@@ -47,9 +47,27 @@ func get_save_data() -> Dictionary:
 		"dodge_stamina_cost": dodge_stamina_cost,
 		"block_damage_reduction": block_damage_reduction,
 		"block_stamina_cost_per_second": block_stamina_cost_per_second,
-		"equipment": equipment.duplicate(true)
+		"equipment": equipment.duplicate(true),
+		"inventory": _get_inventory_from_component()
 	})
 	return data
+
+func _get_inventory_from_component() -> Array:
+	"""Читает инвентарь из компонента (для сохранения)"""
+	var result = []
+	var player = get_player_node()
+	if player and player.has_node("InventoryComponent"):
+		var inv = player.get_node("InventoryComponent")
+		for i in range(inv.max_slots):
+			var slot = inv.get_item_at_slot(i)
+			if slot:
+				result.append({
+					"id": slot.item.id,
+					"quantity": slot.quantity
+				})
+			else:
+				result.append(null)
+	return result
 
 func load_save_data(data: Dictionary) -> void:
 	super.load_save_data(data)
@@ -62,3 +80,25 @@ func load_save_data(data: Dictionary) -> void:
 	if data.has("block_damage_reduction"): block_damage_reduction = data.block_damage_reduction
 	if data.has("block_stamina_cost_per_second"): block_stamina_cost_per_second = data.block_stamina_cost_per_second
 	if data.has("equipment"): equipment = data.equipment.duplicate(true)
+	
+	
+func _serialize_inventory() -> Array:
+	"""Преобразует инвентарь из компонента в формат для сохранения"""
+	var result = []
+	var player = get_player_node()
+	if player and player.has_node("InventoryComponent"):
+		var inv = player.get_node("InventoryComponent")
+		for i in range(inv.max_slots):
+			var slot = inv.get_item_at_slot(i)
+			if slot:
+				result.append({
+					"id": slot.item.id,
+					"quantity": slot.quantity
+				})
+			else:
+				result.append(null)
+	return result
+
+func get_player_node() -> Node:
+	"""Вспомогательный метод для получения узла игрока"""
+	return Engine.get_main_loop().get_first_node_in_group("player")

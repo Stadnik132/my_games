@@ -4,23 +4,21 @@ func enter() -> void:
 	super.enter()
 	set_battle_velocity(Vector2.ZERO)
 	
-	# Включаем анимацию idle при входе в состояние
-	var anim_direction = _get_animation_direction_from_fsm()
-	EventBus.Animations.requested.emit(entity, "idle_" + anim_direction, 0)
+	# Определяем направление только влево/вправо
+	var anim_direction = _get_horizontal_direction()
+	EventBus.Animations.requested.emit(entity, "idle_battle_" + anim_direction, 0)
 
-func _get_animation_direction_from_fsm() -> String:
+func _get_horizontal_direction() -> String:
+	"""Возвращает 'left' или 'right' на основе последнего направления"""
 	var dir = fsm.last_movement_direction
-	if abs(dir.x) > abs(dir.y):
-		return "right" if dir.x > 0 else "left"
-	else:
-		return "down" if dir.y > 0 else "up"
+	if dir.x < 0:
+		return "left"
+	return "right"  # по умолчанию вправо
 
 func physics_process(_delta: float) -> void:
-	# Получаем вектор движения из компонента (Input для Player, AI для Actor)
 	var move_vector = combat_component.get_move_vector()
 	
 	if move_vector != Vector2.ZERO:
-		# Запоминаем направление для уворота/анимаций
 		fsm.last_movement_direction = move_vector
 		fsm.last_dodge_direction = move_vector
 		transition_requested.emit("Walk")

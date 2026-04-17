@@ -30,20 +30,22 @@ func _ready() -> void:
 # ==================== НАСТРОЙКА ПОДКЛЮЧЕНИЙ ====================
 func _setup_event_bus_connections() -> void:
 	"""Подключение к сигналам EventBus для обновления кэша"""
-	
+
 	# === Отношения ===
 	eb.Relationship.trust_changed.connect(_on_trust_changed)
 	eb.Relationship.will_changed.connect(_on_will_changed)
-	
+
 	# === Флаги ===
 	eb.Flags.flag_changed.connect(_on_flag_changed)
-	
+
 	# === Игрок ===
 	eb.Player.level_up.connect(_on_player_level_up)
 	eb.Player.equipment_changed.connect(_on_player_equipment_changed)
-	
+
 	# === Диалоги ===
 	eb.Game.dialogue_requested.connect(_on_transition_to_dialogue_requested)
+	eb.Dialogue.change_trust.connect(_on_dialogue_change_trust)
+	eb.Dialogue.use_will.connect(_on_dialogue_use_will)
 
 	if debug_mode:
 		print_debug("DialogicBridge: подключено к EventBus для кэширования данных")
@@ -112,6 +114,21 @@ func _on_player_equipment_changed(slot: String, old_item: String, new_item: Stri
 	if debug_mode:
 		print_debug("DialogicBridge: снаряжение изменилось: ", slot, " ", old_item, " -> ", new_item)
 
+func _on_dialogue_change_trust(amount: int) -> void:
+	"""Обработка изменения доверия из диалога"""
+	RelationshipManager.change_trust(amount, "dialogic")
+	if debug_mode:
+		print_debug("DialogicBridge: доверие изменено через диалог на ", amount)
+
+func _on_dialogue_use_will(amount: int) -> void:
+	"""Обработка использования Воли из диалога"""
+	var success = RelationshipManager.use_will(amount)
+	if success:
+		if debug_mode:
+			print_debug("DialogicBridge: Воля использована (", amount, "), осталось: ", RelationshipManager.get_will_power())
+	else:
+		push_warning("DialogicBridge: недостаточно Воли для использования (нужно: ", amount, ")")
+
 # ==================== МЕТОДЫ ДЛЯ DIALOGIC EXPRESSIONS (СИНХРОННЫЕ) ====================
 func get_trust_level() -> int:
 	"""Возвращает текущий уровень доверия для условий в Dialogic"""
@@ -126,8 +143,9 @@ func can_afford_will(amount: int = 1) -> bool:
 	return _cached_will_power >= amount
 
 func check_flag(flag_name: String) -> bool:
-	"""Проверяет флаг для условий в Dialogic"""
-	return _cached_flags.get(flag_name, false)
+	"""Для условий в диалоге: [if="DialogicBridge.check_flag('TestFlag')"]"""
+	var value = GameFlags.get_flag(flag_name)
+	return value == true
 
 func get_player_level() -> int:
 	"""Возвращает уровень игрока"""
@@ -137,17 +155,35 @@ func get_player_stat(stat_name: String) -> int:
 	"""Возвращает характеристику игрока (для сложных условий)"""
 	return _cached_player_stats.get(stat_name, 0)
 
+func get_flag(flag_name: String) -> Variant:
+	"""Если нужно получить значение флага (не только bool)"""
+	return GameFlags.get_flag(flag_name)
+
+# Установить флаг из диалога
+func set_flag(flag_name: String, value: Variant) -> void:
+	GameFlags.set_flag(flag_name, value, "dialogic")
+
 # ==================== ОБРАБОТЧИКИ DIALOGIC ====================
 func _on_dialogic_signal(argument: String) -> void:
 	"""Обрабатывает сигналы из timeline Dialogic"""
 	if debug_mode:
 		print_debug("Dialogic сигнал получен: ", argument)
-	
+
+	# Поддержка формата "trust+10" или "trust-5" (без двоеточия)
+	if argument.begins_with("trust"):
+		var amount_str = argument.trim_prefix("trust")
+		if amount_str.is_valid_int():
+			var amount = int(amount_str)
+			if debug_mode:
+				print_debug("DialogicBridge: изменение доверия на ", amount)
+			EventBus.Dialogue.change_trust.emit(amount)
+			return
+
 	# Разбираем сигнал: формат "тип:значение"
 	var parts = argument.split(":", true, 1)
 	var signal_type = parts[0]
 	var signal_value = parts[1] if parts.size() > 1 else ""
-	
+
 	match signal_type:
 		"start_battle":
 			var npc_id = signal_value
@@ -187,9 +223,19 @@ func _on_dialogic_signal(argument: String) -> void:
 				var amount = int(signal_value)
 				EventBus.Dialogue.change_trust.emit(amount)
 		
-		"flag":
+		"flag", "set_flag":  # обрабатываем оба одинаково
 			if signal_value:
-				EventBus.Dialogue.set_flag.emit(signal_value, true)
+				# Значение по умолчанию = true, можно расширить для "flag:name:false"
+				var flag_name = signal_value
+				var flag_value = true
+				
+				# Поддержка формата "flag:name:value"
+				if signal_value.contains(","):
+					var parts2 = signal_value.split(",", true, 1)
+					flag_name = parts2[0]
+					flag_value = parts2[1] == "true" if parts2.size() > 1 else true
+				
+				EventBus.Dialogue.set_flag.emit(flag_name, flag_value)
 		
 		"quest":
 			if signal_value:

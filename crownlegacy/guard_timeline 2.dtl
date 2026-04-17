@@ -1,3 +1,6 @@
 join Guard center
 Guard: Че тебе надо?
-[signal arg="end_dialogue"]
+- У меня есть TestFlag2 | [if DialogicBridge.check_flag('TestFlag2')]
+	[signal arg="end_dialogue"]
+- Пока
+	[signal arg="end_dialogue"]

@@ -1,0 +1,30 @@
+[gd_scene format=3 uid="uid://c2tkwj4n3ogqq"]
+
+[ext_resource type="Script" uid="uid://bhto6gm5h7sft" path="res://Scripts/ui/PauseMenu.gd" id="1_tba2g"]
+
+[node name="Game" type="CanvasLayer" unique_id=1017187244]
+script = ExtResource("1_tba2g")
+
+[node name="PauseMenu" type="Panel" parent="." unique_id=1392857400]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PauseMenu" unique_id=675014259]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="Button" type="Button" parent="PauseMenu/VBoxContainer" unique_id=38242922]
+layout_mode = 2
+
+[node name="Button2" type="Button" parent="PauseMenu/VBoxContainer" unique_id=1889135410]
+layout_mode = 2
+
+[node name="Button3" type="Button" parent="PauseMenu/VBoxContainer" unique_id=1412777498]
+layout_mode = 2
+
+[node name="Button4" type="Button" parent="PauseMenu/VBoxContainer" unique_id=41717945]
+layout_mode = 2
+
+[node name="Button5" type="Button" parent="PauseMenu/VBoxContainer" unique_id=900368716]
+layout_mode = 2

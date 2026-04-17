@@ -11,7 +11,7 @@
 	  "stamina_cost": 15,
 	  "health_cost": 0,
 	  "cast_time": 0.5,
-	  "cooldown": 3.0,
+	  "cooldown": 4.0,
 	  "channeled": false,
 	  "damage_data": {
 		"damage_type": 0,
@@ -36,8 +36,8 @@
 	  "mana_cost": 15,
 	  "stamina_cost": 0,
 	  "health_cost": 0,
-	  "cast_time": 0.5,
-	  "cooldown": 2.0,
+	  "cast_time": 0.8,
+	  "cooldown": 5.0,
 	  "channeled": false,
 	  "damage_data": {
 		"damage_type": 1,
@@ -64,8 +64,8 @@
 	  "mana_cost": 25,
 	  "stamina_cost": 10,
 	  "health_cost": 0,
-	  "cast_time": 0.5,
-	  "cooldown": 1.0,
+	  "cast_time": 2.5,
+	  "cooldown": 8.0,
 	  "channeled": false,
 	  "damage_data": {
 		"damage_type": 1,
