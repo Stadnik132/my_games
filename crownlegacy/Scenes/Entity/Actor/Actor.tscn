@@ -28,7 +28,7 @@
 
 [sub_resource type="Resource" id="Resource_s7a7g"]
 script = ExtResource("2_is3bj")
-ability_slot_assignments = Array[String](["fireball"])
+timeline_name = "guard_encounter"
 base_stats = {
 "agility": 5,
 "attack": 1,
@@ -349,7 +349,6 @@ radius = 34.525352
 
 [sub_resource type="Resource" id="Resource_2j8bb"]
 script = ExtResource("14_p25mq")
-move_speed = 130.0
 metadata/_custom_type_script = "uid://todvfrjyk52p"
 
 [node name="Actor" type="CharacterBody2D" unique_id=1897500711]

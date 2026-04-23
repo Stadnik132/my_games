@@ -5,7 +5,7 @@ class_name AIController
 # move_speed больше не нужен - скорость берется из combat_config
 
 # ==================== ССЫЛКИ ====================
-var actor: Actor
+var actor: Node2D
 var brain: AIBrain
 var perception: AIPerception
 var combat_component: ActorCombatComponent
@@ -16,7 +16,7 @@ var _tick_timer: float = 0.0
 const TICK_INTERVAL: float = 0.2  # принимаем решение 5 раз в секунду
 
 # ==================== ИНИЦИАЛИЗАЦИЯ ====================
-func setup(actor_node: Actor) -> void:
+func setup(actor_node: Node2D) -> void:
 	actor = actor_node
 	perception = actor.get_node_or_null("AIPerception")
 	brain = actor.get_node_or_null("AIBrain")

@@ -15,12 +15,12 @@ enum CombatDecision {
 @export var ability_usage_chance: float = 0.2    # Шанс использовать способность вместо атаки
 
 # ==================== ССЫЛКИ ====================
-var actor: Actor
+var actor: Node2D
 var perception: AIPerception
 var combat_component: ActorCombatComponent
 
 # ==================== ИНИЦИАЛИЗАЦИЯ ====================
-func setup(actor_node: Actor, perception_node: AIPerception, combat_node: ActorCombatComponent) -> void:
+func setup(actor_node: Node2D, perception_node: AIPerception, combat_node: ActorCombatComponent) -> void:
 	actor = actor_node
 	perception = perception_node
 	combat_component = combat_node

@@ -22,21 +22,26 @@ _data = {
 script = ExtResource("1_mjmdf")
 
 [node name="TextureRect" type="TextureRect" parent="." unique_id=664866904]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_right = 256.0
-offset_bottom = 304.0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -768.0
+offset_top = -512.0
+offset_right = 768.0
+offset_bottom = 512.0
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("2_k8um8")
 
-[node name="Panel" type="Panel" parent="." unique_id=1294674484]
+[node name="BackgroundDim" type="ColorRect" parent="." unique_id=968799354]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+color = Color(0, 0, 0, 0.39607844)
 
 [node name="Label" type="Label" parent="." unique_id=1449232266]
 anchors_preset = 8

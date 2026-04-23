@@ -1,0 +1,145 @@
+[gd_scene format=3 uid="uid://bhufn0fxr8rrn"]
+
+[ext_resource type="Script" uid="uid://dlgaj2lw1r2cy" path="res://Scripts/entitis/Enemy/Enemy.gd" id="1_768hr"]
+[ext_resource type="Script" uid="uid://bowg23nj8eakw" path="res://Scripts/entitis/HealthComponent.gd" id="1_psb0h"]
+[ext_resource type="Texture2D" uid="uid://cyfekgu6x82y" path="res://Assets/Sprites/Bandit.png" id="2_41vwj"]
+[ext_resource type="Script" uid="uid://i8anyeyqqjcc" path="res://Scripts/entitis/ResourceComponent.gd" id="2_tq3g3"]
+[ext_resource type="Script" uid="uid://duijk3xsl0n36" path="res://Scripts/entitis/Hurtbox.gd" id="3_768hr"]
+[ext_resource type="Script" uid="uid://bxganyhns4nhp" path="res://Scripts/entitis/HitboxComponent.gd" id="4_nfls3"]
+[ext_resource type="Script" uid="uid://cyktqi15eskhc" path="res://Scripts/resources/EntityData.gd" id="4_vu3xg"]
+[ext_resource type="Script" uid="uid://bghkf61ukvvnf" path="res://Scripts/Ability/AbilityComponent.gd" id="5_2df3r"]
+[ext_resource type="Script" uid="uid://cpud8hdv0qkko" path="res://Scripts/entitis/EntityCombatFSM.gd" id="6_68pqk"]
+[ext_resource type="Script" uid="uid://6tmd2w4u00ic" path="res://Scripts/entitis/states/IdleState.gd" id="7_41vwj"]
+[ext_resource type="PackedScene" uid="uid://chn4kenaj7cp3" path="res://Scenes/Entity/Hitbox.tscn" id="8_1y8jr"]
+[ext_resource type="Script" uid="uid://dffiglh5cnj5w" path="res://Scripts/entitis/states/WalkState.gd" id="8_vu3xg"]
+[ext_resource type="Script" uid="uid://7cuvsmdalifd" path="res://Scripts/entitis/states/AttackState.gd" id="9_1y8jr"]
+[ext_resource type="Script" uid="uid://b8ub0047ey4u8" path="res://Scripts/entitis/Actors/Components/State/CastState.gd" id="10_3einn"]
+[ext_resource type="Script" uid="uid://d7obpadyfu0r" path="res://Scripts/entitis/states/StunState.gd" id="11_42yh2"]
+[ext_resource type="Script" uid="uid://baarqgcghdftt" path="res://Scripts/entitis/Actors/Components/ActorCombatComponent.gd" id="12_qeq3o"]
+[ext_resource type="Script" uid="uid://bjrcji1t2ifi" path="res://Scripts/entitis/Actors/Components/AI/AIController.gd" id="13_njt03"]
+[ext_resource type="Script" uid="uid://cf2tiqncq8vgo" path="res://Scripts/entitis/Actors/Components/AI/AIPerception.gd" id="14_vwa62"]
+[ext_resource type="Script" uid="uid://bohemxes4bdbx" path="res://Scripts/entitis/Actors/Components/AI/AIBrain.gd" id="15_s0qij"]
+[ext_resource type="Script" uid="uid://dq6s1u3yaenn7" path="res://Scripts/entitis/Enemy/Component/EnemyPatrolComponent.gd" id="16_tq3g3"]
+[ext_resource type="Script" uid="uid://todvfrjyk52p" path="res://Scripts/entitis/CombatConfig.gd" id="17_3einn"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_noljf"]
+
+[sub_resource type="Resource" id="Resource_42yh2"]
+script = ExtResource("4_vu3xg")
+metadata/_custom_type_script = "uid://cyktqi15eskhc"
+
+[sub_resource type="Resource" id="Resource_qeq3o"]
+script = ExtResource("4_vu3xg")
+metadata/_custom_type_script = "uid://cyktqi15eskhc"
+
+[sub_resource type="Resource" id="Resource_njt03"]
+script = ExtResource("4_vu3xg")
+metadata/_custom_type_script = "uid://cyktqi15eskhc"
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_6qm1n"]
+height = 40.0
+
+[sub_resource type="Resource" id="Resource_vwa62"]
+script = ExtResource("17_3einn")
+metadata/_custom_type_script = "uid://todvfrjyk52p"
+
+[node name="Enemy" type="CharacterBody2D" unique_id=2138481612]
+script = ExtResource("1_768hr")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=648255239]
+texture = ExtResource("2_41vwj")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1771521727]
+position = Vector2(0, 5)
+shape = SubResource("CapsuleShape2D_noljf")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=369741969]
+
+[node name="HealthComponent" type="Node" parent="." unique_id=381646590]
+script = ExtResource("1_psb0h")
+entity_data = SubResource("Resource_42yh2")
+metadata/_custom_type_script = "uid://bowg23nj8eakw"
+
+[node name="ManaComponent" type="Node" parent="." unique_id=102157195]
+script = ExtResource("2_tq3g3")
+entity_data = SubResource("Resource_qeq3o")
+metadata/_custom_type_script = "uid://i8anyeyqqjcc"
+
+[node name="StaminaComponent" type="Node" parent="." unique_id=1836137945]
+script = ExtResource("2_tq3g3")
+resource_type = 1
+entity_data = SubResource("Resource_njt03")
+metadata/_custom_type_script = "uid://i8anyeyqqjcc"
+
+[node name="Hurtbox" type="Area2D" parent="." unique_id=1837493856]
+script = ExtResource("3_768hr")
+metadata/_custom_type_script = "uid://duijk3xsl0n36"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox" unique_id=1331676347]
+position = Vector2(0, 2)
+shape = SubResource("CapsuleShape2D_6qm1n")
+
+[node name="HitboxComponent" type="Node" parent="." unique_id=1588414270]
+script = ExtResource("4_nfls3")
+hitbox_scene = ExtResource("8_1y8jr")
+metadata/_custom_type_script = "uid://bxganyhns4nhp"
+
+[node name="AbilityComponent" type="Node" parent="." unique_id=1708518039]
+script = ExtResource("5_2df3r")
+metadata/_custom_type_script = "uid://bghkf61ukvvnf"
+
+[node name="EntityCombatFSM" type="Node" parent="." unique_id=1866892590]
+script = ExtResource("6_68pqk")
+metadata/_custom_type_script = "uid://cpud8hdv0qkko"
+
+[node name="IdleState" type="Node" parent="EntityCombatFSM" unique_id=298123119]
+script = ExtResource("7_41vwj")
+metadata/_custom_type_script = "uid://6tmd2w4u00ic"
+
+[node name="WalkState" type="Node" parent="EntityCombatFSM" unique_id=1701238331]
+script = ExtResource("8_vu3xg")
+metadata/_custom_type_script = "uid://dffiglh5cnj5w"
+
+[node name="AttackState" type="Node" parent="EntityCombatFSM" unique_id=1823879122]
+script = ExtResource("9_1y8jr")
+metadata/_custom_type_script = "uid://7cuvsmdalifd"
+
+[node name="CastState" type="Node" parent="EntityCombatFSM" unique_id=1494299519]
+script = ExtResource("10_3einn")
+metadata/_custom_type_script = "uid://b8ub0047ey4u8"
+
+[node name="StunState" type="Node" parent="EntityCombatFSM" unique_id=27992552]
+script = ExtResource("11_42yh2")
+metadata/_custom_type_script = "uid://d7obpadyfu0r"
+
+[node name="ActorCombatComponent" type="Node" parent="." unique_id=1274215249 node_paths=PackedStringArray("owner_entity", "ability_component", "stamina_component")]
+script = ExtResource("12_qeq3o")
+combat_config = SubResource("Resource_vwa62")
+owner_entity = NodePath("..")
+ability_component = NodePath("../AbilityComponent")
+stamina_component = NodePath("../StaminaComponent")
+metadata/_custom_type_script = "uid://baarqgcghdftt"
+
+[node name="AIController" type="Node" parent="." unique_id=4227208]
+script = ExtResource("13_njt03")
+metadata/_custom_type_script = "uid://bjrcji1t2ifi"
+
+[node name="AIPerception" type="Node" parent="." unique_id=1692224086]
+script = ExtResource("14_vwa62")
+metadata/_custom_type_script = "uid://cf2tiqncq8vgo"
+
+[node name="AIBrain" type="Node" parent="." unique_id=1990769797]
+script = ExtResource("15_s0qij")
+metadata/_custom_type_script = "uid://bohemxes4bdbx"
+
+[node name="EnemyPatrolComponent" type="Node" parent="." unique_id=47706610]
+script = ExtResource("16_tq3g3")
+
+[node name="Marker2D" type="Marker2D" parent="EnemyPatrolComponent" unique_id=292640864]
+position = Vector2(1, -39)
+
+[node name="Marker2D2" type="Marker2D" parent="EnemyPatrolComponent" unique_id=1213324352]
+position = Vector2(-32, -1)
+
+[node name="Marker2D3" type="Marker2D" parent="EnemyPatrolComponent" unique_id=1686523242]
+position = Vector2(48, -3)

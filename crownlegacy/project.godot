@@ -277,6 +277,10 @@ locale/test="ru"
 2d_physics/layer_2="Игрок"
 2d_physics/layer_3="Актёр"
 
+[physics]
+
+common/physics_interpolation=true
+
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0

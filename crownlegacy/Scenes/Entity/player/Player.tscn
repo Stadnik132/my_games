@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://434uhhsakf0n" path="res://Scripts/entitis/Player/Player.gd" id="1_sy2hw"]
 [ext_resource type="Script" uid="uid://dcenurv8uxest" path="res://Scripts/entitis/Player/PlayerInteractionDetector.gd" id="3_gpg7s"]
 [ext_resource type="Texture2D" uid="uid://cyyi187xmb2y4" path="res://Assets/Klous/Возможно GG-Sheet.png" id="4_c1ec4"]
+[ext_resource type="Script" uid="uid://lje8fd8s1o0t" path="res://Scenes/Entity/player/camera_2d.gd" id="5_fc8im"]
 [ext_resource type="Script" uid="uid://dld7djtapmud4" path="res://Scripts/entitis/Player/PlayerCombatComponent.gd" id="5_iqiq2"]
 [ext_resource type="Script" uid="uid://cpud8hdv0qkko" path="res://Scripts/entitis/EntityCombatFSM.gd" id="6_8hdke"]
 [ext_resource type="Script" uid="uid://todvfrjyk52p" path="res://Scripts/entitis/CombatConfig.gd" id="6_iqiq2"]
@@ -351,7 +352,6 @@ radius = 26.87936
 script = ExtResource("6_iqiq2")
 attack_combo_damage = Array[float]([1.0, 1.2, 1.5])
 dodge_distance = 80.0
-move_speed = 130.0
 attack_lunge_distance = 30.0
 metadata/_custom_type_script = "uid://todvfrjyk52p"
 
@@ -366,8 +366,8 @@ collision_mask = 5
 motion_mode = 1
 wall_min_slide_angle = 0.6806784
 script = ExtResource("1_sy2hw")
-move_speed = 130.0
-sprint_speed = 250.0
+move_speed = 80.0
+sprint_speed = 120.0
 player_data = SubResource("Resource_fc8im")
 
 [node name="PlayerController" type="Node" parent="." unique_id=1081099668]
@@ -380,6 +380,12 @@ frame = 1
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=441789922]
 zoom = Vector2(2, 2)
+process_callback = 0
+script = ExtResource("5_fc8im")
+follow_speed = 5.0
+deadzone_size = Vector2(0, 0)
+look_ahead_amount = 20.0
+look_ahead_speed = 0.0
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=507674643]
 libraries/ = SubResource("AnimationLibrary_fc8im")
