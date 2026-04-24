@@ -23,3 +23,14 @@ texture = ExtResource("1_c6abt")
 position = Vector2(585, 417)
 enemy_data = SubResource("Resource_fogt4")
 combat_config = SubResource("Resource_gdvwq")
+
+[node name="Marker2D" parent="Enemy/EnemyPatrolComponent" parent_id_path=PackedInt32Array(2138481612, 47706610) index="0" unique_id=292640864]
+position = Vector2(606, 258)
+
+[node name="Marker2D2" parent="Enemy/EnemyPatrolComponent" parent_id_path=PackedInt32Array(2138481612, 47706610) index="1" unique_id=1213324352]
+position = Vector2(459, 429)
+
+[node name="Marker2D3" parent="Enemy/EnemyPatrolComponent" parent_id_path=PackedInt32Array(2138481612, 47706610) index="2" unique_id=1686523242]
+position = Vector2(716, 433)
+
+[editable path="Enemy"]

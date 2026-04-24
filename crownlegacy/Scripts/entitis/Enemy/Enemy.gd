@@ -60,6 +60,11 @@ func _ready() -> void:
 	
 	if patrol_component:
 		patrol_component.setup(self)
+		print_debug("Enemy: patrol_component инициализирован")
+		print_debug("  Enemy позиция (глобальная): ", global_position)
+		print_debug("  Дочерние узлы Enemy: ")
+		for child in get_children():
+			print_debug("    - ", child.name, " (тип: ", child.get_class(), ")")
 	
 	EventBus.Combat.started.connect(_on_combat_started)
 	EventBus.Combat.ended.connect(_on_combat_ended)
@@ -140,6 +145,7 @@ func _apply_mode() -> void:
 				combat_component.enter_combat()
 		Mode.WORLD:
 			_in_combat_mode = false
+			velocity = Vector2.ZERO  # Сбрасываем скорость при выходе из боя
 			if ai_controller:
 				ai_controller.set_active(false)
 			if combat_component:

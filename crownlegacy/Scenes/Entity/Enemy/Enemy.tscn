@@ -22,6 +22,14 @@
 [ext_resource type="Script" uid="uid://dq6s1u3yaenn7" path="res://Scripts/entitis/Enemy/Component/EnemyPatrolComponent.gd" id="16_tq3g3"]
 [ext_resource type="Script" uid="uid://todvfrjyk52p" path="res://Scripts/entitis/CombatConfig.gd" id="17_3einn"]
 
+[sub_resource type="Resource" id="Resource_41vwj"]
+script = ExtResource("4_vu3xg")
+metadata/_custom_type_script = "uid://cyktqi15eskhc"
+
+[sub_resource type="Resource" id="Resource_vu3xg"]
+script = ExtResource("17_3einn")
+metadata/_custom_type_script = "uid://todvfrjyk52p"
+
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_noljf"]
 
 [sub_resource type="Resource" id="Resource_42yh2"]
@@ -45,6 +53,8 @@ metadata/_custom_type_script = "uid://todvfrjyk52p"
 
 [node name="Enemy" type="CharacterBody2D" unique_id=2138481612]
 script = ExtResource("1_768hr")
+enemy_data = SubResource("Resource_41vwj")
+combat_config = SubResource("Resource_vu3xg")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=648255239]
 texture = ExtResource("2_41vwj")
@@ -134,12 +144,3 @@ metadata/_custom_type_script = "uid://bohemxes4bdbx"
 
 [node name="EnemyPatrolComponent" type="Node" parent="." unique_id=47706610]
 script = ExtResource("16_tq3g3")
-
-[node name="Marker2D" type="Marker2D" parent="EnemyPatrolComponent" unique_id=292640864]
-position = Vector2(1, -39)
-
-[node name="Marker2D2" type="Marker2D" parent="EnemyPatrolComponent" unique_id=1213324352]
-position = Vector2(-32, -1)
-
-[node name="Marker2D3" type="Marker2D" parent="EnemyPatrolComponent" unique_id=1686523242]
-position = Vector2(48, -3)

@@ -25,6 +25,7 @@ func _ready() -> void:
 
 func _setup_connections() -> void:
 	# Слушаем запросы на начало боя
+	EventBus.Combat.start_combat_requested.connect(_on_start_combat_requested)
 	EventBus.Combat.started.connect(_on_combat_started)
 	EventBus.Dialogue.start_battle.connect(_on_dialogue_start_battle)
 	
@@ -199,13 +200,44 @@ func _on_combat_started(enemies: Array) -> void:
 		return
 	start_combat(enemies)
 
-func _on_dialogue_start_battle(npc_id: String) -> void:
+func _on_start_combat_requested(enemies: Array) -> void:
+	"""Обработчик запроса на начало боя от врагов (без диалога)"""
 	if debug_mode:
-		print_debug("CombatManager: запрос боя с NPC ID: ", npc_id)
+		print_debug("CombatManager: запрос на бой от врагов: ", enemies)
 	
-	var npc = _find_npc_by_id(npc_id)
-	if npc:
-		start_combat_with_npc(npc)
+	# Проверяем, что все враги в массиве
+	for enemy in enemies:
+		if not enemy or not is_instance_valid(enemy):
+			push_warning("CombatManager: недействительный враг в запросе")
+			return
+	
+	# Начинаем бой
+	EventBus.Combat.started.emit(enemies)
+
+func _on_dialogue_start_battle(npc_id: String) -> void:
+	"""Обработчик начала боя через диалог (для Actor)"""
+	if debug_mode:
+		print_debug("CombatManager: начало боя через диалог с NPC ID: ", npc_id)
+	
+	# Находим актора по ID
+	var actor = _find_actor_by_id(npc_id)
+	if not actor:
+		push_error("CombatManager: актор с ID '" + npc_id + "' не найден!")
+		return
+	
+	# Начинаем бой с этим актором
+	EventBus.Combat.started.emit([actor])
+
+func _find_actor_by_id(npc_id: String) -> Node:
+	"""Поиск актора по ID среди всех акторов в сцене"""
+	var actors = get_tree().get_nodes_in_group("actors")
+	for actor in actors:
+		if actor.has_method("get_enemy_id") and actor.get_enemy_id() == npc_id:
+			return actor
+		elif "enemy_id" in actor and actor.enemy_id == npc_id:
+			return actor
+	return null
+
 
 func start_combat_with_npc(npc: Node) -> void:
 	if debug_mode:

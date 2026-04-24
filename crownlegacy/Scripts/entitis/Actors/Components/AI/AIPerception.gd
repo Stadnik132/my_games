@@ -12,12 +12,15 @@ signal player_out_of_attack_range(player: Player)
 @export var vision_angle: float = 90.0
 @export var hearing_range: float = 150.0
 @export var attack_range: float = 40.0
+@export var memory_duration: float = 5.0
 
 # ==================== ПЕРЕМЕННЫЕ ====================
 var owner_node: Node2D
 var player: Player = null
 var is_player_visible: bool = false
 var is_player_in_attack_range: bool = false
+var last_seen_player_position: Vector2 = Vector2.ZERO
+var memory_elapsed: float = INF
 
 
 func setup(p_owner: Node2D) -> void:
@@ -34,21 +37,27 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if not player or not owner_node:
 		return
-	
+
 	var distance = owner_node.global_position.distance_to(player.global_position)
 	var was_visible = is_player_visible
 	var was_in_attack = is_player_in_attack_range
-	
+
 	# Проверка видимости
 	is_player_visible = _can_see_player(distance)
 	is_player_in_attack_range = distance <= attack_range and is_player_visible
-	
+
+	if is_player_visible:
+		last_seen_player_position = player.global_position
+		memory_elapsed = 0.0
+	else:
+		memory_elapsed = min(memory_elapsed + _delta, memory_duration + 1.0)
+
 	# Эмитим сигналы при изменении состояния
 	if is_player_visible and not was_visible:
 		player_detected.emit(player)
 	elif not is_player_visible and was_visible:
 		player_lost.emit(player)
-	
+
 	if is_player_in_attack_range and not was_in_attack:
 		player_in_attack_range.emit(player)
 	elif not is_player_in_attack_range and was_in_attack:
@@ -58,15 +67,15 @@ func _process(_delta: float) -> void:
 func _can_see_player(distance: float) -> bool:
 	if distance > vision_range:
 		return false
-	
+
 	# Проверка угла обзора
 	var to_player = (player.global_position - owner_node.global_position).normalized()
 	var forward = Vector2.RIGHT.rotated(owner_node.global_rotation)
 	var angle = rad_to_deg(forward.angle_to(to_player))
-	
+
 	if abs(angle) > vision_angle / 2:
 		return false
-	
+
 	# Raycast для проверки препятствий
 	var space_state = owner_node.get_world_2d().direct_space_state
 	var query = PhysicsRayQueryParameters2D.create(
@@ -75,11 +84,11 @@ func _can_see_player(distance: float) -> bool:
 	)
 	query.exclude = [owner_node]
 	var result = space_state.intersect_ray(query)
-	
+
 	if result:
 		var collider = result.collider
 		return collider == player or collider.is_in_group("player")
-	
+
 	return true
 
 
@@ -87,13 +96,15 @@ func _can_see_player(distance: float) -> bool:
 func get_direction_to_player() -> Vector2:
 	if not player or not owner_node:
 		return Vector2.ZERO
-	return (player.global_position - owner_node.global_position).normalized()
+	var target_position = player.global_position if is_player_visible else last_seen_player_position
+	return (target_position - owner_node.global_position).normalized()
 
 
 func get_distance_to_player() -> float:
 	if not player or not owner_node:
 		return INF
-	return owner_node.global_position.distance_to(player.global_position)
+	var target_position = player.global_position if is_player_visible else last_seen_player_position
+	return owner_node.global_position.distance_to(target_position)
 
 
 func get_player_position() -> Vector2:
@@ -102,5 +113,13 @@ func get_player_position() -> Vector2:
 	return Vector2.ZERO
 
 
+func get_last_known_player_position() -> Vector2:
+	return last_seen_player_position
+
+
+func has_player_memory() -> bool:
+	return memory_elapsed <= memory_duration
+
+
 func is_player_detected() -> bool:
-	return is_player_visible
+	return is_player_visible or has_player_memory()

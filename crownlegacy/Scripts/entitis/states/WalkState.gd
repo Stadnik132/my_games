@@ -7,7 +7,7 @@ func physics_process(delta: float) -> void:
 		fsm.update_facing_direction(move_vector)
 		_handle_movement(move_vector, delta)
 		
-		entity.last_movement_direction = move_vector
+		fsm.last_movement_direction = move_vector
 		fsm.last_dodge_direction = move_vector
 	else:
 		_handle_stop_movement(delta)

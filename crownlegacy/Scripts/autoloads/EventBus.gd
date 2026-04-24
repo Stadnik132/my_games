@@ -59,6 +59,7 @@ class DialogueSignals:
 # ----- Боевая система (структурированная) -----
 class CombatSignals:
 	# Управление боем
+	signal start_combat_requested(enemies: Array)
 	signal started(enemies: Array)
 	signal ended(victory: bool)
 	signal combat_state_changed(old_state: String, new_state: String)

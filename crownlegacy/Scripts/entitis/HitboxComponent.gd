@@ -73,6 +73,31 @@ func clear_hitboxes() -> void:
 			hitbox.queue_free()
 	_active_hitboxes.clear()
 
+func get_attack_range() -> float:
+	if not hitbox_scene:
+		return 0.0
+
+	var temporary = hitbox_scene.instantiate()
+	if not temporary or not temporary.has_node("CollisionShape2D"):
+		return 0.0
+
+	var collision = temporary.get_node("CollisionShape2D") as CollisionShape2D
+	if not collision or not collision.shape:
+		temporary.queue_free()
+		return 0.0
+
+	var shape = collision.shape
+	var range = 0.0
+	if shape is CapsuleShape2D:
+		range = max(shape.radius, shape.height * 0.5)
+	elif shape is CircleShape2D:
+		range = shape.radius
+	elif shape is RectangleShape2D:
+		range = max(shape.extents.x, shape.extents.y)
+
+	temporary.queue_free()
+	return range
+
 func _on_hitbox_removed(hitbox: Hitbox) -> void:
 	_active_hitboxes.erase(hitbox)
 
