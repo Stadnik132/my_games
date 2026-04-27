@@ -1,11 +1,14 @@
 class_name AttackState extends CombatState
 
+# Общий для Player и остальных NPC типа Actor/Enemy и т.д
+
 var combo_step: int = 0
 var attack_timer: float = 0.0
 var can_combo_or_cancel: bool = false
 var hitbox_spawned: bool = false
 var attack_direction: String = "right"
 var _combo_used: bool = false
+var is_npc: bool = false
 
 var hitbox_component: HitboxComponent
 var combo_window_timer: Timer
@@ -23,13 +26,12 @@ func enter() -> void:
 	if not hitbox_component:
 		hitbox_component = entity.get_node_or_null("HitboxComponent") as HitboxComponent
 
-	# Определяем направление атаки
+	is_npc = not entity.is_in_group("player")
+
 	attack_direction = _get_attack_direction()
 
-	# Получаем шаг комбо из FSM
 	combo_step = fsm.attack_combo_step
 	
-	# Если это первый удар или комбо сброшено
 	if combo_step == 0:
 		combo_step = 1
 		fsm.attack_combo_step = 1
@@ -37,23 +39,29 @@ func enter() -> void:
 	attack_timer = attack_params.get("attack_duration", 0.8)
 	can_combo_or_cancel = false
 	hitbox_spawned = false
-	_combo_used = false  # Сбрасываем при каждом входе
+	_combo_used = false
 
-	# Инициализация параметров выпада
 	lunge_direction = Vector2.RIGHT if attack_direction == "right" else Vector2.LEFT
 	lunge_duration = combat_config.attack_lunge_duration if combat_config else 0.3
 	lunge_distance = combat_config.attack_lunge_distance if combat_config else 60.0
 	lunge_timer = 0.0
 	lunge_phase = 0
 
-	# Запускаем анимацию с направлением и шагом комбо
 	var anim_name = "attack_%s_%d" % [attack_direction, combo_step]
 	EventBus.Animations.requested.emit(entity, anim_name, attack_timer)
 
 	_open_combo_window()
 
 func _get_attack_direction() -> String:
-	"""Возвращает 'left' или 'right' на основе последнего движения"""
+	# Для NPC — бьём в сторону игрока
+	if entity.has_method("get_target_position") or entity.has_node("AIPerception"):
+		var perception_node = entity.get_node_or_null("AIPerception")
+		if perception_node and perception_node.has_method("get_player_position"):
+			var player_pos = perception_node.get_player_position()
+			if player_pos != Vector2.ZERO:
+				return "left" if player_pos.x < entity.global_position.x else "right"
+	
+	# Fallback для игрока и случаев без восприятия
 	var dir = fsm.last_movement_direction
 	if dir.x < 0:
 		return "left"
@@ -177,12 +185,46 @@ func _spawn_attack_hitbox() -> void:
 	EventBus.Combat.attack.basic_hit.emit(combo_step, 1)
 
 func _finish_attack() -> void:
-	# Если окно комбо было открыто - закрываем его
 	if can_combo_or_cancel:
 		EventBus.Combat.attack.combo_window_closed.emit()
 	
+	# Для NPC: продолжаем комбо, если игрок рядом
+	if is_npc and combo_step < attack_params.get("max_combo_steps", 4):
+		var brain_node = entity.get_node_or_null("AIBrain")
+		if brain_node and brain_node.has_method("notify_combo_step"):
+			brain_node.notify_combo_step(combo_step + 1)
+		
+		# Используем большую дистанцию для комбо окна - позволяем игроку немного отойти
+		if _is_player_in_combo_range():
+			fsm.attack_combo_step = combo_step + 1
+			transition_requested.emit("Attack")
+			return
+	
+	# Сбрасываем комбо в Brain
+	var brain_node = entity.get_node_or_null("AIBrain")
+	if brain_node and brain_node.has_method("notify_combo_ended"):
+		brain_node.notify_combo_ended()
+	
 	_reset_combo()
 	transition_requested.emit("Idle")
+
+func _is_player_in_attack_range() -> bool:
+	var perception_node = entity.get_node_or_null("AIPerception")
+	if perception_node and perception_node.has_method("get_distance_to_player"):
+		var dist = perception_node.get_distance_to_player()
+		var effective_range = attack_params.get("attack_range", 40.0)
+		return dist <= effective_range
+	return false
+
+func _is_player_in_combo_range() -> bool:
+	var perception_node = entity.get_node_or_null("AIPerception")
+	if perception_node and perception_node.has_method("get_distance_to_player"):
+		var dist = perception_node.get_distance_to_player()
+		var effective_range = attack_params.get("attack_range", 40.0)
+		# Расширяем диапазон для комбо - позволяем игроку отойти дальше перед сбросом комбо
+		var combo_range = effective_range * 1.5
+		return dist <= combo_range
+	return false
 
 func _reset_combo() -> void:
 	fsm.attack_combo_step = 0

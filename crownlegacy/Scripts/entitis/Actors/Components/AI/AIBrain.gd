@@ -1,38 +1,36 @@
-# AIBrain.gd
 extends Node
 class_name AIBrain
 
-# ==================== ТИПЫ РЕШЕНИЙ ====================
-enum CombatDecision { 
-	IDLE,    # Ничего не делать
-	WALK,    # Двигаться к цели
-	ATTACK,  # Атаковать
-	CAST     # Использовать способность
-}
+enum CombatDecision { IDLE, WALK, ATTACK, CAST }
 
-# ==================== ЭКСПОРТ ====================
-@export var attack_range: float = 30.0                   # Дистанция для атаки в случае отсутствия данных из hitbox
-@export var ability_usage_chance: float = 0.3            # Шанс выбрать способность, если игрок рядом
-@export var ability_prefer_distance: float = 120.0       # Если игрок дальше этой дистанции, NPC предпочитает каст
-@export var attack_distance_buffer: float = 8.0          # Отступ при подходе, чтобы не налететь в плотную
-@export var obstacle_avoidance_distance: float = 40.0    # Смещение при обходе препятствия
-@export var memory_search_radius: float = 16.0           # Радиус для завершения поиска последнего известного положения
+@export var attack_range: float = 30.0
+@export var ability_usage_chance: float = 0.3
+@export var ability_prefer_distance: float = 120.0
+@export var attack_distance_buffer: float = 8.0
+@export var obstacle_avoidance_distance: float = 40.0
+@export var memory_search_radius: float = 16.0
+@export var search_speed_multiplier: float = 0.7
 
-# ==================== ССЫЛКИ ====================
 var actor: Node2D
 var perception: AIPerception
 var combat_component: ActorCombatComponent
+var walk_state_speed_multiplier: float = 1.0
 
-# ==================== ИНИЦИАЛИЗАЦИЯ ====================
+# Новое: отслеживание комбо
+var is_combo_active: bool = false
+var combo_step: int = 0
+var max_combo_steps: int = 4
+
+
 func setup(actor_node: Node2D, perception_node: AIPerception, combat_node: ActorCombatComponent) -> void:
 	actor = actor_node
 	perception = perception_node
 	combat_component = combat_node
 
-# ==================== ОСНОВНАЯ ЛОГИКА ====================
+
 func decide() -> Dictionary:
-	# Если игрок не обнаружен и нет памяти - стоим
 	if not perception.is_player_detected():
+		combo_step = 0
 		return {"type": CombatDecision.IDLE}
 
 	var player_visible = perception.is_player_visible
@@ -40,50 +38,55 @@ func decide() -> Dictionary:
 	var distance_to_target = actor.global_position.distance_to(target_position)
 	var effective_attack_range = _get_effective_attack_range()
 
-	# Если игрок виден и достаточно далеко, предпочитаем каст способности
+	walk_state_speed_multiplier = 1.0
+
+	# Дальняя дистанция + видимость → каст
 	if player_visible and distance_to_target > ability_prefer_distance:
 		var slot = _get_ranged_ability_slot(distance_to_target)
 		if slot >= 0:
-			return {
-				"type": CombatDecision.CAST,
-				"slot": slot,
-				"target": target_position
-			}
+			return {"type": CombatDecision.CAST, "slot": slot, "target": target_position}
 
-	# Если игрок не в зоне атаки — идем к нему, стараясь встать на дистанцию hitbox
+	# Если игрок далеко — идём (но не во время активного комбо)
 	if distance_to_target > effective_attack_range:
+		# Если комбо активно — продолжаем атаковать, несмотря на расстояние
+		if combo_step > 0 and combo_step < max_combo_steps:
+			return {"type": CombatDecision.ATTACK, "target": target_position}
+		
 		var walk_target = _get_walk_target(target_position, effective_attack_range)
 		walk_target = _adjust_target_for_obstacle(walk_target)
-		return {
-			"type": CombatDecision.WALK,
-			"target": walk_target
-		}
+		if not player_visible:
+			walk_state_speed_multiplier = search_speed_multiplier
+		return {"type": CombatDecision.WALK, "target": walk_target}
 
-	# Если игрок помнен, но уже достигли последней точки — перестаем искать
+	# Дошли до последней известной позиции, игрок не виден → бездействуем
 	if not player_visible and distance_to_target <= memory_search_radius:
 		return {"type": CombatDecision.IDLE}
 
-	# Если игрок рядом и виден, атаковать или кастовать
+	# Ближний бой
 	if player_visible:
+		# Если уже в комбо — продолжаем, не сбрасываем combo_step
+		if combo_step == 0:
+			combo_step = 1
+		
 		var ability_slot = _get_close_ability_slot()
 		if ability_slot >= 0 and randf() < ability_usage_chance:
-			return {
-				"type": CombatDecision.CAST,
-				"slot": ability_slot,
-				"target": target_position
-			}
-		return {
-			"type": CombatDecision.ATTACK,
-			"target": target_position
-		}
+			return {"type": CombatDecision.CAST, "slot": ability_slot, "target": target_position}
+		return {"type": CombatDecision.ATTACK, "target": target_position}
 
-	# Если игрок скрыт, но мы всё ещё помним его позицию — идем к ней
-	return {
-		"type": CombatDecision.WALK,
-		"target": _adjust_target_for_obstacle(target_position)
-	}
+	walk_state_speed_multiplier = search_speed_multiplier
+	return {"type": CombatDecision.WALK, "target": _adjust_target_for_obstacle(target_position)}
 
-# ==================== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ====================
+
+func notify_combo_step(step: int) -> void:
+	combo_step = step
+
+
+func notify_combo_ended() -> void:
+	is_combo_active = false
+	combo_step = 0
+
+
+# Остальные методы без изменений:
 func _get_effective_attack_range() -> float:
 	if combat_component and combat_component.hitbox_component:
 		var hitbox_range = combat_component.hitbox_component.get_attack_range()
@@ -100,7 +103,6 @@ func _get_walk_target(target_position: Vector2, desired_distance: float) -> Vect
 func _get_ranged_ability_slot(distance_to_target: float) -> int:
 	if not combat_component or not combat_component.ability_component:
 		return -1
-
 	var ability_comp = combat_component.ability_component
 	var available = []
 	for i in range(ability_comp.slots.size()):
@@ -109,7 +111,6 @@ func _get_ranged_ability_slot(distance_to_target: float) -> int:
 		var ability = ability_comp.get_ability_in_slot(i)
 		if ability and ability.max_cast_range >= distance_to_target:
 			available.append(i)
-	
 	if available.is_empty():
 		return -1
 	return available[randi() % available.size()]
@@ -117,13 +118,11 @@ func _get_ranged_ability_slot(distance_to_target: float) -> int:
 func _get_close_ability_slot() -> int:
 	if not combat_component or not combat_component.ability_component:
 		return -1
-
-	var available = []
 	var ability_comp = combat_component.ability_component
+	var available = []
 	for i in range(ability_comp.slots.size()):
 		if ability_comp.can_cast_ability(i):
 			available.append(i)
-	
 	if available.is_empty():
 		return -1
 	return available[randi() % available.size()]
@@ -134,11 +133,12 @@ func _adjust_target_for_obstacle(target_position: Vector2) -> Vector2:
 		return target_position
 
 	var hit = _get_first_obstacle_hit(origin, target_position)
-	if not hit:
+	if hit.is_empty():
 		return target_position
 
 	var direction = (target_position - origin).normalized()
-	var side = direction.tangent().normalized()
+	var side = Vector2(-direction.y, direction.x).normalized()
+
 	var candidate_a = hit.position + side * obstacle_avoidance_distance
 	var candidate_b = hit.position - side * obstacle_avoidance_distance
 
@@ -152,7 +152,7 @@ func _adjust_target_for_obstacle(target_position: Vector2) -> Vector2:
 	if b_clear:
 		return candidate_b
 
-	return origin + direction.rotated(PI * 0.5) * obstacle_avoidance_distance
+	return origin + side * obstacle_avoidance_distance
 
 func _is_path_blocked(from_position: Vector2, to_position: Vector2) -> bool:
 	var query = PhysicsRayQueryParameters2D.create(from_position, to_position)

@@ -9,7 +9,7 @@ signal player_out_of_attack_range(player: Player)
 
 # ==================== ЭКСПОРТ ====================
 @export var vision_range: float = 200.0
-@export var vision_angle: float = 90.0
+@export var vision_angle: float = 360.0
 @export var hearing_range: float = 150.0
 @export var attack_range: float = 40.0
 @export var memory_duration: float = 5.0
@@ -68,15 +68,18 @@ func _can_see_player(distance: float) -> bool:
 	if distance > vision_range:
 		return false
 
-	# Проверка угла обзора
+	# Определяем forward врага: берём из owner_node (должен быть метод get_facing_direction_vector)
+	var forward = Vector2.RIGHT
+	if owner_node.has_method("get_horizontal_facing_direction"):
+		forward = owner_node.get_horizontal_facing_direction()
+	
 	var to_player = (player.global_position - owner_node.global_position).normalized()
-	var forward = Vector2.RIGHT.rotated(owner_node.global_rotation)
 	var angle = rad_to_deg(forward.angle_to(to_player))
-
-	if abs(angle) > vision_angle / 2:
+	
+	if abs(angle) > vision_angle / 2.0:
 		return false
 
-	# Raycast для проверки препятствий
+	# Raycast...
 	var space_state = owner_node.get_world_2d().direct_space_state
 	var query = PhysicsRayQueryParameters2D.create(
 		owner_node.global_position,
@@ -90,6 +93,7 @@ func _can_see_player(distance: float) -> bool:
 		return collider == player or collider.is_in_group("player")
 
 	return true
+
 
 
 # ==================== ГЕТТЕРЫ ====================

@@ -3,7 +3,7 @@ class_name Enemy
 
 enum Mode { WORLD, BATTLE }
 
-@export var enemy_id: String = "enemy"
+@export var entity_id: String = "enemy"
 @export var enemy_data: EntityData
 @export var initial_mode: Mode = Mode.WORLD
 @export var combat_config: CombatConfig
@@ -42,7 +42,8 @@ func _ready() -> void:
 			combat_component.combat_config = combat_config
 	
 	if ability_component and enemy_data:
-		ability_component.initial_slot_assignments = enemy_data.ability_slot_assignments
+		if not enemy_data.ability_slot_assignments.is_empty():
+			ability_component.initial_slot_assignments = enemy_data.ability_slot_assignments
 		ability_component.setup(self)
 	
 	if fsm and combat_component:
@@ -68,6 +69,8 @@ func _ready() -> void:
 	
 	EventBus.Combat.started.connect(_on_combat_started)
 	EventBus.Combat.ended.connect(_on_combat_ended)
+	EventBus.Animations.requested.connect(_on_animation_requested)
+
 	
 	_apply_mode()
 
@@ -90,14 +93,19 @@ func _physics_process(delta: float) -> void:
 		return
 	
 	if _in_combat_mode:
-		_update_animation()
+		# В бою обновляем направление взгляда по velocity
+		if velocity.length() > 10:
+			sprite.flip_h = velocity.x < 0
+			last_facing_direction = "right" if velocity.x >= 0 else "left"
+		# else: сохраняем последнее направление
+#		_update_animation()
 		return
 	
 	if patrol_component:
 		patrol_component.update(delta)
 	
 	move_and_slide()
-	_update_animation()
+#	_update_animation()
 
 
 func _update_animation() -> void:
@@ -105,10 +113,21 @@ func _update_animation() -> void:
 		return
 	
 	if _in_combat_mode:
-		var dir = "right" if get_horizontal_facing_direction() == Vector2.RIGHT else "left"
-		var anim_name = "idle_battle_" + dir
-		if animation_player.has_animation(anim_name):
-			animation_player.play(anim_name)
+		var moving = velocity.length() > 10
+		var dir = "right" if not sprite.flip_h else "left"
+		
+		if moving:
+			# Если есть walk_battle анимация, используем её
+			var anim_name = "walk_battle_" + dir
+			if animation_player.has_animation(anim_name):
+				animation_player.play(anim_name)
+			else:
+				# fallback на idle_battle
+				animation_player.play("idle_battle_" + dir)
+		else:
+			var anim_name = "idle_battle_" + dir
+			if animation_player.has_animation(anim_name):
+				animation_player.play(anim_name)
 	else:
 		if velocity.length() > 10:
 			_update_facing_direction_from_velocity()
@@ -119,7 +138,13 @@ func _update_animation() -> void:
 			var anim_name = "idle_" + last_facing_direction
 			if animation_player.has_animation(anim_name):
 				animation_player.play(anim_name)
+				
 
+func _on_animation_requested(target: Node, animation_name: String, duration: float) -> void:
+	if target != self:
+		return
+	# Враг сам управляет анимациями, игнорируем
+	pass
 
 func _update_facing_direction_from_velocity() -> void:
 	if abs(velocity.x) > abs(velocity.y):
@@ -128,12 +153,17 @@ func _update_facing_direction_from_velocity() -> void:
 		last_facing_direction = "down" if velocity.y > 0 else "up"
 
 
+
 func change_mode(new_mode: Mode) -> void:
 	if new_mode == current_mode:
 		return
 	current_mode = new_mode
 	_apply_mode()
 
+func enter_combat(combat_manager: Node = null) -> void:
+	change_mode(Mode.BATTLE)
+	if combat_component:
+		combat_component.enter_combat()
 
 func _apply_mode() -> void:
 	match current_mode:
@@ -175,9 +205,11 @@ func get_sprite() -> Sprite2D:
 
 
 func get_horizontal_facing_direction() -> Vector2:
-	if sprite:
+	# В бою определяем по flip_h, в мире — по last_facing_direction
+	if _in_combat_mode:
 		return Vector2.LEFT if sprite.flip_h else Vector2.RIGHT
-	return Vector2.RIGHT
+	else:
+		return Vector2.RIGHT if last_facing_direction in ["right", "up_right", "down_right"] else Vector2.LEFT
 
 
 func _on_died() -> void:

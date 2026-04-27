@@ -1,4 +1,5 @@
 class_name IdleState extends CombatState
+# Общий для Player и остальных NPC типа Actor/Enemy и т.д
 
 func enter() -> void:
 	super.enter()

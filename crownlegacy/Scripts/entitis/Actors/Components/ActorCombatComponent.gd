@@ -4,6 +4,7 @@ class_name ActorCombatComponent
 var entity_data: EntityData
 var _in_combat: bool = false
 var _desired_move: Vector2 = Vector2.ZERO
+var ai_speed_multiplier: float = 1.0
 
 
 func setup(entity: Entity, data: EntityData) -> void:

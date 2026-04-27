@@ -1,5 +1,8 @@
 class_name WalkState extends CombatState
 
+# Общий для Player и остальных NPC типа Actor/Enemy и т.д
+
+
 func physics_process(delta: float) -> void:
 	var move_vector = combat_component.get_move_vector()
 	
@@ -15,6 +18,7 @@ func physics_process(delta: float) -> void:
 		return
 	
 	apply_movement()
+
 
 func handle_command(command: String, data: Dictionary = {}) -> void:
 	match command:
@@ -32,14 +36,23 @@ func handle_command(command: String, data: Dictionary = {}) -> void:
 				fsm.current_slot_index = data.get("slot_index", -1)
 			transition_requested.emit("Aim")
 
+
 func get_allowed_transitions() -> Array[String]:
 	return ["Idle", "Attack", "Dodge", "Block", "Aim", "Stun", "Cast"]
+
 
 func _handle_movement(input_vector: Vector2, delta: float) -> void:
 	if not entity is CharacterBody2D:
 		return
 	
 	var speed = combat_config.move_speed
+	
+	# Применяем множитель скорости от AI (если есть)
+	if combat_component.has_method("get_ai_speed_multiplier"):
+		speed *= combat_component.ai_speed_multiplier
+	elif "ai_speed_multiplier" in combat_component:
+		speed *= combat_component.ai_speed_multiplier
+	
 	var target_velocity = input_vector * speed
 	entity.velocity = entity.velocity.lerp(target_velocity, combat_config.acceleration * delta)
 	
@@ -47,10 +60,12 @@ func _handle_movement(input_vector: Vector2, delta: float) -> void:
 	var anim_direction = _get_horizontal_direction(input_vector)
 	EventBus.Animations.requested.emit(entity, "walk_" + anim_direction, 0)
 
+
 func _handle_stop_movement(delta: float) -> void:
 	if not entity is CharacterBody2D:
 		return
 	entity.velocity = entity.velocity.lerp(Vector2.ZERO, combat_config.friction * delta)
+
 
 func _get_horizontal_direction(input_vector: Vector2) -> String:
 	"""Возвращает 'left' или 'right'"""

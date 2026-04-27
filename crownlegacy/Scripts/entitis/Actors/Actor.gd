@@ -7,7 +7,7 @@ const MODE_BATTLE = "battle"
 
 # ==================== ЭКСПОРТ ====================
 @export_category("Данные актёра")
-@export var actor_id: String = "Actor"
+@export var entity_id: String = "Actor"
 @export var initial_mode: String = MODE_WORLD
 @export var actor_data: ActorData
 # ==================== ПАРАМЕТРЫ ДВИЖЕНИЯ ====================
@@ -75,7 +75,7 @@ func _ready() -> void:
 		print_debug("Actor: инициализация AbilityComponent со слотами: ", actor_data.ability_slot_assignments)
 		ability_component.initial_slot_assignments = actor_data.ability_slot_assignments
 		ability_component.setup(self)
-		print_debug("Actor ", actor_id, ": AbilityComponent настроен")
+		print_debug("Actor ", entity_id, ": AbilityComponent настроен")
 	else:
 		print_debug("Actor: AbilityComponent не инициализирован")
 		
@@ -99,7 +99,7 @@ func _ready() -> void:
 	# Настраиваем DecisionTriggerComponent
 	if decision_trigger_component and actor_data and not actor_data.decision_triggers.is_empty():
 		decision_trigger_component.setup(self, actor_data.decision_triggers)
-		print_debug("Actor ", actor_id, ": DecisionTriggerComponent настроен")
+		print_debug("Actor ", entity_id, ": DecisionTriggerComponent настроен")
 	
 	# Подписываемся на события
 	EventBus.Dialogue.started.connect(_on_dialogue_started)
@@ -109,18 +109,17 @@ func _ready() -> void:
 	EventBus.Animations.requested.connect(_on_animation_requested)
 
 	_play_idle_animation()
-	print_debug("Actor создан: ", actor_id, " (режим: ", current_mode, ")")
+	print_debug("Actor создан: ", entity_id, " (режим: ", current_mode, ")")
 
 # ==================== ФИЗИКА ====================
 func _physics_process(delta: float) -> void:
-	# В бою движение через FSM
 	if _in_combat_mode:
-		_update_animation()
+		# В бою анимации управляются через EventBus.Animations из состояний FSM
+		# НЕ вызываем _update_animation() — она для мира
 		return
 
 	move_and_slide()
 
-	# Проверка компонента защиты позиции (если есть)
 	if position_guard_component:
 		position_guard_component.process_physics(delta)
 
@@ -236,10 +235,10 @@ func _apply_mode() -> void:
 
 # ==================== ВЗАИМОДЕЙСТВИЕ ====================
 func _on_player_entered_range() -> void:
-	print_debug(actor_id, ": игрок в зоне взаимодействия")
+	print_debug(entity_id, ": игрок в зоне взаимодействия")
 
 func _on_player_exited_range() -> void:
-	print_debug(actor_id, ": игрок покинул зону взаимодействия")
+	print_debug(entity_id, ": игрок покинул зону взаимодействия")
 
 func _on_interaction_requested() -> void:
 	if _can_interact():
@@ -257,7 +256,7 @@ func start_interaction() -> void:
 		return
 	
 	_is_in_dialogue = true
-	print_debug(actor_id, ": начало взаимодействия")
+	print_debug(entity_id, ": начало взаимодействия")
 	
 	EventBus.Actors.interaction_started.emit(self)
 	
@@ -276,7 +275,7 @@ func start_interaction() -> void:
 		EventBus.Game.dialogue_requested.emit(timeline_to_play)
 		dialogue_used = true
 	else:
-		print_debug("У актёра ", actor_id, " нет диалога")
+		print_debug("У актёра ", entity_id, " нет диалога")
 		_is_in_dialogue = false
 
 # ==================== ДИАЛОГИ ====================
@@ -286,7 +285,7 @@ func _on_dialogue_started(timeline_name: String) -> void:
 
 func _on_dialogue_ended() -> void:
 	_is_in_dialogue = false
-	print_debug(actor_id, ": диалог закончен, можно взаимодействовать снова")
+	print_debug(entity_id, ": диалог закончен, можно взаимодействовать снова")
 
 func reset_after_spare() -> void:
 	"""Сбрасывает состояние актора после пощады для возможности нового диалога"""
@@ -301,7 +300,7 @@ func reset_after_spare() -> void:
 	
 	if ai_controller:
 		ai_controller.set_active(false)  # В мире AI не активен	
-	print_debug(actor_id, ": сброшен после пощады")
+	print_debug(entity_id, ": сброшен после пощады")
 
 # ==================== БОЙ ====================
 func enter_combat(combat_manager: Node = null) -> void:
@@ -346,7 +345,7 @@ func _on_animation_requested(target: Node, animation_name: String, duration: flo
 
 # ==================== ЗДОРОВЬЕ И СМЕРТЬ ====================
 func _on_health_changed(new_value: int, _old_value: int, max_value: int) -> void:
-	print_debug(actor_id, " здоровье: ", new_value, "/", max_value)
+	print_debug(entity_id, " здоровье: ", new_value, "/", max_value)
 
 func _on_died() -> void:
 	is_dead = true

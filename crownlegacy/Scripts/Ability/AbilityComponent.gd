@@ -55,7 +55,16 @@ func _find_components() -> void:
 
 func _initialize_slots() -> void:
 	slots.clear()
-	slot_assignments = initial_slot_assignments.duplicate()
+	
+	# Приоритет: entity_data → initial_slot_assignments
+	if entity_data and not entity_data.ability_slot_assignments.is_empty():
+		slot_assignments = entity_data.ability_slot_assignments.duplicate()
+	else:
+		slot_assignments = initial_slot_assignments.duplicate()
+	
+	# Подгоняем размер под 4 слота, если меньше
+	while slot_assignments.size() < 4:
+		slot_assignments.append("")
 	
 	for i in range(slot_assignments.size()):
 		var ability_id = slot_assignments[i]
@@ -63,10 +72,8 @@ func _initialize_slots() -> void:
 		if ability_id != "" and ability_manager.is_ability_unlocked(ability_id):
 			var ability = ability_manager.get_ability(ability_id)
 			slots.append(ability)
-			print("  Слот ", i, ": ", ability.ability_name)
 		else:
 			slots.append(null)
-			print("  Слот ", i, ": ПУСТОЙ (id='", ability_id, "')")
 		
 		cooldowns[i] = 0.0
 

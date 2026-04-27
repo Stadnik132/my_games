@@ -1,5 +1,7 @@
 class_name PlayerAimState extends CombatState
 
+
+
 var ability: AbilityResource
 var slot_index: int
 var aiming_visual: BaseAimingVisual

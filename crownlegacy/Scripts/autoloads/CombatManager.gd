@@ -202,6 +202,10 @@ func _on_combat_started(enemies: Array) -> void:
 
 func _on_start_combat_requested(enemies: Array) -> void:
 	"""Обработчик запроса на начало боя от врагов (без диалога)"""
+	if is_combat_active:
+		print_debug("CombatManager: бой уже идёт, пропускаю запрос")
+		return
+	EventBus.Combat.started.emit(enemies)
 	if debug_mode:
 		print_debug("CombatManager: запрос на бой от врагов: ", enemies)
 	
@@ -234,7 +238,7 @@ func _find_actor_by_id(npc_id: String) -> Node:
 	for actor in actors:
 		if actor.has_method("get_enemy_id") and actor.get_enemy_id() == npc_id:
 			return actor
-		elif "enemy_id" in actor and actor.enemy_id == npc_id:
+		elif "entity_id" in actor and actor.entity_id == npc_id:
 			return actor
 	return null
 

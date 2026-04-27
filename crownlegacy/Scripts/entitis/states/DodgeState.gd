@@ -1,5 +1,6 @@
 class_name DodgeState extends CombatState
 
+
 var dodge_timer: float = 0.0
 var dodge_direction: Vector2 = Vector2.ZERO
 var dodge_speed: float = 0.0

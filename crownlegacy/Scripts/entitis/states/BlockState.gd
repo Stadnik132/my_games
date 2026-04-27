@@ -1,5 +1,6 @@
 class_name BlockState extends CombatState
 
+
 # Блок: вход по block_start, выход по block_end или при нехватке стамины.
 # Стамина тратится за каждый полученный удар, урон снижается.
 # CombatComponent обрабатывает получение урона и трату стамины.

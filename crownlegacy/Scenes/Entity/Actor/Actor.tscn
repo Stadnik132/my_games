@@ -349,6 +349,8 @@ radius = 34.525352
 
 [sub_resource type="Resource" id="Resource_2j8bb"]
 script = ExtResource("14_p25mq")
+attack_combo_damage = Array[float]([1.0, 1.2, 1.5])
+attack_lunge_distance = 30.0
 metadata/_custom_type_script = "uid://todvfrjyk52p"
 
 [node name="Actor" type="CharacterBody2D" unique_id=1897500711]
@@ -360,7 +362,6 @@ max_slides = 1
 floor_stop_on_slope = false
 floor_block_on_wall = false
 script = ExtResource("1_vpcky")
-actor_id = "guard_01"
 actor_data = SubResource("Resource_s7a7g")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1565869217]
@@ -410,16 +411,17 @@ script = ExtResource("2_tm1wl")
 visible = false
 shape = SubResource("CircleShape2D_343dn")
 
-[node name="ActorCombatComponent" type="Node" parent="." unique_id=199198654 node_paths=PackedStringArray("stats_provider", "ability_component", "stamina_component")]
+[node name="ActorCombatComponent" type="Node" parent="." unique_id=199198654 node_paths=PackedStringArray("owner_entity", "stats_provider", "ability_component", "stamina_component")]
 script = ExtResource("5_okbp1")
 combat_config = SubResource("Resource_2j8bb")
+owner_entity = NodePath("..")
 stats_provider = NodePath("../ProgressionComponent")
 ability_component = NodePath("../AbilityComponent")
 stamina_component = NodePath("../ManaComponent")
 
 [node name="AbilityComponent" type="Node" parent="." unique_id=1527726465]
 script = ExtResource("9_o07q7")
-initial_slot_assignments = Array[String](["fireball"])
+initial_slot_assignments = Array[String]([])
 metadata/_custom_type_script = "uid://bghkf61ukvvnf"
 
 [node name="EntityCombatFSM" type="Node" parent="." unique_id=733169550]
