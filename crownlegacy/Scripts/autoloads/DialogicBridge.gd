@@ -4,7 +4,7 @@ extends Node
 @export var debug_mode: bool = true
 
 # ==================== КЭШИРОВАННЫЕ ДАННЫЕ ====================
-var _cached_trust_level: int = 50      # [-100, +100]
+var _cached_trust_level: int = 0      # [-100, +100]
 var _cached_will_power: int = 3        # Ограниченный ресурс для принуждения
 var _cached_flags: Dictionary = {}     # Локальный кэш флагов
 var _cached_player_level: int = 1      # Уровень игрока по умолчанию
@@ -186,9 +186,8 @@ func _on_dialogic_signal(argument: String) -> void:
 
 	match signal_type:
 		"start_battle":
-			var npc_id = signal_value
-			if not npc_id.is_empty():
-				EventBus.Dialogue.start_battle.emit(npc_id)
+			var npc_ids = signal_value.split(",", false) if "," in signal_value else [signal_value]
+			EventBus.Dialogue.start_battle.emit(npc_ids)
 		
 		"to_combat":
 			if debug_mode:
@@ -257,9 +256,13 @@ func _on_dialogic_signal(argument: String) -> void:
 
 # ==================== УТИЛИТЫ ====================
 func _reset_to_defaults() -> void:
-	"""Сброс кэша к значениям по умолчанию из GDD"""
-	_cached_trust_level = 50
-	_cached_will_power = 3
+	"""Сброс кэша из RelationshipManager (source of truth) или BalanceConfig"""
+	if RelationshipManager:
+		_cached_trust_level = RelationshipManager.get_trust_level()
+		_cached_will_power = RelationshipManager.get_will_power()
+	else:
+		_cached_trust_level = BalanceConfig.initial_trust if BalanceConfig else 0
+		_cached_will_power = BalanceConfig.initial_will if BalanceConfig else 3
 	_cached_flags.clear()
 	_cached_player_level = 1
 	_cached_player_stats = {

@@ -16,6 +16,7 @@ func save_game(slot_name: String) -> void:
 	
 	var save_data: Dictionary = {
 		"player": PlayerManager.save_player_data() if PlayerManager.has_method("save_player_data") else {},
+		"relationship": RelationshipManager.save_data() if RelationshipManager.has_method("save_data") else {},
 		"game_state": GameStateManager.get_current_state() if GameStateManager.has_method("get_current_state") else GameStateManager.GameState.WORLD,
 		"timestamp": Time.get_datetime_string_from_system()
 	}
@@ -54,6 +55,9 @@ func load_game(slot_name: String) -> void:
 	
 	if "player" in save_data and PlayerManager.has_method("load_player_data"):
 		PlayerManager.load_player_data(save_data["player"])
+	
+	if "relationship" in save_data and RelationshipManager.has_method("load_data"):
+		RelationshipManager.load_data(save_data["relationship"])
 	
 	if "game_state" in save_data and GameStateManager.has_method("change_state"):
 		# Принудительно выставляем состояние, чтобы гарантировать загрузку

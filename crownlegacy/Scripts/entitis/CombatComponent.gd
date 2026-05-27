@@ -64,20 +64,26 @@ func _setup_connections() -> void:
 
 # ==================== ПАРАМЕТРЫ ====================
 func get_attack_params() -> Dictionary:
+	var hitbox_range = hitbox_component.get_attack_range() if hitbox_component else 40
 	return {
 		"combo_damage": combat_config.attack_combo_damage,
 		"combo_window": combat_config.attack_combo_window,
 		"attack_duration": combat_config.attack_duration,
+		"variance_pct": combat_config.attack_variance_pct,
 		"cancel_window_start": combat_config.cancel_window_start,
 		"base_damage": stats_provider.get_stat("attack") if stats_provider else 10,
-		"max_combo_steps": combat_config.attack_combo_damage.size()
+		"max_combo_steps": combat_config.attack_combo_damage.size(),
+		"can_crit": combat_config.can_crit,
+		"crit_chance": combat_config.crit_chance,
+		"crit_multiplier": combat_config.crit_multiplier,
+		"penetration": combat_config.penetration,
+		"attack_range": hitbox_range
 	}
 
 func get_dodge_params() -> Dictionary:
 	return {
 		"distance": combat_config.dodge_distance,
 		"duration": combat_config.dodge_duration,
-		"collider_radius": combat_config.dodge_collider_radius,
 		"stamina_cost": combat_config.dodge_stamina_cost
 	}
 
@@ -89,19 +95,6 @@ func _on_attack_requested() -> void:
 	if fsm:
 		fsm.send_command("attack")
 
-func _on_dodge_requested(direction: Vector2) -> void:
-	if not fsm:
-		return
-	
-	if direction == Vector2.ZERO:
-		return
-	
-	# Проверка выносливости
-	if stamina_component and not stamina_component.use(combat_config.dodge_stamina_cost):
-		return
-	
-	fsm.send_command("dodge", {"direction": direction})
-
 func _on_block_started() -> void:
 	if fsm:
 		fsm.send_command("block_start")
@@ -111,10 +104,6 @@ func _on_block_ended() -> void:
 		fsm.send_command("block_end")
 
 func _on_ability_slot_pressed(slot_index: int) -> void:
-	print("=== ABILITY SLOT PRESSED: ", slot_index)
-	print("  fsm state: ", fsm.get_current_state_name() if fsm else "no fsm")
-	print("  ability: ", ability_component.get_ability_in_slot(slot_index).ability_name if ability_component and ability_component.get_ability_in_slot(slot_index) else "none")
-	print("  can cast: ", ability_component.can_cast_ability(slot_index) if ability_component else false)
 	if not fsm or not ability_component:
 		return
 	
@@ -128,7 +117,6 @@ func _on_ability_slot_pressed(slot_index: int) -> void:
 			"ability": ability,
 			"slot_index": slot_index
 		})
-		fsm.send_command("aiming_start")
 
 # ==================== ПОЛУЧЕНИЕ УРОНА ====================
 func _on_hurtbox_damage(damage_data: DamageData, source: Node) -> void:
@@ -157,7 +145,6 @@ func _on_hurtbox_damage(damage_data: DamageData, source: Node) -> void:
 			if stamina_component.get_current() < 5:
 				# Блок сломан - переводим в стан
 				fsm.request_stun(Vector2.ZERO, 0)
-				return  # Выходим - стан применится, урон всё равно наносится
 	
 	# Шаг 2: Применяем защиту цели
 	final_damage = _apply_defense(final_damage, damage_data)
@@ -189,13 +176,15 @@ func _apply_block(damage_data: DamageData) -> Dictionary:
 	if not combat_config:
 		return {"damage": damage_data.amount, "stamina_cost": 0}
 	
-	# Уменьшаем урон
-	var reduction = combat_config.block_damage_reduction
-	var damage_after_block = int(damage_data.amount * (1.0 - reduction))
+	# Редукция: база 50% + 1% за единицу physical_defense (кап 90%)
+	var defense = stats_provider.get_stat("physical_defense") if stats_provider else 0
+	var total_reduction = clampf(0.5 + defense * 0.01, 0.0, 0.9)
+	var damage_after_block = int(damage_data.amount * (1.0 - total_reduction))
 	
-	# Рассчитываем стоимость стамины
+	# Стоимость стамины: базовая + процент урона минус защита (не меньше 1)
 	var stamina_cost = combat_config.block_base_stamina_cost
 	stamina_cost += int(damage_data.amount * combat_config.block_stamina_damage_factor)
+	stamina_cost = max(1, stamina_cost - defense)
 	
 	return {
 		"damage": damage_after_block,
@@ -205,13 +194,6 @@ func _apply_block(damage_data: DamageData) -> Dictionary:
 func _apply_defense(damage: int, damage_data: DamageData) -> int:
 
 	return damage
-
-func _calculate_block_stamina_cost(incoming_damage: int) -> int:
-	"""Рассчитывает стоимость выносливости за блокированный удар"""
-	# Базовая стоимость + процент от полученного урона
-	var base_cost = combat_config.block_base_stamina_cost  # нужно добавить в CombatConfig
-	var damage_cost = int(incoming_damage * combat_config.block_stamina_damage_factor)  # тоже добавить
-	return base_cost + damage_cost
 
 # ==================== УПРАВЛЕНИЕ FSM ====================
 func _on_game_state_changed(new_state: int, _old_state: int) -> void:

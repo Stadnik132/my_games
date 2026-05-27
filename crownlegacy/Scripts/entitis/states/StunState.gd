@@ -117,4 +117,8 @@ func _clear_stun_effect() -> void:
 	
 	if _stun_tween:
 		_stun_tween.kill()
-	sprite.modulate = Color.WHITE
+	
+	if entity.has_method("get_modulate_override"):
+		sprite.modulate = entity.get_modulate_override()
+	else:
+		sprite.modulate = Color.WHITE

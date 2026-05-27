@@ -11,7 +11,6 @@ var line_color: Color = Color.YELLOW
 func _ready_setup() -> void:
 	if ability:
 		max_range = ability.max_cast_range
-		line_color = ability.targeting_color
 	
 	if line:
 		line.default_color = line_color

@@ -18,6 +18,7 @@ var interaction_locked: bool = false
 var _flash_tween: Tween
 var _death_tween: Tween
 var _stun_tween: Tween
+var _modulate_override: Color = Color.WHITE
 
 # ==================== ВСТРОЕННЫЕ МЕТОДЫ ====================
 func _ready() -> void:
@@ -97,7 +98,7 @@ func apply_damage_flash(damage_type: int) -> void:
 	
 	_flash_tween = create_tween()
 	_flash_tween.tween_property(sprite, "modulate", flash_color, 0.05)
-	_flash_tween.tween_property(sprite, "modulate", Color.WHITE, 0.1)
+	_flash_tween.tween_property(sprite, "modulate", _modulate_override, 0.1)
 
 func apply_stun_effect() -> void:
 	var sprite = get_sprite()
@@ -108,7 +109,7 @@ func apply_stun_effect() -> void:
 		_stun_tween.kill()
 	
 	_stun_tween = create_tween()
-	_stun_tween.tween_property(sprite, "modulate", Color.WHITE, 0.1)
+	_stun_tween.tween_property(sprite, "modulate", _modulate_override, 0.1)
 
 func clear_stun_effect() -> void:
 	var sprite = get_sprite()
@@ -117,7 +118,16 @@ func clear_stun_effect() -> void:
 	
 	if _stun_tween:
 		_stun_tween.kill()
-	sprite.modulate = Color.WHITE
+	sprite.modulate = _modulate_override
+
+func set_modulate_override(color: Color) -> void:
+	_modulate_override = color
+
+func clear_modulate_override() -> void:
+	_modulate_override = Color.WHITE
+
+func get_modulate_override() -> Color:
+	return _modulate_override
 
 
 func _on_damage_taken(amount: int, damage_type: int, source: Node, is_critical: bool) -> void:

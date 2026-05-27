@@ -8,7 +8,6 @@ var current_state: CombatState = null
 
 # Комбо атаки (сбрасывается при смене состояния)
 var attack_combo_step: int = 0
-var combo_window_timer: float = 0.0
 var last_dodge_direction: Vector2 = Vector2.DOWN
 var last_movement_direction: Vector2 = Vector2.DOWN
 
@@ -23,9 +22,6 @@ var current_slot_index: int = -1
 var current_ability: AbilityResource = null
 var cast_target_position: Vector2 = Vector2.ZERO
 var cast_target_data: Dictionary = {}
-
-# Ввод для комбо (устанавливается CombatComponent)
-var combo_input_received: bool = false
 
 func setup(p_entity: Entity, p_stats: ProgressionComponent, p_component: CombatComponent, p_config: CombatConfig) -> void:
 	entity = p_entity
@@ -54,8 +50,6 @@ func setup(p_entity: Entity, p_stats: ProgressionComponent, p_component: CombatC
 func change_state(state_name: String) -> void:
 	if not states.has(state_name):
 		return
-	if not states.has(state_name):
-		return
 
 	var old_name = get_current_state_name()
 
@@ -72,10 +66,6 @@ func change_state(state_name: String) -> void:
 	current_state.enter()
 
 	state_changed.emit(old_name, state_name)
-	
-	# Сбрасываем флаг ввода комбо при смене состояния
-	if state_name != "Attack":
-		combo_input_received = false
 
 func send_command(command: String, data: Dictionary = {}) -> void:
 	match command:
@@ -125,9 +115,6 @@ func send_command(command: String, data: Dictionary = {}) -> void:
 			current_slot_index = -1
 			current_ability = null
 		
-		"combo_input":
-			combo_input_received = true
-	
 	# Все команды передаём текущему состоянию
 	if current_state:
 		current_state.handle_command(command, data)

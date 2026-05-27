@@ -41,7 +41,6 @@ enum AimingType { NONE, AREA, PROJECTILE, SELF }
 # Визуал прицеливания (опционально)
 @export var visual_scene_path: String = ""
 @export var visual_scene: PackedScene
-@export var targeting_color: Color = Color(1, 0, 0, 0.3)
 
 # Анимация и звук
 @export var cast_animation: String = "cast"
@@ -96,7 +95,6 @@ func can_afford(health: HealthComponent, mana: ResourceComponent, stamina: Resou
 
 func get_aiming_visual_scene() -> PackedScene:
 	"""Возвращает сцену для визуала прицеливания"""
-	load_assets()
 	
 	# Если есть кастомная сцена - используем её
 	if visual_scene:
@@ -156,10 +154,13 @@ static func from_json(json_data: Dictionary) -> AbilityResource:
 	
 	# ЕДИНАЯ сцена эффекта
 	ability.effect_scene_path = json_data.get("effect_scene", "")
+	if ability.effect_scene_path != "":
+		ability.effect_scene = load(ability.effect_scene_path)
 	
 	# Визуал прицеливания
 	ability.visual_scene_path = json_data.get("visual_scene", "")
-	ability.targeting_color = json_data.get("targeting_color", Color(1, 0, 0, 0.3))
+	if ability.visual_scene_path != "":
+		ability.visual_scene = load(ability.visual_scene_path)
 	
 	# Анимация и звук
 	ability.cast_animation = json_data.get("cast_animation", "cast")

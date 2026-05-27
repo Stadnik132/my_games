@@ -13,7 +13,7 @@ var health_component: HealthComponent        # Для траты здоровь�
 # ==================== ВНУТРЕННИЕ МАССИВЫ ====================
 var slots: Array[AbilityResource] = []       # AbilityResource в слотах
 var slot_assignments: Array[String] = []     # ID способностей в слотах
-var cooldowns: Dictionary = {}               # Кулдауны по индексам {0: 2.5, 1: 0.0, ...}
+var cooldowns: Array[float] = []              # Кулдауны по индексам [0.0, 0.0, 0.0, 0.0]
 
 # ==================== ССЫЛКИ НА МЕНЕДЖЕРЫ ====================
 @onready var ability_manager = AbilityManager  # остаётся глобальным
@@ -39,9 +39,8 @@ func _find_components() -> void:
 	if not entity:
 		return
 	
-	entity_data = entity.get("entity_data")  # Может быть PlayerData или ActorData
+	entity_data = entity.get("entity_data")
 	
-	# Ищем компоненты ресурсов
 	for child in entity.get_children():
 		if child is ResourceComponent:
 			var res_comp = child as ResourceComponent
@@ -51,13 +50,25 @@ func _find_components() -> void:
 				ResourceComponent.ResourceType.STAMINA:
 					stamina_component = res_comp
 	
+	if not stamina_component:
+		stamina_component = mana_component
+	if not mana_component:
+		mana_component = stamina_component
+	
 	health_component = entity.health_component
 
 func _initialize_slots() -> void:
 	slots.clear()
 	
 	# Приоритет: entity_data → initial_slot_assignments
+	var has_real_assignments = false
 	if entity_data and not entity_data.ability_slot_assignments.is_empty():
+		for id in entity_data.ability_slot_assignments:
+			if id != "":
+				has_real_assignments = true
+				break
+	
+	if has_real_assignments:
 		slot_assignments = entity_data.ability_slot_assignments.duplicate()
 	else:
 		slot_assignments = initial_slot_assignments.duplicate()
@@ -75,11 +86,11 @@ func _initialize_slots() -> void:
 		else:
 			slots.append(null)
 		
-		cooldowns[i] = 0.0
+		cooldowns.append(0.0)
 
 func _process(delta: float):
 	# Обновляем кулдауны
-	for slot_index in cooldowns.keys():
+	for slot_index in cooldowns.size():
 		if cooldowns[slot_index] > 0:
 			cooldowns[slot_index] = max(0, cooldowns[slot_index] - delta)
 			_update_ui(slot_index)
@@ -119,35 +130,31 @@ func set_ability_in_slot(slot_index: int, ability_id: String) -> bool:
 func can_cast_ability(slot_index: int) -> bool:
 	var ability = get_ability_in_slot(slot_index)
 	if not ability:
-		print("  ❌ нет способности в слоте")
 		return false
 	
 	if is_on_cooldown(slot_index):
-		print("  ❌ на кулдауне, осталось: ", cooldowns[slot_index])
 		return false
 	
-	if not has_resources(slot_index):
-		print("  ❌ не хватает ресурсов")
+	if entity and entity.is_in_group("player") and not has_resources(slot_index):
 		return false
 	
-	print("  ✅ можно кастовать")
 	return true
 
 func is_on_cooldown(slot_index: int) -> bool:
-	return cooldowns.get(slot_index, 0) > 0
+	return cooldowns[slot_index] > 0 if slot_index < cooldowns.size() else false
 
 func get_cooldown_percentage(slot_index: int) -> float:
 	var ability = get_ability_in_slot(slot_index)
 	if not ability or ability.cooldown == 0:
 		return 1.0
 	
-	var remaining = cooldowns.get(slot_index, 0)
+	var remaining = cooldowns[slot_index] if slot_index < cooldowns.size() else 0.0
 	return 1.0 - (remaining / ability.cooldown)
 
 func start_cooldown(slot_index: int):
 	"""Запустить кулдаун для слота"""
 	var ability = get_ability_in_slot(slot_index)
-	if ability:
+	if ability and slot_index < cooldowns.size():
 		cooldowns[slot_index] = ability.cooldown
 		_update_ui(slot_index)
 
@@ -180,10 +187,12 @@ func cast_ability(slot_index: int, target_position: Vector2 = Vector2.ZERO) -> b
 
 # ==================== РЕСУРСЫ ====================
 func spend_resources(slot_index: int) -> bool:
-	"""Тратит ресурсы способности, возвращает успех"""
 	var ability = get_ability_in_slot(slot_index)
 	if not ability:
 		return false
+	
+	if entity and not entity.is_in_group("player"):
+		return true
 	
 	var success = true
 	
@@ -194,31 +203,29 @@ func spend_resources(slot_index: int) -> bool:
 		success = success and stamina_component.use(ability.stamina_cost)
 	
 	if ability.health_cost > 0 and health_component:
-		# Для здоровья используем специальный метод
 		var current = health_component.get_current_health()
 		if current > ability.health_cost:
-			health_component.take_damage(ability.health_cost, 2, entity, false)  # 2 = TRUE damage
+			health_component.take_damage(ability.health_cost, 2, entity, false)
 		else:
 			success = false
 	
 	return success
 
 func has_resources(slot_index: int) -> bool:
-	"""Проверяет, хватает ли ресурсов без их траты"""
 	var ability = get_ability_in_slot(slot_index)
 	if not ability:
 		return false
 	
-	if ability.mana_cost > 0 and mana_component:
-		if mana_component.get_current() < ability.mana_cost:
+	if ability.mana_cost > 0:
+		if not mana_component or mana_component.get_current() < ability.mana_cost:
 			return false
 	
-	if ability.stamina_cost > 0 and stamina_component:
-		if stamina_component.get_current() < ability.stamina_cost:
+	if ability.stamina_cost > 0:
+		if not stamina_component or stamina_component.get_current() < ability.stamina_cost:
 			return false
 	
-	if ability.health_cost > 0 and health_component:
-		if health_component.get_current_health() <= ability.health_cost:
+	if ability.health_cost > 0:
+		if not health_component or health_component.get_current_health() <= ability.health_cost:
 			return false
 	
 	return true
@@ -238,7 +245,6 @@ func _apply_ability_effect(ability: AbilityResource, target_position: Vector2):
 
 func _spawn_effect_scene(ability: AbilityResource, target_position: Vector2):
 	"""Единый метод для спавна сцены эффекта (снаряд/область/удар)"""
-	ability.load_assets()
 	
 	if not ability.effect_scene:
 		print("AbilityComponent: нет сцены эффекта для ", ability.ability_name)
@@ -335,21 +341,6 @@ func _remove_buff(buff_id: String):
 	
 	entity.progression_component.remove_modifier_by_id(buff_id)
 
-
-# ==================== ВРЕМЕННЫЙ ПОИСК ВРАГОВ (ЗАГЛУШКА) ====================
-func _find_enemies_in_area(center: Vector2, radius: float, damage_data: DamageData):
-	"""Временный метод для поиска врагов в области"""
-	var enemies = get_tree().get_nodes_in_group("enemies")
-	var hit_count = 0
-	
-	for enemy in enemies:
-		var distance = enemy.global_position.distance_to(center)
-		if distance <= radius:
-			if enemy.has_method("apply_combat_damage_data"):
-				enemy.apply_combat_damage_data(damage_data, entity)
-				hit_count += 1
-	
-	print("AbilityComponent: поражено врагов: ", hit_count)
 
 # ==================== УТИЛИТЫ ====================
 func find_slot_index(ability: AbilityResource) -> int:

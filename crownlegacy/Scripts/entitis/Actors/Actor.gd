@@ -19,11 +19,8 @@ var last_movement_direction: Vector2 = Vector2.DOWN
 @onready var interaction_component: ActorInteractionComponent = $ActorInteractionComponent
 @onready var combat_component: ActorCombatComponent = $ActorCombatComponent
 @onready var ai_controller: AIController = $AIController
-@onready var perception_component: AIPerception = $AIPerception
 @onready var brain_component: AIBrain = $AIBrain
-@onready var decision_trigger_component: DecisionTriggerComponent = $DecisionTriggerComponent
-@onready var position_guard_component: ActorPositionGuardComponent = $ActorPositionGuardComponent
-
+@onready var resolve_component: ResolveComponent = get_node_or_null("ResolveComponent") as ResolveComponent
 # Совместимость для кода, который ожидает свойство `entity_data` у Entity.
 var entity_data: EntityData:
 	get:
@@ -63,17 +60,19 @@ func _ready() -> void:
 		interaction_component.player_entered_range.connect(_on_player_entered_range)
 		interaction_component.player_exited_range.connect(_on_player_exited_range)
 
-	# Настраиваем компонент защиты позиции
-	if position_guard_component:
-		position_guard_component.setup(self)
-
 	# Настраиваем боевой компонент
 	if combat_component:
 		combat_component.setup(self, actor_data)
 	
-	if ability_component and actor_data and not actor_data.ability_slot_assignments.is_empty():
-		print_debug("Actor: инициализация AbilityComponent со слотами: ", actor_data.ability_slot_assignments)
-		ability_component.initial_slot_assignments = actor_data.ability_slot_assignments
+	if ability_component and actor_data:
+		var has_real = false
+		for id in actor_data.ability_slot_assignments:
+			if id != "":
+				has_real = true
+				break
+		if has_real:
+			print_debug("Actor: инициализация AbilityComponent со слотами: ", actor_data.ability_slot_assignments)
+			ability_component.initial_slot_assignments = actor_data.ability_slot_assignments
 		ability_component.setup(self)
 		print_debug("Actor ", entity_id, ": AbilityComponent настроен")
 	else:
@@ -90,16 +89,13 @@ func _ready() -> void:
 	if ai_controller:
 		ai_controller.setup(self)
 
-	if perception_component:
-		perception_component.setup(self)
 
-	if brain_component and perception_component and combat_component:
-		brain_component.setup(self, perception_component, combat_component)
 	
-	# Настраиваем DecisionTriggerComponent
-	if decision_trigger_component and actor_data and not actor_data.decision_triggers.is_empty():
-		decision_trigger_component.setup(self, actor_data.decision_triggers)
-		print_debug("Actor ", entity_id, ": DecisionTriggerComponent настроен")
+	if combat_component and combat_component.get_fsm():
+		_register_surrender_state()
+	
+	if resolve_component:
+		resolve_component.surrendered.connect(_on_resolve_depleted)
 	
 	# Подписываемся на события
 	EventBus.Dialogue.started.connect(_on_dialogue_started)
@@ -114,14 +110,7 @@ func _ready() -> void:
 # ==================== ФИЗИКА ====================
 func _physics_process(delta: float) -> void:
 	if _in_combat_mode:
-		# В бою анимации управляются через EventBus.Animations из состояний FSM
-		# НЕ вызываем _update_animation() — она для мира
 		return
-
-	move_and_slide()
-
-	if position_guard_component:
-		position_guard_component.process_physics(delta)
 
 	_update_animation()
 
@@ -378,27 +367,25 @@ func get_horizontal_facing_direction() -> Vector2:
 func get_sprite() -> Sprite2D:
 	return sprite
 
-# ==================== НАЧАЛО БОЯ ====================
-func combat_start_jump(direction: Vector2, distance: float, duration: float) -> void:
-	"""
-	Плавный отскок при начале боя.
-	Вызывается из CombatManager для Actor.
-	Если Actor — босс с marker_point, этот метод НЕ вызывается.
-	"""
-	_in_combat_mode = true  # Отключаем обычный physics_process
-	
-	var start_pos = global_position
-	var end_pos = start_pos + direction * distance
-	
-	# Плавная анимация через Tween
-	var tween = create_tween()
-	tween.set_trans(Tween.TRANS_QUAD)
-	tween.set_ease(Tween.EASE_OUT)
-	tween.tween_property(self, "global_position", end_pos, duration)
-	tween.tween_callback(func():
-		velocity = Vector2.ZERO
-		print_debug("Actor: отскок завершён")
-	)
+func _register_surrender_state() -> void:
+	var fsm_node = combat_component.get_fsm()
+	if not fsm_node or fsm_node.has_node("SurrenderedState"):
+		return
+	var state = SurrenderedState.new()
+	state.name = "SurrenderedState"
+	state.entity = self
+	state.stats_provider = progression_component
+	state.combat_component = combat_component
+	state.combat_config = combat_component.combat_config
+	state.fsm = fsm_node
+	fsm_node.add_child(state)
+	fsm_node.states["Surrendered"] = state
+	state.transition_requested.connect(fsm_node._on_transition_requested)
+
+func _on_resolve_depleted() -> void:
+	var fsm_node = combat_component.get_fsm() if combat_component else null
+	if fsm_node:
+		fsm_node.change_state("Surrendered")
 
 func _update_component_data(new_data: ActorData) -> void:
 	"""Обновляет ссылки на данные во всех компонентах"""

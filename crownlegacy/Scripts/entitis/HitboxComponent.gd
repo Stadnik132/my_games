@@ -16,7 +16,7 @@ func _ready() -> void:
 		push_error("HitboxComponent: hitbox_scene не назначен!")
 
 func spawn_hitbox(
-	position: Vector2,
+	world_pos: Vector2,
 	damage_amount: int,
 	damage_type: int = 0,
 	is_critical: bool = false,
@@ -40,10 +40,9 @@ func spawn_hitbox(
 	hitbox.set_damage_data(damage)
 	hitbox.direction = direction
 	hitbox.lifetime = lifetime if lifetime > 0 else default_lifetime
-	hitbox.global_position = position
+	hitbox.position = owner_node.to_local(world_pos)
 	
-	# ВАЖНО: Добавляем в корень сцены
-	get_tree().current_scene.add_child(hitbox)
+	owner_node.add_child(hitbox)
 	
 	_active_hitboxes.append(hitbox)
 	hitbox.tree_exited.connect(_on_hitbox_removed.bind(hitbox))
@@ -101,7 +100,7 @@ func get_attack_range() -> float:
 func _on_hitbox_removed(hitbox: Hitbox) -> void:
 	_active_hitboxes.erase(hitbox)
 
-func spawn_hitbox_with_damage(position: Vector2, direction: Vector2, damage_data: DamageData) -> Hitbox:
+func spawn_hitbox_with_damage(world_pos: Vector2, direction: Vector2, damage_data: DamageData) -> Hitbox:
 	if not hitbox_scene:
 		return null
 	
@@ -113,9 +112,9 @@ func spawn_hitbox_with_damage(position: Vector2, direction: Vector2, damage_data
 	hitbox.set_damage_data(damage_data)
 	hitbox.direction = direction
 	hitbox.lifetime = default_lifetime
-	hitbox.global_position = position
+	hitbox.position = owner_node.to_local(world_pos)
 	
-	get_tree().current_scene.add_child(hitbox)
+	owner_node.add_child(hitbox)
 	
 	_active_hitboxes.append(hitbox)
 	hitbox.tree_exited.connect(_on_hitbox_removed.bind(hitbox))

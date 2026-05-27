@@ -11,8 +11,7 @@ class GameSignals:
 	signal menu_requested()
 	signal cutscene_requested(cutscene_id: String)
 	signal game_over_requested()
-	signal decision_point_activated()  # Замедление времени
-	signal decision_point_deactivated()  # Возврат времени	
+
 
 # ----- Общие сигналы для всех живых сущностей (Player, Actor, Enemy) -----
 class EntitySignals:
@@ -54,7 +53,7 @@ class DialogueSignals:
 	signal change_trust(amount: int)
 	signal set_flag(flag_name: String, value: Variant)
 	signal use_will(amount: int)
-	signal start_battle(npc_id: String)
+	signal start_battle(npc_ids: Array)
 
 # ----- Боевая система (структурированная) -----
 class CombatSignals:
@@ -62,28 +61,25 @@ class CombatSignals:
 	signal start_combat_requested(enemies: Array)
 	signal started(enemies: Array)
 	signal ended(victory: bool)
+	signal reward_calculation_requested(experience: int, enemies: Array)
 	signal combat_state_changed(old_state: String, new_state: String)
 	signal entity_stunned(entity: Node, is_stunned: bool)
 	
 	# Враги
-	class EnemySignals:
+	class _CEnemy:
 		signal health_changed(enemy: Node, current_hp: int, max_hp: int)
 		signal died(enemy: Node, experience: int)
 		signal hit(enemy: Node, damage: int, is_critical: bool)
+		signal joined(enemy: Node)
 	
-	# Точки решений
-	class DecisionSignals:
-		signal point_triggered(enemy: Node, trigger_data: Dictionary)
-		signal made(enemy: Node, choice: String)
-		signal ui_closed()
+	# Точки решений (сигналы между боем и диалогом)
+	class _CDecision:
 		signal dialogic_made(choice: String)
-		signal combat_to_dialogue_requested(enemy: Node)
-		signal point_requested(enemy: Node, trigger_data: Dictionary)  # Запрос от актора
-		signal transition_to_dialogue(enemy: Node, timeline: String)  # Переход в диалог
-		signal enemy_spared(enemy: Node)  # Враг пощажён
+		signal transition_to_dialogue(enemy: Node, timeline: String)
+		signal enemy_spared(enemy: Node)
 	
 	# Атаки
-	class AttackSignals:
+	class _CAttack:
 		signal basic_requested()
 		signal basic_started()
 		signal basic_hit(combo_step: int, enemies_hit: int)
@@ -91,14 +87,14 @@ class CombatSignals:
 		signal combo_window_opened()
 		signal combo_window_closed()
 	
-	# Уклонение (теперь без failed)
-	class DodgeSignals:
+	# Уклонение
+	class _CDodge:
 		signal requested(direction: Vector2)
 		signal started()
 		signal completed()
 	
 	# Блокирование
-	class BlockSignals:
+	class _CBlock:
 		signal started()
 		signal ended()
 		signal active()
@@ -106,30 +102,46 @@ class CombatSignals:
 		signal broken()
 	
 	# Способности
-	class AbilitySignals:
+	class _CAbility:
 		signal slot_pressed(slot_index: int)
 		signal aiming_started(slot_index: int)
 		signal aiming_cancelled()
 		signal target_confirmed(target_position: Vector2)
-		signal cast_started(ability: Resource)  # AbilityResource
+		signal cast_started(ability: Resource)
 		signal cast_completed()
 		signal animation_started(animation_name: String, duration: float)
+
+	# Убеждение
+	class _CPersuasion:
+		signal action_requested(action_name: String)
+		signal action_performed(action_name: String, target: Node)
+		signal resolve_changed(target: Node, new_value: int, old_value: int, max_value: int)
+		signal target_surrendered(target: Node)
+
+	# Инвентарь в бою
+	class _CInventory:
+		signal use_item_requested(slot_index: int)
+		signal item_used(slot_index: int, effect: Dictionary)
 	
-	# Экземпляры подгрупп (создаются в CombatSignals)
-	var enemy: EnemySignals
-	var decision: DecisionSignals
-	var attack: AttackSignals
-	var dodge: DodgeSignals
-	var block: BlockSignals
-	var ability: AbilitySignals
+	# Экземпляры подгрупп
+	var enemy: _CEnemy
+	var decision: _CDecision
+	var attack: _CAttack
+	var dodge: _CDodge
+	var block: _CBlock
+	var ability: _CAbility
+	var persuasion: _CPersuasion
+	var inventory: _CInventory
 	
 	func _init():
-		enemy = EnemySignals.new()
-		decision = DecisionSignals.new()
-		attack = AttackSignals.new()
-		dodge = DodgeSignals.new()
-		block = BlockSignals.new()
-		ability = AbilitySignals.new()
+		enemy = _CEnemy.new()
+		decision = _CDecision.new()
+		attack = _CAttack.new()
+		dodge = _CDodge.new()
+		block = _CBlock.new()
+		ability = _CAbility.new()
+		persuasion = _CPersuasion.new()
+		inventory = _CInventory.new()
 
 # ----- Система анимаций (общая) -----
 class AnimationSignals:
@@ -143,7 +155,7 @@ class UISignals:
 	signal menu_opened(menu_type: String)
 	signal menu_closed()
 	signal notification(text: String, duration: float)
-	signal hud_update_required()
+	signal hud_update_required(data: Dictionary)
 
 # ----- Акторы (NPC, объекты мира) -----
 class ActorsSignals:
@@ -213,7 +225,7 @@ func _clear_all_connections() -> void:
 func _print_debug_info() -> void:
 	print("=== EventBus [Активен] ===")
 	print("Основные группы: Game, Entity, Player, Relationship, Dialogue, Combat, Animations, UI, Actors, Flags, System")
-	print("Подгруппы Combat: enemy, decision, attack, dodge, block, ability")
+	print("Подгруппы Combat: enemy, decision, attack, dodge, block, ability, persuasion, inventory")
 	print("===========================")
 
 

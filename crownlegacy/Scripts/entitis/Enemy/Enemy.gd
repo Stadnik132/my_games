@@ -7,15 +7,16 @@ enum Mode { WORLD, BATTLE }
 @export var enemy_data: EntityData
 @export var initial_mode: Mode = Mode.WORLD
 @export var combat_config: CombatConfig
+@export var detect_range: float = 150.0
 
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var animation_player: AnimationPlayer = $AnimationPlayer
 @onready var combat_component: ActorCombatComponent = $ActorCombatComponent
 @onready var ai_controller: AIController = $AIController
-@onready var perception: AIPerception = $AIPerception
 @onready var brain: AIBrain = $AIBrain
 @onready var patrol_component: EnemyPatrolComponent = $EnemyPatrolComponent
 @onready var fsm: EntityCombatFSM = $EntityCombatFSM
+@onready var resolve_component: ResolveComponent = get_node_or_null("ResolveComponent") as ResolveComponent
 
 var current_mode: Mode = Mode.WORLD
 var _in_combat_mode: bool = false
@@ -48,16 +49,12 @@ func _ready() -> void:
 	
 	if fsm and combat_component:
 		fsm.setup(self, progression_component, combat_component, combat_config)
+		_register_surrender_state()
+	
+	_ensure_resolve_component()
 	
 	if ai_controller:
 		ai_controller.setup(self)
-	
-	if perception:
-		perception.setup(self)
-		perception.player_detected.connect(_on_player_detected)
-	
-	if brain and perception and combat_component:
-		brain.setup(self, perception, combat_component)
 	
 	if patrol_component:
 		patrol_component.setup(self)
@@ -91,6 +88,11 @@ func _update_component_data(new_data: EntityData) -> void:
 func _physics_process(delta: float) -> void:
 	if is_dead:
 		return
+	
+	if current_mode == Mode.WORLD:
+		var player = get_tree().get_first_node_in_group("player")
+		if player and global_position.distance_to(player.global_position) <= detect_range:
+			EventBus.Combat.start_combat_requested.emit([self])
 	
 	if _in_combat_mode:
 		# В бою обновляем направление взгляда по velocity
@@ -153,6 +155,28 @@ func _update_facing_direction_from_velocity() -> void:
 		last_facing_direction = "down" if velocity.y > 0 else "up"
 
 
+
+func _ensure_resolve_component() -> void:
+	if resolve_component:
+		resolve_component.surrendered.connect(_on_resolve_depleted)
+
+func _register_surrender_state() -> void:
+	if not fsm or fsm.has_node("SurrenderedState"):
+		return
+	var state = SurrenderedState.new()
+	state.name = "SurrenderedState"
+	state.entity = self
+	state.stats_provider = progression_component
+	state.combat_component = combat_component
+	state.combat_config = combat_config
+	state.fsm = fsm
+	fsm.add_child(state)
+	fsm.states["Surrendered"] = state
+	state.transition_requested.connect(fsm._on_transition_requested)
+
+func _on_resolve_depleted() -> void:
+	if fsm and combat_component:
+		fsm.change_state("Surrendered")
 
 func change_mode(new_mode: Mode) -> void:
 	if new_mode == current_mode:

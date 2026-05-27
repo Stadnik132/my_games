@@ -9,8 +9,7 @@ Guard: Стой, ё-маё
 		Klous: Окэ, мачу
 		[signal arg="trust-10"]
 		Klous: Тестик
-		[signal arg="start_battle:guard_01"]
-		[signal arg="start_battle:guard_02"]
+		[signal arg="start_battle:guard_01,guard_02"]
 	else:
 		Klous: Не, не буду
 		if DialogicBridge.can_afford_will(1):
@@ -18,7 +17,7 @@ Guard: Стой, ё-маё
 				[signal arg="use_will:1"]
 				Klous: Блииин... Ну ладно, Ты ж использовал волю короля. Атакую
 				[clear time="0.0"]
-				[signal arg="start_battle:guard_01"]
+				[signal arg="start_battle:guard_01,guard_02"]
 			- Продолжить...
 				[clear time="0.0"]
 - Не нажимай

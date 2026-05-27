@@ -1,17 +1,14 @@
-# BalanceConfig.gd
-extends Resource
-class_name BalanceConfig
+extends Node
 
 # ==================== СИСТЕМА ДОВЕРИЯ ====================
 @export_category("01. Система доверия")
-@export_range(-100, 100) var initial_trust: int = 50
+@export_range(-100, 100) var initial_trust: int = 0
 @export_range(0, 10) var initial_will: int = 3
 @export var force_action_trust_penalty: int = 25
 @export var trust_damage_multiplier: float = 0.005
 @export var trust_dodge_chance: float = 0.001
 @export var min_refusal_chance: float = 0.0
 @export var max_refusal_chance: float = 0.5
-#GameFlags.gd
 
 # ==================== ПЕРЕМЕЩЕНИЕ ====================
 @export_category("02. Перемещение")

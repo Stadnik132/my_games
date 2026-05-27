@@ -5,45 +5,52 @@
 [ext_resource type="PackedScene" uid="uid://c13138o3lbiu" path="res://Scenes/Entity/Actor/Actor.tscn" id="3_ej3ka"]
 [ext_resource type="PackedScene" uid="uid://c3gn1gu8g8qaw" path="res://Scenes/Entity/player/Player.tscn" id="3_iavhu"]
 [ext_resource type="Script" uid="uid://b1braurhti7u8" path="res://Scripts/resources/ActorData.gd" id="4_ej3ka"]
-[ext_resource type="Script" uid="uid://ssoy2ikaytj6" path="res://Scripts/resources/DecisionTrigger.gd" id="5_ml3ve"]
 
 [sub_resource type="Resource" id="Resource_s48co"]
 script = ExtResource("3_6tpqx")
 base_stats = {
 "agility": 5,
-"attack": 10,
+"attack": 100,
 "defense": 5,
 "speed": 5
 }
 metadata/_custom_type_script = "uid://rix2axybkxut"
 
+[sub_resource type="Resource" id="Resource_6tpqx"]
+resource_local_to_scene = true
+script = ExtResource("4_ej3ka")
+timeline_name = "guard_encounter"
+repeat_timeline_name = "guard_timeline 2"
+base_stats = {
+"agility": 5,
+"attack": 9,
+"defense": 5,
+"speed": 5
+}
+ability_slot_assignments = Array[String](["fireball"])
+max_mp = 9999
+current_mp = 9999
+metadata/_custom_type_script = "uid://b1braurhti7u8"
+
 [sub_resource type="Resource" id="Resource_ml3ve"]
 resource_local_to_scene = true
 script = ExtResource("4_ej3ka")
-repeat_timeline_name = "guard_timeline 2"
-ability_slot_assignments = Array[String](["fireball"])
-base_stats = {
-"agility": 5,
-"attack": 1,
-"defense": 5,
-"speed": 5
-}
-metadata/_custom_type_script = "uid://b1braurhti7u8"
-
-[sub_resource type="Resource" id="Resource_gas7q"]
-resource_local_to_scene = true
-script = ExtResource("4_ej3ka")
 display_name = "Actor1"
-ability_slot_assignments = Array[String](["berserk"])
 base_stats = {
 "agility": 5,
-"attack": 3,
+"attack": 15,
 "defense": 5,
 "speed": 5
 }
+ability_slot_assignments = Array[String](["berserk"])
+max_mp = 9999
+current_mp = 9999
+max_stamina = 9999
+current_stamina = 9999
 metadata/_custom_type_script = "uid://b1braurhti7u8"
 
 [node name="Main" type="Node2D" unique_id=1131979430]
+scale = Vector2(2, 2)
 
 [node name="Icon" type="Sprite2D" parent="." unique_id=22268518]
 position = Vector2(108.000015, -10.000015)
@@ -52,14 +59,15 @@ texture = ExtResource("1_ej3ka")
 
 [node name="Klous" parent="." unique_id=1832941691 instance=ExtResource("3_iavhu")]
 position = Vector2(-11, 18)
-move_speed = 130.0
+sprint_speed = 300.0
 player_data = SubResource("Resource_s48co")
 
 [node name="Actor" parent="." unique_id=1186382391 instance=ExtResource("3_ej3ka")]
 position = Vector2(135, -37)
-actor_data = SubResource("Resource_ml3ve")
+entity_id = "guard_01"
+actor_data = SubResource("Resource_6tpqx")
 
 [node name="Actor2" parent="." unique_id=1897500711 instance=ExtResource("3_ej3ka")]
 position = Vector2(-88, -82)
-actor_id = "guard_02"
-actor_data = SubResource("Resource_gas7q")
+entity_id = "guard_02"
+actor_data = SubResource("Resource_ml3ve")

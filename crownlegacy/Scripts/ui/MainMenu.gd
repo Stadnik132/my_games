@@ -8,9 +8,10 @@ extends CanvasLayer
 @onready var music_player: AudioStreamPlayer = $MusicPlayer
 @onready var texture_rect: TextureRect = $TextureRect
 @onready var background_dim: ColorRect = $BackgroundDim  # Опционально
-
+@onready var new_game_sfx: AudioStreamPlayer = $NewGameSFX
 
 func _ready() -> void:
+	await get_tree().process_frame
 	_resize_logo()
 	
 	if animation_player:
@@ -57,6 +58,9 @@ func _fade_out_music() -> void:
 
 
 func _on_new_game_pressed() -> void:
+	if new_game_sfx and new_game_sfx.stream:
+		new_game_sfx.play()
+	
 	await _fade_out_music()
 	
 	SaveManager.reset_game()
@@ -65,7 +69,7 @@ func _on_new_game_pressed() -> void:
 		animation_player.play("fade_out")
 		await animation_player.animation_finished
 	
-	get_tree().change_scene_to_file("res://Scenes/Demo/Village.tscn")
+	get_tree().change_scene_to_file("res://Scenes/DEMO.tscn")
 
 
 func _on_load_pressed() -> void:

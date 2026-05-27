@@ -42,12 +42,9 @@ func handle_command(command: String, data: Dictionary = {}) -> void:
 
 func _has_stamina_for_block() -> bool:
 	"""Проверяет, достаточно ли выносливости для продолжения блока"""
-	var stamina_comp = entity.get_node_or_null("StaminaComponent") as ResourceComponent
-	if not stamina_comp:
-		return true  # если нет стамины, считаем что блок всегда возможен
-
-	# Минимальный порог для удержания блока
-	return stamina_comp.get_current() >= 5
+	if not combat_component or not combat_component.stamina_component:
+		return true
+	return combat_component.stamina_component.get_current() >= 5
 
 func _break_block() -> void:
 	"""Блок сломан (не хватило выносливости)"""

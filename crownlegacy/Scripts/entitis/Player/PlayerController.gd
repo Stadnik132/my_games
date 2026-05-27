@@ -4,7 +4,6 @@ class_name PlayerController
 # ==================== ССЫЛКИ ====================
 @onready var player: Player = get_parent()
 
-var _was_blocking: bool = false
 var _can_attack: bool = true
 
 # ==================== ВВОД ====================

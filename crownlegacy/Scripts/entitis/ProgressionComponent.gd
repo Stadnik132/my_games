@@ -92,9 +92,8 @@ func _apply_level_up_stats() -> Dictionary:
 	
 	# Базовое увеличение (зависит от класса, пока хардкод)
 	increases["attack"] = 2
-	increases["magic_attack"] = 2
-	increases["defense"] = 1
-	increases["magic_defense"] = 1
+	increases["physical_defense"] = 1
+	increases["magical_defense"] = 1
 	increases["speed"] = 1
 	increases["agility"] = 1
 	

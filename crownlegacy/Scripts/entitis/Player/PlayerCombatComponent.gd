@@ -62,8 +62,11 @@ func _on_attack_requested() -> void:
 	_attack_request_pending = false
 
 func _on_dodge_requested(direction: Vector2) -> void:
-	if fsm:
-		fsm.send_command("dodge", {"direction": direction})
+	if not fsm or direction == Vector2.ZERO:
+		return
+	if stamina_component and not stamina_component.use(combat_config.dodge_stamina_cost):
+		return
+	fsm.send_command("dodge", {"direction": direction})
 
 func _on_block_started() -> void:
 	if fsm:

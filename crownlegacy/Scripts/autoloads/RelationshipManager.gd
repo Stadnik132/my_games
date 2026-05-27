@@ -22,6 +22,10 @@ func _ready() -> void:
 	# ВСЕГДА создаём копию для игрового процесса
 	relationship_data = default_relationship_data.duplicate()
 	
+	# Инициализируем из BalanceConfig (если не было загрузки сохранения)
+	relationship_data.trust_level = BalanceConfig.initial_trust
+	relationship_data.will_power = BalanceConfig.initial_will
+	
 	# Подключаем сигналы данных к менеджеру
 	relationship_data.trust_changed.connect(_on_data_trust_changed)
 	relationship_data.will_changed.connect(_on_data_will_changed)

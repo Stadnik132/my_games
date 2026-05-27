@@ -25,40 +25,37 @@ EventBus="*uid://dlo035ihua5u"
 SettingManager="*uid://bp0t80mt7wahf"
 SaveManager="*uid://vwuupqhbskcw"
 GameStateManager="*res://Scripts/autoloads/GameStateManager.gd"
-GameMenu="*uid://dbqjnya0e55ru"
 RelationshipManager="*res://Scripts/autoloads/RelationshipManager.gd"
 ItemRegistry="*uid://be4ncb5b5k441"
 GameFlags="*res://Scripts/autoloads/GameFlags.gd"
 PlayerManager="*res://Scripts/autoloads/PlayerManager.gd"
 CombatManager="*res://Scripts/autoloads/CombatManager.gd"
 AbilityManager="*res://Scripts/autoloads/AbilityManager.gd"
-DecisionManager="*uid://dck4g01scyvwb"
 DialogicBridge="*res://Scripts/autoloads/DialogicBridge.gd"
-Dialogic="*res://addons/dialogic/Core/DialogicGameHandler.gd"
+Dialogic="*uid://ds2q0uclmolvu"
+GameMenu="*uid://dbqjnya0e55ru"
+BalanceConfig="*res://Scripts/autoloads/BalanceConfig.gd"
+CombatUIManager="*res://Scripts/ui/combat/CombatUIManager.gd"
 
 [dialogic]
 
 directories/dch_directory={
 "Guard": "res://dialogic/Characters/Guard.dch",
-"Klous": "res://dialogic/Characters/Klous.dch"
+"Klous": "res://dialogic/Characters/Klous.dch",
+"Pip": "res://dialogic/Characters/Pip.dch"
 }
 directories/dtl_directory={
 "CutSceneEntry": "res://dialogic/timelines/CutSceneEntry.dtl",
+"Intro_dialogue": "res://dialogic/timelines/DEMO/Intro-PIP/Intro_dialogue.dtl",
+"Pip": "res://dialogic/timelines/DEMO/Intro-PIP/Pip.dtl",
 "enemy_surrender": "res://dialogic/timelines/enemy_surrender.dtl",
 "guard_encounter": "res://dialogic/timelines/guard_encounter.dtl",
-"guard_timeline 2": "res://guard_timeline 2.dtl"
+"pip_intro": "res://dialogic/timelines/DEMO/Intro-PIP/pip_intro.dtl"
 }
-layout/style_directory={
-"": "res://StileDEMO.tres",
-"StileDEMO": "res://StileDEMO.tres"
-}
+layout/style_directory={}
 glossary/default_case_sensitive=true
-layout/style_list=["res://StileDEMO.tres"]
-variables={
-"coins": 50,
-"trust_level": 26,
-"will_power": 3
-}
+layout/style_list=[]
+variables={}
 extensions_folder="res://addons/dialogic_additions"
 text/letter_speed=0.05
 text/initial_text_reveal_skippable=true
@@ -74,13 +71,7 @@ choices/reveal_delay=0
 choices/reveal_by_input=false
 save/autosave_delay=60.0
 save/encryption_on_exports_only=true
-text/autopauses={
-"!": 0.5,
-",": 0.30000000000000004,
-".": 0.5,
-"...": 0.30000000000000004,
-"?": 0.5
-}
+text/autopauses={}
 audio/channel_defaults={
 "": {
 "audio_bus": "",
@@ -101,7 +92,7 @@ translation/file_mode=1
 translation/translation_folder=""
 translation/save_mode=0
 translation/add_separator=false
-layout/default_style="res://StileDEMO.tres"
+layout/default_style=""
 text/absolute_autopauses=false
 text/autoskip_time_per_event=0.1
 timer/process_in_physics=true
@@ -111,6 +102,7 @@ animations/cross_fade_default="Fade Cross"
 animations/join_default_length=0.5
 animations/leave_default_length=0.5
 animations/cross_fade_default_length=0.5
+text/input_action="dialogic_default_action"
 
 [display]
 
@@ -266,6 +258,21 @@ game_menu={
 "events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":4194306,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
 ]
 }
+open_combat_menu={
+"deadzone": 0.2,
+"events": [Object(InputEventMouseButton,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"button_mask":0,"position":Vector2(0, 0),"global_position":Vector2(0, 0),"factor":1.0,"button_index":3,"canceled":false,"pressed":true,"double_click":false,"script":null)
+]
+}
+spare={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":81,"key_label":0,"unicode":113,"location":0,"echo":false,"script":null)
+]
+}
+execute={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":69,"key_label":0,"unicode":101,"location":0,"echo":false,"script":null)
+]
+}
 
 [internationalization]
 
@@ -284,3 +291,4 @@ common/physics_interpolation=true
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0
+2d/snapping/pixel_snap=true

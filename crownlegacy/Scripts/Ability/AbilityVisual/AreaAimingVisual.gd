@@ -13,7 +13,6 @@ func _ready_setup() -> void:
 	if ability:
 		radius = ability.effect_radius
 		max_range = ability.max_cast_range
-		color = ability.targeting_color
 	
 	# Настраиваем круг
 	if circle_sprite:

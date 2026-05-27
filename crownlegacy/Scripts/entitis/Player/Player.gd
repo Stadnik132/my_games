@@ -269,6 +269,7 @@ func _on_game_state_changed(new_state: int, _old_state: int) -> void:
 			_can_move_in_world = true
 			interaction_locked = false
 			_in_combat_mode = false
+			movement_locked = false
 			# Возвращаем idle анимацию на основе последнего направления
 			var idle_anim = _get_idle_animation()
 			_play_animation(idle_anim)
@@ -330,42 +331,6 @@ func teleport(new_position: Vector2, _fade_effect: bool = true) -> void:
 	var idle_anim = _get_idle_animation()
 	_play_animation(idle_anim)
 	_current_animation = idle_anim
-
-# ==================== НАЧАЛО БОЯ ====================
-func combat_start_jump(direction: Vector2, distance: float, duration: float, target_marker: Node = null) -> void:
-	"""
-	Плавный отскок при начале боя.
-	
-	Параметры:
-	- direction: направление отскока (нормализованный Vector2)
-	- distance: расстояние отскока
-	- duration: длительность анимации
-	- target_marker: если задан — прыгаем к этой точке (для боссов Actor не прыгает)
-	
-	Использование:
-	- Обычный бой: direction = от Actor к Player, distance = 100, duration = 0.5
-	- Босс с marker_point: Actor НЕ прыгает (вызывается только у Player)
-	"""
-	movement_locked = true
-	_in_combat_mode = true  # Отключаем обычный physics_process
-	
-	var start_pos = global_position
-	var end_pos = start_pos + direction * distance
-	
-	# Если есть marker_point — прыгаем к нему
-	if target_marker:
-		end_pos = target_marker.global_position
-	
-	# Плавная анимация через Tween
-	var tween = create_tween()
-	tween.set_trans(Tween.TRANS_QUAD)
-	tween.set_ease(Tween.EASE_OUT)
-	tween.tween_property(self, "global_position", end_pos, duration)
-	tween.tween_callback(func():
-		movement_locked = false
-		velocity = Vector2.ZERO
-		print_debug("Player: отскок завершён")
-	)
 
 func set_last_horizontal_direction(dir: Vector2) -> void:
 	last_horizontal_direction = dir

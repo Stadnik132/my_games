@@ -7,9 +7,6 @@ var lifetime: float = 0.1
 var _damage_applied: bool = false
 
 func _ready():
-	if damage_data:
-		print("    🔴УРОН! : ", damage_data.amount)
-	
 	_update_layers_from_source()
 	area_entered.connect(_on_area_entered)
 	
@@ -42,8 +39,6 @@ func _update_layers_from_source():
 		collision_layer = 0
 		collision_mask = 0
 		return
-	
-	print("    source группы: ", source.get_groups())
 	
 	if source.is_in_group("player"):
 		# Хитбокс игрока

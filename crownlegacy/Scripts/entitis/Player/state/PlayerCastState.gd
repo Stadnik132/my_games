@@ -59,8 +59,6 @@ func _finish_cast() -> void:
 	if ability_comp:
 		ability_comp.cast_ability(slot_index, target_pos)
 	
-	# Кулдаун уже запускается в cast_ability
-	EventBus.Combat.ability.cast_completed.emit()
 	fsm.change_state("Idle")
 
 func _can_cast() -> bool:

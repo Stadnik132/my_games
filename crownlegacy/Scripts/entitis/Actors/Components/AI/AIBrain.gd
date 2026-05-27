@@ -1,168 +1,143 @@
 extends Node
 class_name AIBrain
 
-enum CombatDecision { IDLE, WALK, ATTACK, CAST }
+enum Decision { IDLE, CHASE, ATTACK, CAST, FLEE, STRAFE }
 
-@export var attack_range: float = 30.0
-@export var ability_usage_chance: float = 0.3
-@export var ability_prefer_distance: float = 120.0
-@export var attack_distance_buffer: float = 8.0
-@export var obstacle_avoidance_distance: float = 40.0
-@export var memory_search_radius: float = 16.0
-@export var search_speed_multiplier: float = 0.7
+@export var attack_range: float = 40.0
+@export var flee_health_ratio: float = 0.15
+@export var strafe_range: float = 60.0
+@export var cast_prefer_distance: float = 120.0
 
-var actor: Node2D
-var perception: AIPerception
-var combat_component: ActorCombatComponent
-var walk_state_speed_multiplier: float = 1.0
+class AIContext:
+	var distance: float
+	var player_position: Vector2
+	var actor_position: Vector2
+	var health_ratio: float
+	var attack_cooldown: float
+	var is_attacking: bool
+	var can_cast: bool
+	var abilities_ready: Array
+	var has_ranged_ability: bool
+	var has_melee_ability: bool
 
-# Новое: отслеживание комбо
-var is_combo_active: bool = false
-var combo_step: int = 0
-var max_combo_steps: int = 4
-
-
-func setup(actor_node: Node2D, perception_node: AIPerception, combat_node: ActorCombatComponent) -> void:
-	actor = actor_node
-	perception = perception_node
-	combat_component = combat_node
-
-
-func decide() -> Dictionary:
-	if not perception.is_player_detected():
-		combo_step = 0
-		return {"type": CombatDecision.IDLE}
-
-	var player_visible = perception.is_player_visible
-	var target_position = perception.get_player_position() if player_visible else perception.get_last_known_player_position()
-	var distance_to_target = actor.global_position.distance_to(target_position)
-	var effective_attack_range = _get_effective_attack_range()
-
-	walk_state_speed_multiplier = 1.0
-
-	# Дальняя дистанция + видимость → каст
-	if player_visible and distance_to_target > ability_prefer_distance:
-		var slot = _get_ranged_ability_slot(distance_to_target)
-		if slot >= 0:
-			return {"type": CombatDecision.CAST, "slot": slot, "target": target_position}
-
-	# Если игрок далеко — идём (но не во время активного комбо)
-	if distance_to_target > effective_attack_range:
-		# Если комбо активно — продолжаем атаковать, несмотря на расстояние
-		if combo_step > 0 and combo_step < max_combo_steps:
-			return {"type": CombatDecision.ATTACK, "target": target_position}
-		
-		var walk_target = _get_walk_target(target_position, effective_attack_range)
-		walk_target = _adjust_target_for_obstacle(walk_target)
-		if not player_visible:
-			walk_state_speed_multiplier = search_speed_multiplier
-		return {"type": CombatDecision.WALK, "target": walk_target}
-
-	# Дошли до последней известной позиции, игрок не виден → бездействуем
-	if not player_visible and distance_to_target <= memory_search_radius:
-		return {"type": CombatDecision.IDLE}
-
-	# Ближний бой
-	if player_visible:
-		# Если уже в комбо — продолжаем, не сбрасываем combo_step
-		if combo_step == 0:
-			combo_step = 1
-		
-		var ability_slot = _get_close_ability_slot()
-		if ability_slot >= 0 and randf() < ability_usage_chance:
-			return {"type": CombatDecision.CAST, "slot": ability_slot, "target": target_position}
-		return {"type": CombatDecision.ATTACK, "target": target_position}
-
-	walk_state_speed_multiplier = search_speed_multiplier
-	return {"type": CombatDecision.WALK, "target": _adjust_target_for_obstacle(target_position)}
+	func _init(
+		p_distance: float,
+		p_player_position: Vector2,
+		p_actor_position: Vector2,
+		p_health_ratio: float,
+		p_attack_cooldown: float,
+		p_is_attacking: bool,
+		p_can_cast: bool,
+		p_abilities_ready: Array,
+		p_has_ranged: bool,
+		p_has_melee: bool
+	):
+		distance = p_distance
+		player_position = p_player_position
+		actor_position = p_actor_position
+		health_ratio = p_health_ratio
+		attack_cooldown = p_attack_cooldown
+		is_attacking = p_is_attacking
+		can_cast = p_can_cast
+		abilities_ready = p_abilities_ready
+		has_ranged_ability = p_has_ranged
+		has_melee_ability = p_has_melee
 
 
-func notify_combo_step(step: int) -> void:
-	combo_step = step
-
-
-func notify_combo_ended() -> void:
-	is_combo_active = false
-	combo_step = 0
-
-
-# Остальные методы без изменений:
-func _get_effective_attack_range() -> float:
-	if combat_component and combat_component.hitbox_component:
-		var hitbox_range = combat_component.hitbox_component.get_attack_range()
-		if hitbox_range > 0.0:
-			return hitbox_range + attack_distance_buffer
+func _get_desired_range(ctx: AIContext) -> float:
+	if ctx.has_ranged_ability:
+		return cast_prefer_distance
 	return attack_range
 
-func _get_walk_target(target_position: Vector2, desired_distance: float) -> Vector2:
-	var direction = (target_position - actor.global_position).normalized()
-	if direction == Vector2.ZERO:
-		return actor.global_position
-	return target_position - direction * desired_distance
 
-func _get_ranged_ability_slot(distance_to_target: float) -> int:
-	if not combat_component or not combat_component.ability_component:
-		return -1
-	var ability_comp = combat_component.ability_component
-	var available = []
-	for i in range(ability_comp.slots.size()):
-		if not ability_comp.can_cast_ability(i):
+func decide(ctx: AIContext) -> int:
+	var scores = {}
+	scores[Decision.IDLE] = _score_idle(ctx)
+	scores[Decision.CHASE] = _score_chase(ctx)
+	scores[Decision.ATTACK] = _score_attack(ctx)
+	scores[Decision.CAST] = _score_cast(ctx)
+	scores[Decision.FLEE] = _score_flee(ctx)
+	scores[Decision.STRAFE] = _score_strafe(ctx)
+
+	var best = Decision.IDLE
+	for action in scores:
+		if scores[action] > scores[best]:
+			best = action
+	return best
+
+
+func _score_idle(_ctx: AIContext) -> float:
+	return 0.0
+
+
+func _score_chase(ctx: AIContext) -> float:
+	var desired = _get_desired_range(ctx)
+	if ctx.distance > desired * 1.3:
+		return 1.0
+	return 0.0
+
+
+func _score_attack(ctx: AIContext) -> float:
+	if ctx.is_attacking:
+		return 0.0
+	if ctx.attack_cooldown > 0.0:
+		return 0.0
+	var dx = abs(ctx.player_position.x - ctx.actor_position.x)
+	if dx > attack_range:
+		return 0.0
+	return 2.0
+
+
+func _score_cast(ctx: AIContext) -> float:
+	if not ctx.can_cast or ctx.abilities_ready.is_empty():
+		return 0.0
+	for entry in ctx.abilities_ready:
+		var ab = entry.ability as AbilityResource
+		if not ab:
 			continue
-		var ability = ability_comp.get_ability_in_slot(i)
-		if ability and ability.max_cast_range >= distance_to_target:
-			available.append(i)
-	if available.is_empty():
-		return -1
-	return available[randi() % available.size()]
+		var is_ranged = ab.ability_type == AbilityResource.AbilityType.PROJECTILE or ab.ability_type == AbilityResource.AbilityType.AREA
+		var is_melee = ab.ability_type == AbilityResource.AbilityType.INSTANT or ab.ability_type == AbilityResource.AbilityType.SELF_TARGET
+		if is_ranged and ctx.distance >= attack_range:
+			return 3.0
+		if is_melee and ctx.distance <= attack_range:
+			return 3.0
+	return 0.0
 
-func _get_close_ability_slot() -> int:
-	if not combat_component or not combat_component.ability_component:
-		return -1
-	var ability_comp = combat_component.ability_component
-	var available = []
-	for i in range(ability_comp.slots.size()):
-		if ability_comp.can_cast_ability(i):
-			available.append(i)
-	if available.is_empty():
-		return -1
-	return available[randi() % available.size()]
 
-func _adjust_target_for_obstacle(target_position: Vector2) -> Vector2:
-	var origin = actor.global_position
-	if not _is_path_blocked(origin, target_position):
-		return target_position
+func _score_flee(ctx: AIContext) -> float:
+	if ctx.health_ratio <= flee_health_ratio:
+		return 1.0 - ctx.health_ratio + 0.01
+	return 0.0
 
-	var hit = _get_first_obstacle_hit(origin, target_position)
-	if hit.is_empty():
-		return target_position
 
-	var direction = (target_position - origin).normalized()
-	var side = Vector2(-direction.y, direction.x).normalized()
+func _score_strafe(ctx: AIContext) -> float:
+	var desired = _get_desired_range(ctx)
+	if ctx.distance < desired * 0.6:
+		return 1.5
+	if ctx.distance >= desired * 0.6 and ctx.distance <= desired * 1.4:
+		return 0.7
+	return 0.0
 
-	var candidate_a = hit.position + side * obstacle_avoidance_distance
-	var candidate_b = hit.position - side * obstacle_avoidance_distance
 
-	var a_clear = not _is_path_blocked(origin, candidate_a)
-	var b_clear = not _is_path_blocked(origin, candidate_b)
-
-	if a_clear and b_clear:
-		return candidate_a if origin.distance_to(candidate_a) < origin.distance_to(candidate_b) else candidate_b
-	if a_clear:
-		return candidate_a
-	if b_clear:
-		return candidate_b
-
-	return origin + side * obstacle_avoidance_distance
-
-func _is_path_blocked(from_position: Vector2, to_position: Vector2) -> bool:
-	var query = PhysicsRayQueryParameters2D.create(from_position, to_position)
-	query.exclude = [actor]
-	var result = actor.get_world_2d().direct_space_state.intersect_ray(query)
-	if result.is_empty():
-		return false
-	return not (result.collider == perception.player or result.collider.is_in_group("player"))
-
-func _get_first_obstacle_hit(from_position: Vector2, to_position: Vector2) -> Dictionary:
-	var query = PhysicsRayQueryParameters2D.create(from_position, to_position)
-	query.exclude = [actor]
-	return actor.get_world_2d().direct_space_state.intersect_ray(query)
+func pick_best_ability(ctx: AIContext) -> Dictionary:
+	if ctx.abilities_ready.is_empty():
+		return {}
+	var is_close = ctx.distance <= attack_range
+	var is_far = ctx.distance >= cast_prefer_distance
+	var preferred = []
+	for entry in ctx.abilities_ready:
+		var ab = entry.ability as AbilityResource
+		if ab == null:
+			continue
+		var matches = false
+		if is_far and (ab.ability_type == AbilityResource.AbilityType.PROJECTILE or ab.ability_type == AbilityResource.AbilityType.AREA):
+			matches = true
+		elif is_close and (ab.ability_type == AbilityResource.AbilityType.INSTANT or ab.ability_type == AbilityResource.AbilityType.SELF_TARGET):
+			matches = true
+		elif not is_close and not is_far:
+			matches = true
+		if matches:
+			preferred.append(entry)
+	if not preferred.is_empty():
+		return preferred[0]
+	return ctx.abilities_ready[0]
