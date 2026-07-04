@@ -1,16 +1,9 @@
 # RelationshipManager
 extends Node
 
-# Сигналы менеджера (только для внутреннего использования, не для EventBus)
-# Подписчики должны использовать EventBus.Relationship
-signal trust_changed(new_value: int, delta: int)
-signal will_changed(new_value: int, delta: int)
-
 # Данные отношений
 var relationship_data: RelationshipData
 
-# Конфигурация баланса
-@export var force_action_trust_penalty: int = 25
 @export var default_relationship_data: RelationshipData
 
 func _ready() -> void:
@@ -50,10 +43,9 @@ func use_will(amount: int = 1) -> bool:
 	return false
 
 func force_action() -> bool:
-	"""Принудить действие Волей (штраф доверия)"""
+	"""Принудить действие Волей"""
 	if use_will():
-		relationship_data.trust_level -= force_action_trust_penalty
-		print_debug("Принуждение Волей! Доверие уменьшено на ", force_action_trust_penalty)
+		print_debug("Принуждение Волей!")
 		return true
 	return false
 
@@ -65,30 +57,6 @@ func change_trust(amount: int, source: String = "unknown") -> void:
 	"""Изменить уровень доверия"""
 	relationship_data.trust_level += amount
 	print_debug("Доверие изменено на ", amount, " (источник: ", source, ")")
-
-# === РАСЧЁТЫ И МОДИФИКАТОРЫ ===
-func get_combat_modifier(modifier_name: String) -> float:
-	"""Возвращает модификатор для боевой системы на основе доверия"""
-	var trust_value = get_trust_level()
-	
-	match modifier_name:
-		"damage_multiplier":
-			return 1.0 + (trust_value * 0.005)  # +0.5% за единицу доверия
-		"ability_cost_multiplier":
-			return max(0.5, 1.0 + (trust_value * -0.002))  # -0.2% за единицу доверия
-		_:
-			return 1.0
-
-func get_refusal_chance() -> float:
-	"""Вероятность отказа Клоуса выполнить команду (0.0-1.0)"""
-	var trust = get_trust_level()
-	
-	if trust >= 50:
-		return 0.0
-	elif trust <= -50:
-		return 0.5
-	else:
-		return remap(trust, -50, 50, 0.5, 0.0)
 
 # === ГЕТТЕРЫ ===
 func get_trust_level() -> int:
@@ -133,7 +101,7 @@ func _on_data_will_changed(new_value: int, delta: int) -> void:
 	
 	# Если использовали Волю
 	if delta < 0:
-		EventBus.Relationship.will_used.emit(true, new_value)
+		EventBus.Relationship.will_used.emit(-delta, new_value)
 
 # === СОХРАНЕНИЕ И ЗАГРУЗКА ===
 func save_data() -> Dictionary:
@@ -147,9 +115,17 @@ func save_data() -> Dictionary:
 func load_data(data: Dictionary) -> void:
 	"""Загружает данные из сохранения"""
 	if data.has("trust_level"):
+		var old_trust = relationship_data.trust_level
 		relationship_data.trust_level = data.trust_level
+		var delta = relationship_data.trust_level - old_trust
+		if delta != 0:
+			EventBus.Relationship.trust_changed.emit(relationship_data.trust_level, delta)
 	if data.has("will_power"):
+		var old_will = relationship_data.will_power
 		relationship_data.will_power = data.will_power
+		var delta = relationship_data.will_power - old_will
+		if delta != 0:
+			EventBus.Relationship.will_changed.emit(relationship_data.will_power, delta)
 	if data.has("character_flags"):
 		relationship_data.character_flags = data.character_flags.duplicate()
 
@@ -159,7 +135,5 @@ func get_relationship_summary() -> Dictionary:
 	return {
 		"trust": get_trust_level(),
 		"will": get_will_power(),
-		"status": get_trust_status(),
-		"refusal_chance": get_refusal_chance(),
-		"damage_modifier": get_combat_modifier("damage_multiplier")
+		"status": get_trust_status()
 	}

@@ -19,8 +19,7 @@ metadata/_custom_type_script = "uid://rix2axybkxut"
 [sub_resource type="Resource" id="Resource_6tpqx"]
 resource_local_to_scene = true
 script = ExtResource("4_ej3ka")
-timeline_name = "guard_encounter"
-repeat_timeline_name = "guard_timeline 2"
+timeline_name = "test"
 base_stats = {
 "agility": 5,
 "attack": 9,

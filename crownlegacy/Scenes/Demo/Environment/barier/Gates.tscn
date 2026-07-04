@@ -1,0 +1,242 @@
+[gd_scene format=3 uid="uid://kou1pl6jlqqf"]
+
+[ext_resource type="Script" uid="uid://bmvxlqof8xjir" path="res://Scripts/Environment/barier.gd" id="1_q8wb5"]
+[ext_resource type="Texture2D" uid="uid://r5j2mrp3y4on" path="res://Assets/Gates.png" id="2_k687j"]
+[ext_resource type="Script" uid="uid://pykv5626h4ct" path="res://Scripts/entitis/Components/InteractableComponent.gd" id="3_1wk2b"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_k687j"]
+size = Vector2(15, 60)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_343rm"]
+size = Vector2(50, 5)
+
+[sub_resource type="Animation" id="Animation_343rm"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:region_rect")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Rect2(281, 0, 105, 106)]
+}
+
+[sub_resource type="Animation" id="Animation_2cybc"]
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:region_rect")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Rect2(393, 0, 105, 106)]
+}
+
+[sub_resource type="Animation" id="Animation_li3hd"]
+resource_name = "Left"
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:region_rect")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Rect2(73, 0, 64, 106)]
+}
+
+[sub_resource type="Animation" id="Animation_lkdqb"]
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:region_rect")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Rect2(217, 0, 64, 106)]
+}
+
+[sub_resource type="Animation" id="Animation_yefvb"]
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:region_rect")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Rect2(617, 0, 105, 106)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_wphcv"]
+_data = {
+&"RESET": SubResource("Animation_343rm"),
+&"open_down": SubResource("Animation_2cybc"),
+&"open_left": SubResource("Animation_li3hd"),
+&"open_right": SubResource("Animation_lkdqb"),
+&"open_up": SubResource("Animation_yefvb")
+}
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_ihb6d"]
+radius = 30.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_cl"]
+size = Vector2(15, 60)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_cr"]
+size = Vector2(15, 60)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_cu"]
+size = Vector2(105, 35)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_cd"]
+size = Vector2(105, 35)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ol"]
+size = Vector2(50, 5)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_or"]
+size = Vector2(50, 5)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ou"]
+size = Vector2(10, 60)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_od"]
+size = Vector2(10, 60)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ol2"]
+size = Vector2(50, 5)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_or2"]
+size = Vector2(50, 5)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ou2"]
+size = Vector2(10, 60)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_od2"]
+size = Vector2(10, 60)
+
+[node name="Gates" type="StaticBody2D" unique_id=1265799540]
+script = ExtResource("1_q8wb5")
+texture = ExtResource("2_k687j")
+direction = 0
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1745320094]
+position = Vector2(0.25, 0)
+scale = Vector2(1.0079365, 1)
+texture = ExtResource("2_k687j")
+offset = Vector2(-23.2, -20)
+region_enabled = true
+region_rect = Rect2(281, 0, 105, 106)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1066359433]
+z_index = 1
+position = Vector2(0, -15)
+shape = SubResource("RectangleShape2D_k687j")
+
+[node name="CollisionShape2D2" type="CollisionShape2D" parent="." unique_id=1730545296]
+z_index = 1
+position = Vector2(18, -23)
+shape = SubResource("RectangleShape2D_343rm")
+disabled = true
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=672583363]
+libraries/ = SubResource("AnimationLibrary_wphcv")
+
+[node name="VisibleOnScreenNotifier2D" type="VisibleOnScreenNotifier2D" parent="." unique_id=1551920309]
+visible = false
+rect = Rect2(-77, -64, 149, 127)
+
+[node name="InteractableComponent" type="Area2D" parent="." unique_id=1725804321]
+script = ExtResource("3_1wk2b")
+interaction_radius = 30.0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractableComponent" unique_id=1725804322]
+visible = false
+shape = SubResource("CircleShape2D_ihb6d")
+
+[node name="EditorCollisions" type="Node2D" parent="." unique_id=1473473101]
+process_mode = 4
+
+[node name="ClosedLeft" type="CollisionShape2D" parent="EditorCollisions" unique_id=1452555326]
+position = Vector2(0, -15)
+shape = SubResource("RectangleShape2D_cl")
+disabled = true
+
+[node name="ClosedRight" type="CollisionShape2D" parent="EditorCollisions" unique_id=1764770493]
+visible = false
+position = Vector2(0, -15)
+shape = SubResource("RectangleShape2D_cr")
+disabled = true
+
+[node name="ClosedUp" type="CollisionShape2D" parent="EditorCollisions" unique_id=462640769]
+visible = false
+shape = SubResource("RectangleShape2D_cu")
+disabled = true
+
+[node name="ClosedDown" type="CollisionShape2D" parent="EditorCollisions" unique_id=1853430282]
+visible = false
+shape = SubResource("RectangleShape2D_cd")
+disabled = true
+
+[node name="OpenLeft" type="CollisionShape2D" parent="EditorCollisions" unique_id=1416535017]
+visible = false
+position = Vector2(-16, 28)
+shape = SubResource("RectangleShape2D_ol")
+disabled = true
+
+[node name="OpenRight" type="CollisionShape2D" parent="EditorCollisions" unique_id=1717529678]
+visible = false
+position = Vector2(18, 23)
+shape = SubResource("RectangleShape2D_or")
+disabled = true
+
+[node name="OpenUp" type="CollisionShape2D" parent="EditorCollisions" unique_id=327424576]
+visible = false
+position = Vector2(-45, -10)
+shape = SubResource("RectangleShape2D_ou")
+disabled = true
+
+[node name="OpenDown" type="CollisionShape2D" parent="EditorCollisions" unique_id=1598586850]
+visible = false
+position = Vector2(-45, 5)
+shape = SubResource("RectangleShape2D_od")
+disabled = true
+
+[node name="OpenLeft2" type="CollisionShape2D" parent="EditorCollisions" unique_id=1063731883]
+visible = false
+position = Vector2(-17, -23)
+shape = SubResource("RectangleShape2D_ol2")
+disabled = true
+
+[node name="OpenRight2" type="CollisionShape2D" parent="EditorCollisions" unique_id=658886426]
+visible = false
+position = Vector2(18, -23)
+shape = SubResource("RectangleShape2D_or2")
+disabled = true
+
+[node name="OpenUp2" type="CollisionShape2D" parent="EditorCollisions" unique_id=1638174108]
+visible = false
+position = Vector2(45, -10)
+shape = SubResource("RectangleShape2D_ou2")
+disabled = true
+
+[node name="OpenDown2" type="CollisionShape2D" parent="EditorCollisions" unique_id=1138807878]
+visible = false
+position = Vector2(45, 5)
+shape = SubResource("RectangleShape2D_od2")
+disabled = true

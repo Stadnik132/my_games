@@ -1,0 +1,178 @@
+{
+  "timeline_id": "test",
+  "display_name": "Untitled",
+  "nodes": [
+    {
+      "id": "node_0",
+      "type": "start",
+      "x": -42,
+      "y": -96,
+      "character": "",
+      "text": "",
+      "emotion": "default",
+      "choice_text": "",
+      "condition_expression": "",
+      "is_default": false,
+      "hide_if_false": true,
+      "command_name": "",
+      "command_args": {},
+      "condition": "",
+      "event_name": "",
+      "is_entry_point": true,
+      "connections": [
+        "node_2"
+      ]
+    },
+    {
+      "id": "node_1",
+      "type": "end",
+      "x": -62,
+      "y": 705,
+      "character": "",
+      "text": "",
+      "emotion": "default",
+      "choice_text": "",
+      "condition_expression": "",
+      "is_default": false,
+      "hide_if_false": true,
+      "command_name": "",
+      "command_args": {},
+      "condition": "",
+      "event_name": "",
+      "is_entry_point": false,
+      "connections": []
+    },
+    {
+      "id": "node_2",
+      "type": "line",
+      "x": -57,
+      "y": 141,
+      "character": "Клоус",
+      "text": "Привет",
+      "emotion": "default",
+      "choice_text": "",
+      "condition_expression": "",
+      "is_default": false,
+      "hide_if_false": true,
+      "command_name": "",
+      "command_args": {},
+      "condition": "",
+      "event_name": "",
+      "is_entry_point": false,
+      "connections": [
+        "node_3"
+      ]
+    },
+    {
+      "id": "node_3",
+      "type": "line",
+      "x": -62,
+      "y": 270,
+      "character": "Клоус",
+      "text": "Как дела?",
+      "emotion": "default",
+      "choice_text": "",
+      "condition_expression": "",
+      "is_default": false,
+      "hide_if_false": true,
+      "command_name": "",
+      "command_args": {},
+      "condition": "",
+      "event_name": "",
+      "is_entry_point": false,
+      "connections": [
+        "node_4",
+        "node_5"
+      ]
+    },
+    {
+      "id": "node_4",
+      "type": "choice",
+      "x": -209,
+      "y": 419,
+      "character": "",
+      "text": "",
+      "emotion": "default",
+      "choice_text": "В бой",
+      "condition_expression": "",
+      "is_default": false,
+      "hide_if_false": true,
+      "command_name": "",
+      "command_args": {},
+      "condition": "",
+      "event_name": "",
+      "is_entry_point": false,
+      "connections": [
+        "node_6"
+      ]
+    },
+    {
+      "id": "node_5",
+      "type": "choice",
+      "x": 117,
+      "y": 421,
+      "character": "",
+      "text": "",
+      "emotion": "default",
+      "choice_text": "В мир",
+      "condition_expression": "",
+      "is_default": false,
+      "hide_if_false": true,
+      "command_name": "",
+      "command_args": {},
+      "condition": "",
+      "event_name": "",
+      "is_entry_point": false,
+      "connections": [
+        "node_7"
+      ]
+    },
+    {
+      "id": "node_6",
+      "type": "command",
+      "x": -195,
+      "y": 556,
+      "character": "",
+      "text": "",
+      "emotion": "default",
+      "choice_text": "",
+      "condition_expression": "",
+      "is_default": false,
+      "hide_if_false": true,
+      "command_name": "battle",
+      "command_args": {
+        "npcs": [
+          "guard_01",
+          "guard_02"
+        ]
+      },
+      "condition": "",
+      "event_name": "",
+      "is_entry_point": false,
+      "connections": [
+        "node_1"
+      ]
+    },
+    {
+      "id": "node_7",
+      "type": "command",
+      "x": 107,
+      "y": 563,
+      "character": "",
+      "text": "",
+      "emotion": "default",
+      "choice_text": "",
+      "condition_expression": "",
+      "is_default": false,
+      "hide_if_false": true,
+      "command_name": "world",
+      "command_args": {},
+      "condition": "",
+      "event_name": "",
+      "is_entry_point": false,
+      "connections": [
+        "node_1"
+      ]
+    }
+  ]
+}

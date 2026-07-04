@@ -19,9 +19,6 @@ func _ready() -> void:
 	campfire_visibility.screen_entered.connect(_on_campfire_screen_entered)
 	campfire_visibility.screen_exited.connect(_on_campfire_screen_exited)
 
-	if Dialogic.has_signal("signal_event"):
-		Dialogic.signal_event.connect(_on_dialogic_signal)
-
 	await _show_text("Ты - дух, пробудившийся через сотни лет\nв теле своего потомка")
 	await _show_text("Твоя цель - вернуть трон и восстановить\nпорядок на своих землях")
 
@@ -30,23 +27,17 @@ func _ready() -> void:
 	await get_tree().create_timer(3.0).timeout
 	footsteps_audio.stop()
 
-	Dialogic.start("Intro_dialogue")
-	await Dialogic.timeline_ended
+	EventBus.Game.dialogue_requested.emit("Intro_dialogue")
+	await EventBus.Dialogue.ended
 
 	if _fade_tween:
 		await _fade_tween.finished
 
-	Dialogic.start("pip_intro")
-	await Dialogic.timeline_ended
+	EventBus.Game.dialogue_requested.emit("pip_intro")
+	await EventBus.Dialogue.ended
 
 	_lock_player(false)
 	forest_audio.stop()
-
-
-func _on_dialogic_signal(argument: String) -> void:
-	if argument == "fade_in":
-		_fade_tween = create_tween()
-		_fade_tween.tween_property(fade_rect, "color", Color(0, 0, 0, 0), 1.5)
 
 
 func _show_text(text: String) -> void:

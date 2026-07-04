@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://rxhxuhsyjd1p"]
+
+[ext_resource type="Texture2D" uid="uid://dp87h2r5y82a4" path="res://Assets/Test/Texture/TX Plant.png" id="1_4bvpq"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_31b13"]
+height = 20.0
+
+[node name="Bush" type="StaticBody2D" unique_id=678082381]
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=295343210]
+texture = ExtResource("1_4bvpq")
+region_enabled = true
+region_rect = Rect2(282, 186, 39, 45)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=219693165]
+position = Vector2(3, 7)
+shape = SubResource("CapsuleShape2D_31b13")

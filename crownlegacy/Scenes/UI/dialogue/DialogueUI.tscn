@@ -1,0 +1,112 @@
+[gd_scene format=3 uid="uid://dclf0ytp0s4ix"]
+
+[ext_resource type="Script" uid="uid://13b4fg78dlh6" path="res://Scripts/dialogue_system/DialogueUI.gd" id="1_inkbw"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_frame"]
+content_margin_left = 24.0
+content_margin_top = 24.0
+content_margin_right = 24.0
+content_margin_bottom = 24.0
+bg_color = Color(0.04, 0.04, 0.06, 0.95)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.6, 0.6, 0.7, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_name"]
+content_margin_left = 8.0
+content_margin_top = 4.0
+content_margin_right = 8.0
+content_margin_bottom = 4.0
+bg_color = Color(0.04, 0.04, 0.06, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.6, 0.6, 0.7, 1)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="DialogueUI" type="CanvasLayer" unique_id=755369198]
+process_mode = 3
+layer = 128
+script = ExtResource("1_inkbw")
+
+[node name="DialoguePanel" type="Panel" parent="." unique_id=1894651762]
+anchors_preset = -1
+anchor_left = 0.08
+anchor_top = 0.55
+anchor_right = 0.92
+anchor_bottom = 0.92
+theme_override_styles/panel = SubResource("StyleBoxFlat_frame")
+
+[node name="NameBg" type="Panel" parent="DialoguePanel" unique_id=705949462]
+visible = false
+layout_mode = 0
+offset_left = 12.0
+offset_top = -12.0
+offset_right = 220.0
+offset_bottom = 14.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_name")
+
+[node name="NameLabel" type="RichTextLabel" parent="DialoguePanel/NameBg" unique_id=1650693677]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 2.0
+offset_right = 200.0
+offset_bottom = 24.0
+theme_override_colors/default_color = Color(0.7, 0.85, 1, 1)
+bbcode_enabled = true
+
+[node name="TextLabel" type="RichTextLabel" parent="DialoguePanel" unique_id=1490066316]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = 24.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/default_color = Color(0.88, 0.88, 0.95, 1)
+theme_override_font_sizes/normal_font_size = 30
+theme_override_font_sizes/bold_font_size = 30
+theme_override_font_sizes/bold_italics_font_size = 30
+theme_override_font_sizes/italics_font_size = 30
+theme_override_font_sizes/mono_font_size = 30
+bbcode_enabled = true
+
+[node name="ContinueHint" type="Label" parent="DialoguePanel" unique_id=1914113224]
+visible = false
+layout_mode = 0
+anchor_left = 1.0
+anchor_right = 1.0
+offset_top = -28.0
+offset_right = -12.0
+offset_bottom = -8.0
+grow_horizontal = 0
+theme_override_colors/font_color = Color(0.4, 0.4, 0.5, 1)
+theme_override_font_sizes/font_size = 16
+text = "▼"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="ChoicesContainer" type="VBoxContainer" parent="DialoguePanel" unique_id=650283992]
+visible = false
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 40.0
+offset_top = 12.0
+offset_right = -40.0
+offset_bottom = -12.0
+theme_override_constants/separation = 8

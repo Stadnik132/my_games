@@ -1,0 +1,22 @@
+[gd_scene format=3 uid="uid://bwvwqm4yo0x78"]
+
+[ext_resource type="Texture2D" uid="uid://cabygo0kafipr" path="res://icon.svg" id="1_ej3ka"]
+[ext_resource type="PackedScene" uid="uid://c13138o3lbiu" path="res://Scenes/Actor/Actor.tscn" id="3_ej3ka"]
+[ext_resource type="PackedScene" uid="uid://c3gn1gu8g8qaw" path="res://Scenes/player/Player.tscn" id="3_iavhu"]
+
+[node name="Main" type="Node2D" unique_id=1131979430]
+position = Vector2(168, 15)
+
+[node name="Icon" type="Sprite2D" parent="." unique_id=22268518]
+position = Vector2(-20.999998, 68.99999)
+scale = Vector2(6.36719, 5.05469)
+texture = ExtResource("1_ej3ka")
+
+[node name="Klous" parent="." unique_id=1832941691 instance=ExtResource("3_iavhu")]
+position = Vector2(26, 1)
+move_speed = 200.0
+sprint_speed = 350.0
+
+[node name="Actor" parent="." unique_id=1186382391 instance=ExtResource("3_ej3ka")]
+position = Vector2(135, -37)
+dialogue_timeline = ""

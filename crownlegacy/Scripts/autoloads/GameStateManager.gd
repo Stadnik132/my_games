@@ -29,7 +29,7 @@ func _setup_event_bus_connections() -> void:
 	eb.Game.cutscene_requested.connect(_on_transition_to_cutscene_requested)
 	eb.Game.game_over_requested.connect(_on_transition_to_game_over_requested)
 	eb.Entity.died.connect(_on_entity_died)
-	eb.Combat.decision.dialogic_made.connect(_on_dialogic_decision_made)
+	eb.Combat.decision.dialogue_decision.connect(_on_dialogic_decision_made)
 	
 	print_debug("GameStateManager подключён к EventBus")
 

@@ -1,0 +1,66 @@
+[gd_scene format=3 uid="uid://bwvwqm4yo0x78"]
+
+[ext_resource type="Texture2D" uid="uid://cabygo0kafipr" path="res://icon.svg" id="1_ej3ka"]
+[ext_resource type="Script" uid="uid://rix2axybkxut" path="res://Scripts/resources/PlayerData.gd" id="3_6tpqx"]
+[ext_resource type="PackedScene" uid="uid://c13138o3lbiu" path="res://Scenes/Entity/Actor/Actor.tscn" id="3_ej3ka"]
+[ext_resource type="PackedScene" uid="uid://c3gn1gu8g8qaw" path="res://Scenes/Entity/player/Player.tscn" id="3_iavhu"]
+[ext_resource type="Script" uid="uid://b1braurhti7u8" path="res://Scripts/resources/ActorData.gd" id="4_ej3ka"]
+
+[sub_resource type="Resource" id="Resource_s48co"]
+script = ExtResource("3_6tpqx")
+base_stats = {
+"agility": 5,
+"attack": 100,
+"defense": 5,
+"speed": 5
+}
+metadata/_custom_type_script = "uid://rix2axybkxut"
+
+[sub_resource type="Resource" id="Resource_6tpqx"]
+resource_local_to_scene = true
+script = ExtResource("4_ej3ka")
+timeline_name = "guard_encounter"
+repeat_timeline_name = "guard_timeline 2"
+base_stats = {
+"agility": 5,
+"attack": 1,
+"defense": 5,
+"speed": 5
+}
+ability_slot_assignments = Array[String](["fireball"])
+metadata/_custom_type_script = "uid://b1braurhti7u8"
+
+[sub_resource type="Resource" id="Resource_ml3ve"]
+resource_local_to_scene = true
+script = ExtResource("4_ej3ka")
+display_name = "Actor1"
+base_stats = {
+"agility": 5,
+"attack": 3,
+"defense": 5,
+"speed": 5
+}
+ability_slot_assignments = Array[String](["berserk"])
+metadata/_custom_type_script = "uid://b1braurhti7u8"
+
+[node name="Main" type="Node2D" unique_id=1131979430]
+
+[node name="Icon" type="Sprite2D" parent="." unique_id=22268518]
+position = Vector2(108.000015, -10.000015)
+scale = Vector2(6.36719, 5.05469)
+texture = ExtResource("1_ej3ka")
+
+[node name="Klous" parent="." unique_id=1832941691 instance=ExtResource("3_iavhu")]
+position = Vector2(-11, 18)
+move_speed = 130.0
+player_data = SubResource("Resource_s48co")
+
+[node name="Actor" parent="." unique_id=1186382391 instance=ExtResource("3_ej3ka")]
+position = Vector2(135, -37)
+actor_data = SubResource("Resource_6tpqx")
+entity_id = "guard_01"
+
+[node name="Actor2" parent="." unique_id=1897500711 instance=ExtResource("3_ej3ka")]
+position = Vector2(-88, -82)
+actor_data = SubResource("Resource_ml3ve")
+entity_id = "guard_02"

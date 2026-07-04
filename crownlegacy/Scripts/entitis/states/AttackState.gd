@@ -274,4 +274,4 @@ func exit() -> void:
 func get_allowed_transitions() -> Array[String]:
 	if can_combo_or_cancel:
 		return ["Idle", "Attack", "Dodge", "Block", "Aim", "Stun"]
-	return ["Attack"]
+	return ["Idle", "Attack", "Stun"]

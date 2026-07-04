@@ -54,16 +54,10 @@ func _process(delta: float) -> void:
 		blocker.visible = is_blocked
 		if is_blocked:
 			blocker.global_position = target_pos
-	
-	# Показываем блокер
-	if blocker:
-		blocker.visible = is_blocked
-		if is_blocked:
-			blocker.global_position = target_pos
 
 func _get_target_data() -> Dictionary:
 	return {
-		"position": global_position,
+		"position": $CircleSprite.global_position,
 		"radius": radius,
 		"type": "area"
 	}

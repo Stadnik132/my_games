@@ -122,8 +122,8 @@ func set_ability_in_slot(slot_index: int, ability_id: String) -> bool:
 	print("Слот ", slot_index, " назначена способность: ", ability_id)
 	
 	# Сохраняем в данные, если есть метод
-	if entity_data and entity_data.has_method("set_ability_slot_assignment"):
-		entity_data.set_ability_slot_assignment(slot_index, ability_id)
+	if entity_data and entity_data.has_method("set_ability_in_slot"):
+		entity_data.set_ability_in_slot(slot_index, ability_id)
 	
 	return true
 

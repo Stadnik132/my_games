@@ -960,7 +960,7 @@ animations = [{
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_fe68k")
 }],
-"loop": true,
+"loop": 1,
 "name": &"default",
 "speed": 8.0
 }]
@@ -981,6 +981,7 @@ script = ExtResource("1_i3dwc")
 [node name="OverlayUI" type="CanvasLayer" parent="." unique_id=1320592007]
 
 [node name="FadeRect" type="ColorRect" parent="OverlayUI" unique_id=649244369]
+visible = false
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0

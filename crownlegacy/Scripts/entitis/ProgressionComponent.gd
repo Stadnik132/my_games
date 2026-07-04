@@ -130,7 +130,7 @@ func _calculate_stat(stat_name: String) -> int:
 	# Применяем все модификаторы (сумма)
 	var total_modifier = 0.0
 	for mod in modifiers:
-		total_modifier += mod
+		total_modifier += mod["value"]
 	
 	# Финальное значение (база * (1 + сумма модификаторов))
 	var final_value = base * (1.0 + total_modifier)
@@ -165,9 +165,9 @@ func remove_modifier_by_id(modifier_id: String) -> void:
 		var modifiers = _stat_modifiers[stat_name]
 		var i = 0
 		while i < modifiers.size():
-			if modifiers[i].id == modifier_id:
+			if modifiers[i]["id"] == modifier_id:
 				modifiers.remove_at(i)
-				_cached_stats.erase(stat_name)  # инвалидируем кэш
+				_cached_stats.erase(stat_name)
 			else:
 				i += 1
 	
@@ -187,7 +187,7 @@ func remove_modifier(stat_name: String, modifier_id: String) -> void:
 	
 	var modifiers = _stat_modifiers[stat_name]
 	for i in range(modifiers.size() - 1, -1, -1):
-		if modifiers[i].id == modifier_id:
+		if modifiers[i]["id"] == modifier_id:
 			modifiers.remove_at(i)
 	
 	# Инвалидируем кэш

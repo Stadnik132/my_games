@@ -4,10 +4,6 @@ extends Node
 # ==================== ПЕРЕМЕННЫЕ ====================
 var player_data: PlayerData
 
-# Кэш модификаторов отношений
-var _trust_damage_multiplier: float = 1.0
-var _trust_cost_multiplier: float = 1.0
-
 # Ссылки на компоненты
 var health_component: HealthComponent
 var stamina_component: ResourceComponent
@@ -20,7 +16,6 @@ func _ready() -> void:
 	await get_tree().process_frame
 	_find_components()
 	_bind_player_data()
-	_setup_connections()
 	
 	print_debug("PlayerManager загружен")
 
@@ -50,9 +45,6 @@ func _bind_player_data() -> void:
 	
 	player_data = PlayerData.new()
 
-func _setup_connections() -> void:
-	EventBus.Relationship.trust_changed.connect(_on_trust_changed)
-
 func _restore_inventory_from_save(inventory_data: Array) -> void:
 	"""Восстанавливает инвентарь из сохранённых данных"""
 	var player = get_tree().get_first_node_in_group("player")
@@ -75,11 +67,6 @@ func _restore_inventory_from_save(inventory_data: Array) -> void:
 			else:
 				push_warning("PlayerManager: предмет не найден в реестре: ", slot_data.id)
 
-# ==================== ОБРАБОТЧИКИ ====================
-func _on_trust_changed(new_value: int, _delta: int) -> void:
-	_trust_damage_multiplier = 1.0 + (new_value * 0.005)
-	_trust_cost_multiplier = max(0.5, 1.0 + (new_value * -0.002))
-
 # ==================== ДЕЛЕГИРОВАНИЕ КОМПОНЕНТАМ ====================
 func add_experience(amount: int, source: String = "unknown") -> void:
 	if progression_component:
@@ -92,29 +79,7 @@ func heal(amount: int, _source: String = "unknown") -> void:
 func get_effective_stat(stat_name: String) -> int:
 	if progression_component:
 		return progression_component.get_stat(stat_name)
-	return int(player_data.get_stat(stat_name) * _trust_damage_multiplier)
-
-func _load_inventory_from_data() -> void:
-	"""Восстанавливает инвентарь из сохранённых данных"""
-	var player = get_tree().get_first_node_in_group("player")
-	if not player:
-		return
-	
-	var inv = player.get_node("InventoryComponent") as InventoryComponent
-	if not inv:
-		return
-	
-	# Очищаем текущий инвентарь
-	inv.clear()
-	
-	# Загружаем предметы из player_data.inventory_data
-	for slot_data in player_data.inventory_data:
-		if slot_data and slot_data.has("id"):
-			var item = ItemRegistry.get_item(slot_data.id)  # Используем реестр!
-			if item:
-				inv.add_item(item, slot_data.quantity)
-			else:
-				push_warning("PlayerManager: предмет не найден в реестре: ", slot_data.id)
+	return player_data.get_stat(stat_name)
 
 
 # ==================== СОХРАНЕНИЕ ====================
@@ -135,9 +100,6 @@ func load_player_data(data: Dictionary) -> void:
 	# Обновляем компоненты
 	if health_component and health_component.has_method("refresh_from_data"):
 		health_component.refresh_from_data()
-	_load_inventory_from_data()
-	
 	_restore_inventory_from_save(data.get("inventory", []))
-	
 	
 	print_debug("PlayerManager: данные загружены")

@@ -46,7 +46,7 @@ class RelationshipSignals:
 
 # ----- Система диалогов (Dialogic 2.0) -----
 class DialogueSignals:
-	signal started(timeline_name: String, npc: Node)
+	signal started(timeline_name: String, npc: Node = null)
 	signal ended()
 	signal choice_selected(choice_index: int, choice_text: String)
 	signal requested(timeline_name: String, npc_id: String)
@@ -54,6 +54,7 @@ class DialogueSignals:
 	signal set_flag(flag_name: String, value: Variant)
 	signal use_will(amount: int)
 	signal start_battle(npc_ids: Array)
+	signal custom_event(event_name: String)
 
 # ----- Боевая система (структурированная) -----
 class CombatSignals:
@@ -74,7 +75,7 @@ class CombatSignals:
 	
 	# Точки решений (сигналы между боем и диалогом)
 	class _CDecision:
-		signal dialogic_made(choice: String)
+		signal dialogue_decision(choice: String)
 		signal transition_to_dialogue(enemy: Node, timeline: String)
 		signal enemy_spared(enemy: Node)
 	
