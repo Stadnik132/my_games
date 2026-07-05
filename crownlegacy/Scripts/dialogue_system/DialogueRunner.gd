@@ -48,7 +48,7 @@ func start(timeline_name: String) -> void:
 	_is_running = true
 	_show_ui()
 	started.emit(timeline_name)
-	EventBus.Dialogue.started.emit(timeline_name)
+	EventBus.Dialogue.started.emit(timeline_name, null)
 
 	var entry_id = _find_entry_node()
 	if entry_id.is_empty():

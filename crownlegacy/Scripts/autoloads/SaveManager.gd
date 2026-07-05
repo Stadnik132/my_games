@@ -18,6 +18,8 @@ func save_game(slot_name: String) -> void:
 		"player": PlayerManager.save_player_data() if PlayerManager.has_method("save_player_data") else {},
 		"relationship": RelationshipManager.save_data() if RelationshipManager.has_method("save_data") else {},
 		"game_state": GameStateManager.get_current_state() if GameStateManager.has_method("get_current_state") else GameStateManager.GameState.WORLD,
+		"abilities": AbilityManager.save_data() if AbilityManager.has_method("save_data") else {},
+		"flags": GameFlags.save_data() if GameFlags.has_method("save_data") else {},
 		"timestamp": Time.get_datetime_string_from_system()
 	}
 	
@@ -60,8 +62,13 @@ func load_game(slot_name: String) -> void:
 		RelationshipManager.load_data(save_data["relationship"])
 	
 	if "game_state" in save_data and GameStateManager.has_method("change_state"):
-		# Принудительно выставляем состояние, чтобы гарантировать загрузку
 		GameStateManager.change_state(save_data["game_state"], true)
+
+	if "abilities" in save_data and AbilityManager.has_method("load_data"):
+		AbilityManager.load_data(save_data["abilities"])
+
+	if "flags" in save_data and GameFlags.has_method("load_data"):
+		GameFlags.load_data(save_data["flags"])
 
 
 func delete_save(slot_name: String) -> void:
@@ -76,8 +83,10 @@ func delete_save(slot_name: String) -> void:
 
 
 func reset_game() -> void:
-	# Базовый сброс: выставляем состояние мира.
-	# Если позже появятся свои reset-методы в менеджерах — можно дополнить.
+	if AbilityManager.has_method("load_data"):
+		AbilityManager.load_data({})
+	if GameFlags.has_method("reset_all_flags"):
+		GameFlags.reset_all_flags()
 	if GameStateManager.has_method("change_state"):
 		GameStateManager.change_state(GameStateManager.GameState.WORLD, true)
 

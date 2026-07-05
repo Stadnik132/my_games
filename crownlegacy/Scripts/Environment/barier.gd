@@ -18,18 +18,7 @@ enum Direction { LEFT, RIGHT, UP, DOWN }
 @export var auto_close_delay: float = 3.0
 @export var close_when_off_screen: bool = true
 
-@export var interaction_offset: Vector2 = Vector2.ZERO:
-	set(value):
-		interaction_offset = value
-		if is_inside_tree() and interaction:
-			interaction.position = value
-
-@export var interaction_radius: float = 30.0:
-	set(value):
-		interaction_radius = value
-		if is_inside_tree() and interaction:
-			interaction.interaction_radius = value
-			interaction._setup_collision()
+@export var detection_radius: float = 30.0
 
 @export var start_open: bool = false:
 	set(value):
@@ -69,7 +58,6 @@ enum Direction { LEFT, RIGHT, UP, DOWN }
 	Vector2(0, 0),
 ]
 
-@onready var interaction: InteractableComponent = $InteractableComponent
 @onready var editor_collisions: Node = $EditorCollisions
 @onready var collision_a: CollisionShape2D = $CollisionShape2D
 @onready var collision_b: CollisionShape2D = $CollisionShape2D2
@@ -81,6 +69,7 @@ var auto_close_timer: float = 0.0
 
 func _ready() -> void:
 	add_to_group("barriers")
+	add_to_group("interactable")
 
 	$Sprite2D.region_enabled = true
 	if texture:
@@ -88,13 +77,6 @@ func _ready() -> void:
 
 	$VisibleOnScreenNotifier2D.screen_entered.connect(_on_screen_entered)
 	$VisibleOnScreenNotifier2D.screen_exited.connect(_on_screen_exited)
-
-	if interaction:
-		interaction.position = interaction_offset
-		interaction.interaction_radius = interaction_radius
-		interaction.interacted.connect(toggle)
-		interaction.player_entered_range.connect(_on_player_entered_range)
-		interaction.player_exited_range.connect(_on_player_exited_range)
 
 	_update_editor_visibility()
 
@@ -107,6 +89,9 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	var player = get_tree().get_first_node_in_group("player")
+	is_player_nearby = player and global_position.distance_to(player.global_position) < detection_radius
+
 	if is_open and not is_player_nearby and auto_close_delay > 0:
 		auto_close_timer += delta
 		if auto_close_timer >= auto_close_delay:
@@ -203,6 +188,9 @@ func _dir_name() -> String:
 	return "down"
 
 
+func interact() -> void:
+	toggle()
+
 func open() -> void:
 	if is_open:
 		return
@@ -261,13 +249,7 @@ func _apply_closed_immediate() -> void:
 	_update_editor_visibility()
 
 
-func _on_player_entered_range() -> void:
-	is_player_nearby = true
-	auto_close_timer = 0.0
 
-
-func _on_player_exited_range() -> void:
-	is_player_nearby = false
 
 
 func _on_screen_entered() -> void:

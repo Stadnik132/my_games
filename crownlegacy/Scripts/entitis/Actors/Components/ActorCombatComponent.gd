@@ -87,10 +87,3 @@ func _apply_defense(damage: int, damage_data: DamageData) -> int:
 	
 	var effective_defense = defense * (1.0 - damage_data.penetration)
 	return max(1, damage - int(effective_defense))
-
-
-func _on_attack_requested() -> void: pass
-func _on_dodge_requested(direction: Vector2) -> void: pass
-func _on_block_started() -> void: pass
-func _on_block_ended() -> void: pass
-func _on_ability_slot_pressed(slot_index: int) -> void: pass

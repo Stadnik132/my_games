@@ -42,9 +42,6 @@ func take_damage(amount: int, damage_type: int, source: Node = null, is_critical
 		
 		# Визуальный эффект получения урона
 		_apply_damage_flash(damage_type)
-		
-		if entity_data.current_hp <= 0:
-			died.emit()
 
 func _apply_damage_flash(damage_type: int) -> void:
 	var owner = get_parent()

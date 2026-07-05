@@ -46,7 +46,7 @@ class RelationshipSignals:
 
 # ----- Система диалогов (Dialogic 2.0) -----
 class DialogueSignals:
-	signal started(timeline_name: String, npc: Node = null)
+	signal started(timeline_name: String, npc: Node)
 	signal ended()
 	signal choice_selected(choice_index: int, choice_text: String)
 	signal requested(timeline_name: String, npc_id: String)
@@ -160,10 +160,9 @@ class UISignals:
 
 # ----- Акторы (NPC, объекты мира) -----
 class ActorsSignals:
-	signal mode_changed(actor: Node, new_mode: String, old_mode: String)
-	signal interaction_started(actor: Node)  # устареет, используйте Entity.interaction_started
-	signal died(actor: Node)  # устареет, используйте Entity.died
-	signal interaction_requested()  # устареет
+	signal mode_changed(actor: Node, new_mode: int, old_mode: int)
+	signal interaction_started(actor: Node)
+	signal died(actor: Node)
 
 # ----- Система глобальных флагов -----
 class FlagsSignals:

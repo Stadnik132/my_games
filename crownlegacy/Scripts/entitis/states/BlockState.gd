@@ -41,10 +41,10 @@ func handle_command(command: String, data: Dictionary = {}) -> void:
 			_end_block()
 
 func _has_stamina_for_block() -> bool:
-	"""Проверяет, достаточно ли выносливости для продолжения блока"""
 	if not combat_component or not combat_component.stamina_component:
 		return true
-	return combat_component.stamina_component.get_current() >= 5
+	var min_stamina = combat_config.block_base_stamina_cost if combat_config else 5
+	return combat_component.stamina_component.get_current() >= min_stamina
 
 func _break_block() -> void:
 	"""Блок сломан (не хватило выносливости)"""

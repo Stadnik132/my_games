@@ -141,8 +141,8 @@ func _on_hurtbox_damage(damage_data: DamageData, source: Node) -> void:
 		if stamina_component and block_stamina_cost > 0:
 			stamina_component.use(block_stamina_cost)
 			
-			# Проверяем не закончилась ли стамина
-			if stamina_component.get_current() < 5:
+			var min_stamina = combat_config.block_base_stamina_cost if combat_config else 5
+			if stamina_component.get_current() < min_stamina:
 				# Блок сломан - переводим в стан
 				fsm.request_stun(Vector2.ZERO, 0)
 	
@@ -197,7 +197,7 @@ func _apply_defense(damage: int, damage_data: DamageData) -> int:
 
 # ==================== УПРАВЛЕНИЕ FSM ====================
 func _on_game_state_changed(new_state: int, _old_state: int) -> void:
-	var is_battle = (new_state == 2)  # STATE_BATTLE
+	var is_battle = (new_state == GameStateManager.GameState.BATTLE)
 	
 	if fsm:
 		fsm.set_process(is_battle)

@@ -88,7 +88,30 @@ func save_player_data() -> Dictionary:
 	if ability_component:
 		player_data.ability_slot_assignments = ability_component.save_assignments()
 	
-	return player_data.get_save_data()
+	var data = player_data.get_save_data()
+	data["inventory"] = _save_inventory()
+	return data
+
+func _save_inventory() -> Array:
+	var player = get_tree().get_first_node_in_group("player")
+	if not player:
+		return []
+	
+	var inv = player.get_node_or_null("InventoryComponent") as InventoryComponent
+	if not inv:
+		return []
+	
+	var result = []
+	for i in range(inv.max_slots):
+		var slot = inv.get_item_at_slot(i)
+		if slot:
+			result.append({
+				"id": slot.item.id,
+				"quantity": slot.quantity
+			})
+		else:
+			result.append(null)
+	return result
 
 func load_player_data(data: Dictionary) -> void:
 	player_data.load_save_data(data)

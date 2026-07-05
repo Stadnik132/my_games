@@ -29,10 +29,6 @@ var source: Node = null
 @export_category("Дополнительные эффекты")
 @export var status_effects: Array[Dictionary] = []  # Для будущего
 
-# === СИГНАЛЫ ===
-signal damage_calculated(final_damage: int)
-signal damage_crit(crit_damage: int)
-
 # === МЕТОДЫ ===
 func duplicate_data() -> DamageData:
 	"""Создаёт копию данных урона"""

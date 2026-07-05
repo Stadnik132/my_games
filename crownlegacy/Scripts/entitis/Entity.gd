@@ -9,6 +9,8 @@ var progression_component: ProgressionComponent
 var ability_component: AbilityComponent
 var hurtbox: Hurtbox
 
+# ==================== ДАННЫЕ ====================
+var entity_data: EntityData
 
 # ==================== СОСТОЯНИЕ ====================
 var is_dead: bool = false
@@ -19,6 +21,8 @@ var _flash_tween: Tween
 var _death_tween: Tween
 var _stun_tween: Tween
 var _modulate_override: Color = Color.WHITE
+var _flash_shader_mat: ShaderMaterial
+var _saved_material: Material
 
 # ==================== ВСТРОЕННЫЕ МЕТОДЫ ====================
 func _ready() -> void:
@@ -49,10 +53,6 @@ func _setup_component_connections() -> void:
 	
 	if stamina_component:
 		stamina_component.changed.connect(_on_stamina_changed)
-	
-	if progression_component:
-		progression_component.level_up.connect(_on_level_up)
-		progression_component.experience_gained.connect(_on_experience_gained)
 
 # ==================== ОБРАБОТЧИКИ СОБЫТИЙ КОМПОНЕНТОВ ====================
 func _on_health_changed(new_value: int, old_value: int, max_value: int) -> void:
@@ -84,21 +84,34 @@ func apply_damage_flash(damage_type: int) -> void:
 	if not sprite:
 		return
 	
-	var flash_color: Color
-	match damage_type:
-		0:
-			flash_color = Color.RED
-		1:
-			flash_color = Color.BLUE
-		_:
-			flash_color = Color.WHITE
-	
 	if _flash_tween and _flash_tween.is_running():
 		_flash_tween.kill()
 	
+	if not _flash_shader_mat:
+		_flash_shader_mat = ShaderMaterial.new()
+		_flash_shader_mat.shader = preload("res://Scripts/shaders/damage_flash.gdshader")
+	
+	var flash_color: Color
+	match damage_type:
+		0:
+			flash_color = Color(1.0, 0.0, 0.0, 0.6)
+		1:
+			flash_color = Color(0.0, 0.5, 1.0, 0.6)
+		_:
+			flash_color = Color(1.0, 1.0, 1.0, 0.4)
+	
+	_saved_material = sprite.material
+	sprite.material = _flash_shader_mat
+	_flash_shader_mat.set_shader_parameter("flash_color", flash_color)
+	_flash_shader_mat.set_shader_parameter("flash_strength", 1.0)
+	
 	_flash_tween = create_tween()
-	_flash_tween.tween_property(sprite, "modulate", flash_color, 0.05)
-	_flash_tween.tween_property(sprite, "modulate", _modulate_override, 0.1)
+	_flash_tween.tween_property(_flash_shader_mat, "shader_parameter/flash_strength", 0.0, 0.15)
+	_flash_tween.finished.connect(_restore_sprite_material.bind(sprite), CONNECT_ONE_SHOT)
+
+func _restore_sprite_material(sprite: Sprite2D) -> void:
+	sprite.material = _saved_material
+	_saved_material = null
 
 func apply_stun_effect() -> void:
 	var sprite = get_sprite()
@@ -138,21 +151,6 @@ func _on_mana_changed(new_value: int, old_value: int, max_value: int) -> void:
 
 func _on_stamina_changed(new_value: int, old_value: int, max_value: int) -> void:
 	EventBus.Entity.stamina_changed.emit(self, new_value, old_value, max_value)
-
-func _on_level_up(new_level: int, stat_increases: Dictionary) -> void:
-	# Только для игрока — оставляем в Player.gd
-	pass
-
-func _on_experience_gained(amount: int, new_total: int, next_level: int) -> void:
-	# Только для игрока — оставляем в Player.gd
-	pass
-
-# ==================== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ====================
-func _disable_entity() -> void:
-	movement_locked = true
-	interaction_locked = true
-	set_physics_process(false)
-	set_process(false)
 
 # ==================== ПУБЛИЧНЫЕ МЕТОДЫ ====================
 func take_damage(amount: int, damage_type: int, source: Node = null, is_critical: bool = false) -> void:
@@ -198,9 +196,7 @@ func _on_interaction_ended() -> void:
 	EventBus.Entity.interaction_ended.emit(self)
 
 func get_horizontal_facing_direction() -> Vector2:
-	"""Виртуальный метод - возвращает горизонтальное направление (вправо/влево).
-	Должен быть переопределён в наследниках (Player, Actor)"""
-	return Vector2.RIGHT  # значение по умолчанию
+	return Vector2.RIGHT
 
 func get_sprite() -> Sprite2D:
 	return null
@@ -229,6 +225,16 @@ func get_save_data() -> Dictionary:
 	return data
 
 func load_save_data(data: Dictionary) -> void:
-	"""Загрузить состояние сущности"""
-	# Будет переопределяться в наследниках
-	pass
+	"""Загрузить состояние сущности в компоненты"""
+	if not entity_data:
+		return
+	
+	if data.has("level"): entity_data.set_level(data["level"])
+	if data.has("experience"): entity_data.set_experience(data["experience"])
+	if data.has("experience_to_next_level"): entity_data.experience_to_next_level = data["experience_to_next_level"]
+	if data.has("max_hp"): entity_data.max_hp = data["max_hp"]
+	if data.has("current_hp"): entity_data.set_current_hp(data["current_hp"])
+	if data.has("max_mp"): entity_data.max_mp = data["max_mp"]
+	if data.has("current_mp"): entity_data.set_current_mp(data["current_mp"])
+	if data.has("max_stamina"): entity_data.max_stamina = data["max_stamina"]
+	if data.has("current_stamina"): entity_data.set_current_stamina(data["current_stamina"])

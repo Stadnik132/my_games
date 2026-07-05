@@ -25,28 +25,28 @@ func _init():
 
 func _setup_anim_defs():
 	var defs = {
-		"idle_down": { "parent": "down", "child": "Idle" },
-		"idle_up": { "single_frame": 18 },
-		"idle_left": { "parent": "Left", "child": "idle" },
-		"idle_right": { "parent": "Right", "child": "Idle" },
-		"walk_down": { "parent": "down", "child": "Walk" },
-		"walk_up": { "parent": "Up", "child": "Walk" },
-		"walk_left": { "parent": "Left", "child": "Walk" },
-		"walk_right": { "parent": "Right", "child": "Walk" },
-		"blink_down": { "parent": "down", "child": "blinking" },
-		"blink_left": { "parent": "Left", "child": "blinking" },
-		"blink_right": { "parent": "Right", "child": "blinking" },
+		"idle_down": { "tag_only": "Idle_down" },
+		"idle_up": { "tag_only": "idle_up" },
+		"idle_left": { "tag_only": "idle_left" },
+		"idle_right": { "tag_only": "Idle_right" },
+		"walk_down": { "tag_only": "walk_down" },
+		"walk_up": { "tag_only": "Walk_up" },
+		"walk_left": { "tag_only": "Walk_left" },
+		"walk_right": { "tag_only": "Walk_right" },
+		"blink_down": { "tag_only": "blincing_down" },
+		"blink_left": { "tag_only": "blinking_left" },
+		"blink_right": { "tag_only": "blinking_right" },
 		"idle_battle_left": { "tag_only": "LeftBattle" },
 		"idle_battle_right": { "tag_only": "RightBattle" },
 		"aiming": { "tag_only": "Aiming" },
 		"cast": { "tag_only": "Cast" },
-		"attack_left_1": { "tag_only": "Left", "placeholder": true },
-		"attack_left_2": { "tag_only": "Left", "placeholder": true },
-		"attack_left_3": { "tag_only": "Left", "placeholder": true },
-		"attack_right_1": { "tag_only": "Right", "placeholder": true },
-		"attack_right_2": { "tag_only": "Right", "placeholder": true },
-		"attack_right_3": { "tag_only": "Right", "placeholder": true },
-		"dodge": { "tag_only": "Left", "placeholder": true },
+		"attack_left_1": { "tag_only": "idle_left", "placeholder": true },
+		"attack_left_2": { "tag_only": "idle_left", "placeholder": true },
+		"attack_left_3": { "tag_only": "idle_left", "placeholder": true },
+		"attack_right_1": { "tag_only": "Idle_right", "placeholder": true },
+		"attack_right_2": { "tag_only": "Idle_right", "placeholder": true },
+		"attack_right_3": { "tag_only": "Idle_right", "placeholder": true },
+		"dodge": { "tag_only": "idle_left", "placeholder": true },
 		"block": { "tag_only": "LeftBattle", "placeholder": true },
 		"stun": { "tag_only": "LeftBattle", "placeholder": true },
 	}
@@ -62,6 +62,14 @@ func _ready():
 		region_enabled = true
 		region_rect = parsed_frames[0].rect if parsed_frames.size() > 0 else Rect2()
 		_generate_animations()
+
+func _extract_frame_num(key: String) -> int:
+	var dot_pos = key.rfind(".")
+	var name_part = key.substr(0, dot_pos) if dot_pos > 0 else key
+	var space_pos = name_part.rfind(" ")
+	if space_pos >= 0:
+		return int(name_part.substr(space_pos + 1))
+	return 0
 
 func _parse_json():
 	if sprite_json_path.is_empty():
@@ -81,7 +89,7 @@ func _parse_json():
 		return
 	var frames_data = json.get("frames", {})
 	var keys = frames_data.keys()
-	keys.sort()
+	keys.sort_custom(func(a, b): return _extract_frame_num(a) < _extract_frame_num(b))
 	for key in keys:
 		var f = frames_data[key]
 		var fr = f.get("frame", {})
@@ -99,6 +107,11 @@ func _parse_json():
 				"direction": tag.get("direction", "forward")
 			}
 	_is_parsed = true
+	print_debug("=== AsepriteSprite2D: PARSE ===")
+	print_debug("Frames: ", parsed_frames.size())
+	for tag_name in parsed_tags:
+		var t = parsed_tags[tag_name]
+		print_debug("  Tag '", tag_name, "': ", t.from, "-", t.to, " (", t.direction, ")")
 
 func _generate_animations():
 	if not _is_parsed or parsed_frames.is_empty():
@@ -113,11 +126,14 @@ func _generate_animations():
 		lib = AnimationLibrary.new()
 		anim_player.add_animation_library("", lib)
 	var sprite_name = name
+	print_debug("=== AsepriteSprite2D: GENERATE ===")
 	for anim_name in _anim_defs:
 		var def = _anim_defs[anim_name]
 		var frames = _resolve_frames(def)
 		if frames.is_empty():
+			print_debug("  SKIP '", anim_name, "': no frames")
 			continue
+		print_debug("  Anim '", anim_name, "': frames ", frames, " (", def, ")")
 		var anim = _create_animation(frames, sprite_name)
 		if lib.has_animation(anim_name):
 			lib.remove_animation(anim_name)

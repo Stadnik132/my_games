@@ -84,8 +84,6 @@ func _handle_state_change_effects(new_state: GameState, old_state: GameState) ->
 			EventBus.Game.paused.emit(true)
 		
 		GameState.CUTSCENE:
-			# Катсцена - замедленное время
-			Engine.time_scale = 0.9
 			EventBus.Game.paused.emit(false)
 		
 		GameState.WORLD, GameState.BATTLE:
@@ -134,12 +132,10 @@ func _on_dialogic_decision_made(choice: String) -> void:
 
 # ---------- ОБРАБОТЧИКИ ИГРОВЫХ СОБЫТИЙ ----------
 func _on_entity_died(entity: Node) -> void:
-	# Реагируем только на смерть игрока
 	if not entity or not entity.is_in_group("player"):
 		return
 	
-	# После смерти игрока возвращаемся в состояние WORLD
-	change_state(GameState.WORLD)
+	change_state(GameState.GAME_OVER)
 
 # === ПУБЛИЧНЫЕ МЕТОДЫ ===
 func get_current_state() -> GameState:

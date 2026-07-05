@@ -9,8 +9,6 @@ var is_channeling: bool = false
 func enter() -> void:
 	super.enter()
 	
-	print("=== PLAYER CAST STATE ENTER ===")
-	
 	# Приоритет 1: данные из command_data
 	if command_data.has("ability"):
 		ability = command_data.get("ability")
@@ -23,25 +21,20 @@ func enter() -> void:
 		target_data = fsm.cast_target_data
 	
 	if not ability:
-		print("PlayerCastState: нет способности!")
 		fsm.change_state("Idle")
 		return
 	
 	if not _can_cast():
-		print("PlayerCastState: нельзя использовать способность")
 		fsm.change_state("Idle")
 		return
 	
 	cast_timer = ability.cast_time
 	is_channeling = ability.channeled
 	
-	# Ресурсы тратятся в cast_ability, здесь не нужно
-	
 	if ability.cast_animation:
 		EventBus.Animations.requested.emit(entity, ability.cast_animation, ability.cast_time)
 	
 	EventBus.Combat.ability.cast_started.emit(ability)
-	print("PlayerCastState: начат каст ", ability.ability_name)
 
 func process(delta: float) -> void:
 	cast_timer -= delta
@@ -49,12 +42,8 @@ func process(delta: float) -> void:
 		_finish_cast()
 
 func _finish_cast() -> void:
-	print("=== PLAYER CAST FINISH ===")
-	
-	# Получаем позицию цели
 	var target_pos = target_data.get("position", entity.global_position)
 	
-	# ВЫЗЫВАЕМ cast_ability из AbilityComponent
 	var ability_comp = combat_component.ability_component
 	if ability_comp:
 		ability_comp.cast_ability(slot_index, target_pos)
@@ -72,7 +61,8 @@ func _can_cast() -> bool:
 	return ability_comp.has_resources(slot_index)
 
 func exit() -> void:
-	EventBus.Animations.requested.emit(entity, "idle", 0.1)
+	if entity.has_method("_get_idle_animation"):
+		EventBus.Animations.requested.emit(entity, entity._get_idle_animation(), 0.1)
 	super.exit()
 
 func get_allowed_transitions() -> Array[String]:

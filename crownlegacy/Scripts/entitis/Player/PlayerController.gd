@@ -78,7 +78,7 @@ func _handle_combat_input(event: InputEvent) -> void:
 	
 	# Уворот
 	if event.is_action_pressed("dodge"):
-		var dodge_dir = _get_input_vector()
+		var dodge_dir = player._get_input_vector()
 		if dodge_dir == Vector2.ZERO:
 			dodge_dir = player.last_movement_direction
 		EventBus.Combat.dodge.requested.emit(dodge_dir)
@@ -88,14 +88,14 @@ func _handle_combat_input(event: InputEvent) -> void:
 	# Способности 1-4
 	for i in range(1, 5):
 		if event.is_action_pressed("ability_" + str(i)):
-			print("=== ABILITY KEY PRESSED: ", i)
 			EventBus.Combat.ability.slot_pressed.emit(i-1)
 			get_viewport().set_input_as_handled()
 			return
 
 func _handle_interaction() -> void:
-	print_debug("PlayerController: запрос взаимодействия")
-	EventBus.Actors.interaction_requested.emit()
+	var detector = player.get_node_or_null("PlayerInteractionDetector") as PlayerInteractionDetector
+	if detector:
+		detector.interact()
 
 func _confirm_ability_cast() -> void:
 	var mouse_pos = get_viewport().get_mouse_position()
@@ -103,14 +103,5 @@ func _confirm_ability_cast() -> void:
 	var global_mouse_pos = camera.global_position + (mouse_pos - get_viewport().size * 0.5) / camera.zoom
 	EventBus.Combat.ability.target_confirmed.emit(global_mouse_pos)
 
-func _get_input_vector() -> Vector2:
-	var input = Vector2(
-		Input.get_action_strength("move_right") - Input.get_action_strength("move_left"),
-		Input.get_action_strength("move_down") - Input.get_action_strength("move_up")
-	)
-	return input.normalized() if input.length() > 0 else Vector2.ZERO
-
 func _can_open_menu() -> bool:
-	# Меню можно открыть, если игрок может двигаться или в бою
-	# (но точную проверку делает GameStateManager)
 	return true

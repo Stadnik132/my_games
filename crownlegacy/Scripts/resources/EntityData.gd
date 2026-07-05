@@ -43,10 +43,6 @@ signal experience_changed(new_exp: int, old_exp: int)
 signal died
 signal abilities_changed()
 
-# ==================== АККУМУЛЯТОРЫ ====================
-var _mp_regen_accum: float = 0.0
-var _stamina_regen_accum: float = 0.0
-
 
 # ==================== СПОСОБНОСТИ ====================
 func set_ability_in_slot(slot_index: int, ability_id: String) -> void:
@@ -146,22 +142,6 @@ func use_health(amount: int) -> bool:
 		set_current_hp(current_hp - amount)
 		return true
 	return false
-
-
-func regenerate_resources(delta: float) -> void:
-	if max_mp > 0:
-		_mp_regen_accum += mp_regen_per_second * delta
-		var mp_gain = int(_mp_regen_accum)
-		if mp_gain > 0:
-			set_current_mp(current_mp + mp_gain)
-			_mp_regen_accum -= mp_gain
-	
-	if max_stamina > 0:
-		_stamina_regen_accum += stamina_regen_per_second * delta
-		var stamina_gain = int(_stamina_regen_accum)
-		if stamina_gain > 0:
-			set_current_stamina(current_stamina + stamina_gain)
-			_stamina_regen_accum -= stamina_gain
 
 
 # ==================== ПРОВЕРКИ ====================

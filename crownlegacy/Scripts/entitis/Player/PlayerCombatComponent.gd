@@ -7,8 +7,6 @@ var _attack_request_pending: bool = false
 func _setup_connections() -> void:
 	super._setup_connections()
 	
-	print("PlayerCombatComponent: connecting signals...")
-	
 	EventBus.Combat.attack.basic_requested.connect(_on_attack_requested)
 	EventBus.Combat.dodge.requested.connect(_on_dodge_requested)
 	EventBus.Combat.block.started.connect(_on_block_started)
@@ -23,14 +21,9 @@ func _setup_connections() -> void:
 	if hurtbox:
 		if not hurtbox.damage_taken.is_connected(_on_hurtbox_damage):
 			hurtbox.damage_taken.connect(_on_hurtbox_damage)
-			print("  ✅ hurtbox.damage_taken connected")
 	
 	# Проверка подключения способностей
-	var connected = EventBus.Combat.ability.slot_pressed.connect(_on_ability_slot_pressed)
-	if connected == OK:
-		print("  ✅ slot_pressed connected")
-	else:
-		print("  ❌ slot_pressed connection failed: ", connected)
+	EventBus.Combat.ability.slot_pressed.connect(_on_ability_slot_pressed)
 
 func _on_combo_window_opened() -> void:
 	_combo_window_active = true
@@ -79,6 +72,22 @@ func _on_block_ended() -> void:
 # ==================== ОБРАБОТКА УРОНА ====================
 func _on_hurtbox_damage(damage_data: DamageData, source: Node) -> void:
 	super._on_hurtbox_damage(damage_data, source)
+
+func _apply_defense(damage: int, damage_data: DamageData) -> int:
+	if damage_data.is_true_damage() or not entity_data:
+		return damage
+
+	var defense = 0
+	match damage_data.damage_type:
+		DamageData.DamageType.PHYSICAL:
+			defense = entity_data.get_physical_defense()
+		DamageData.DamageType.MAGICAL:
+			defense = entity_data.get_magical_defense()
+		_:
+			return damage
+
+	var effective_defense = defense * (1.0 - damage_data.penetration)
+	return max(1, damage - int(effective_defense))
 
 # ==================== МЕТОД ДЛЯ FSM ====================
 func get_move_vector() -> Vector2:

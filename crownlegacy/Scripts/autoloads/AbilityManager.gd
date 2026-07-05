@@ -13,13 +13,7 @@ var unlocked_abilities: Array[String] = []
 # ==================== ИНИЦИАЛИЗАЦИЯ ====================
 func _ready():
 	load_abilities_from_json("res://Scripts/Ability/abilities.json")
-	
-	# ВРЕМЕННО: разблокировать все способности для теста
-	# После отладки заменить на нормальную систему разблокировки
-	_unlock_all_abilities_for_test()
-	
-	print("AbilityManager: загружено ", abilities_by_id.size(), " способностей")
-	print("AbilityManager: разблокировано ", unlocked_abilities.size(), " способностей")
+	print("AbilityManager: загружено ", abilities_by_id.size(), " способностей, разблокировано ", unlocked_abilities.size())
 
 func load_abilities_from_json(json_path: String):
 	if not FileAccess.file_exists(json_path):
@@ -29,6 +23,7 @@ func load_abilities_from_json(json_path: String):
 	var file = FileAccess.open(json_path, FileAccess.READ)
 	var json = JSON.new()
 	var error = json.parse(file.get_as_text())
+	file.close()
 	
 	if error != OK:
 		push_error("AbilityManager: ошибка парсинга JSON: ", json.get_error_message())
@@ -47,13 +42,6 @@ func load_abilities_from_json(json_path: String):
 			ability.load_assets()
 	
 	abilities_loaded.emit()
-
-# ВРЕМЕННЫЙ метод для тестирования
-func _unlock_all_abilities_for_test():
-	for ability_id in abilities_by_id.keys():
-		if not ability_id in unlocked_abilities:
-			unlocked_abilities.append(ability_id)
-			print("  Разблокировано: ", ability_id)
 
 # ==================== ОСНОВНЫЕ МЕТОДЫ ====================
 func get_ability(ability_id: String) -> AbilityResource:

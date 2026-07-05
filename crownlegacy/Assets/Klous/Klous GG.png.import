@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://dwxo5xim5g262"
-path="res://.godot/imported/bload Knight.png-baed066c3d0e3251d60797372bdda5fb.ctex"
+uid="uid://dyrokepp3xlnf"
+path="res://.godot/imported/Klous GG.png-448eb5d167e5942523ad60fd5115a30a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/Sprites/bload Knight.png"
-dest_files=["res://.godot/imported/bload Knight.png-baed066c3d0e3251d60797372bdda5fb.ctex"]
+source_file="res://Assets/Klous/Klous GG.png"
+dest_files=["res://.godot/imported/Klous GG.png-448eb5d167e5942523ad60fd5115a30a.ctex"]
 
 [params]
 
