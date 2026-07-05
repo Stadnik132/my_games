@@ -7,6 +7,7 @@ var speed: float = 300.0
 var max_distance: float = 500.0
 var distance_traveled: float = 0.0
 var start_position: Vector2
+var _has_hit: bool = false
 
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 
@@ -57,18 +58,23 @@ func _physics_process(delta: float) -> void:
 		queue_free()
 
 func _on_body_entered(body: Node) -> void:
-	if body == caster:
+	if _has_hit or body == caster:
 		return
+	_has_hit = true
+	set_physics_process(false)
 	_apply_damage(body)
-	queue_free()
+	_on_hit()
 
 func _on_area_entered(area: Area2D) -> void:
-	if area is Hurtbox:
-		# Проверяем владельца хертбокса
-		if area.entity_owner == caster:
-			return
-		_apply_damage_to_hurtbox(area)
-		queue_free()
+	if _has_hit or not area is Hurtbox or area.entity_owner == caster:
+		return
+	_has_hit = true
+	set_physics_process(false)
+	_apply_damage_to_hurtbox(area)
+	_on_hit()
+
+func _on_hit() -> void:
+	queue_free()
 
 func _apply_damage(target: Node) -> void:
 	if not target or not damage_data:

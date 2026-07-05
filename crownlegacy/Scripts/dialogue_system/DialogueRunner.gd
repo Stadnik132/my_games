@@ -106,11 +106,15 @@ func _show_line(node: Dictionary) -> void:
 	var char_name = node.get("character", "")
 	var text = node.get("text", "")
 	var emotion = node.get("emotion", "default")
-	if _ui_instance:
-		_ui_instance.show_line(char_name, text, emotion)
-		await _ui_instance.confirmed
-	if _ui_instance:
-		_ui_instance.hide_text()
+	if not _ui_instance:
+		_follow_or_choose(node)
+		return
+	_ui_instance.show_line(char_name, text, emotion)
+	var ui = _ui_instance
+	await ui.confirmed
+	if not is_instance_valid(ui) or ui != _ui_instance:
+		return
+	ui.hide_text()
 	_follow_or_choose(node)
 
 func _show_choices(node: Dictionary) -> void:
@@ -129,10 +133,12 @@ func _show_choices(node: Dictionary) -> void:
 				options.append(_nodes[target_id])
 
 	if _ui_instance and options.size() > 0:
-		_ui_instance.show_choices(options)
-		var idx = await _ui_instance.choice_selected
-		if _ui_instance:
-			_ui_instance.hide_choices()
+		var ui = _ui_instance
+		ui.show_choices(options)
+		var idx = await ui.choice_selected
+		if not is_instance_valid(ui) or ui != _ui_instance:
+			return
+		ui.hide_choices()
 		if not _is_running:
 			return
 		var label = options[idx].get("choice_text", "") if idx >= 0 and idx < options.size() else ""
@@ -244,7 +250,13 @@ func _execute_command(node: Dictionary) -> void:
 			_stop()
 		"wait":
 			var seconds = float(args.get("seconds", 1.0))
-			await get_tree().create_timer(seconds).timeout
+			var tween = create_tween()
+			tween.tween_interval(seconds)
+			await tween.finished
+			if not is_instance_valid(self):
+				return
+			if not _is_running:
+				return
 		"goto":
 			var timeline = str(args.get("timeline", ""))
 			if not timeline.is_empty():
@@ -265,6 +277,8 @@ func _execute_command(node: Dictionary) -> void:
 				var tween = create_tween()
 				tween.tween_property(fade_rect, "color", Color(0, 0, 0, 0), duration)
 				await tween.finished
+				if not is_instance_valid(self):
+					return
 			_ui_instance.hide_all() if _ui_instance else null
 		"game_over":
 			EventBus.Game.game_over_requested.emit()

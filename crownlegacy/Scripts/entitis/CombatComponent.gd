@@ -192,8 +192,21 @@ func _apply_block(damage_data: DamageData) -> Dictionary:
 	}
 
 func _apply_defense(damage: int, damage_data: DamageData) -> int:
+	if damage_data.is_true_damage() or not owner_entity or not owner_entity.entity_data:
+		return damage
 
-	return damage
+	var defense = 0
+	var entity_data = owner_entity.entity_data
+	match damage_data.damage_type:
+		DamageData.DamageType.PHYSICAL:
+			defense = entity_data.get_physical_defense()
+		DamageData.DamageType.MAGICAL:
+			defense = entity_data.get_magical_defense()
+		_:
+			return damage
+
+	var effective_defense = defense * (1.0 - damage_data.penetration)
+	return max(1, damage - int(effective_defense))
 
 # ==================== УПРАВЛЕНИЕ FSM ====================
 func _on_game_state_changed(new_state: int, _old_state: int) -> void:

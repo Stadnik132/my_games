@@ -29,31 +29,24 @@ func _physics_process(delta: float) -> void:
 	# Опционально: вращаем спрайт, если нужно
 	# animated_sprite.rotation = direction.angle()
 
-func _apply_damage(target: Node) -> void:
-	# Останавливаем движение
-	set_physics_process(false)
-	
-	# Наносим урон через родительский метод (через hurtbox)
-	super._apply_damage(target)
-	
+func _on_hit() -> void:
 	# Проигрываем анимацию попадания
 	if animated_sprite and hit_animation:
 		animated_sprite.play(hit_animation)
-		
-		# Ждём окончания анимации
-		await animated_sprite.animation_finished
-	
-	# Воспроизводим звук попадания (опционально)
+		animated_sprite.animation_finished.connect(_cleanup, CONNECT_ONE_SHOT)
+	else:
+		_cleanup()
+
+func _cleanup() -> void:
+	# Воспроизводим звук попадания
 	if audio_player and audio_hit:
 		audio_player.stream = audio_hit
 		audio_player.play()
-		await audio_player.finished
-	
-	# Создаём отдельную сцену взрыва (если есть)
+
+	# Создаём отдельную сцену взрыва
 	if hit_scene:
 		var explosion = hit_scene.instantiate()
 		explosion.global_position = global_position
 		get_tree().current_scene.add_child(explosion)
-	
-	# Удаляем снаряд
+
 	queue_free()

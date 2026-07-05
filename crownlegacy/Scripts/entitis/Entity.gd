@@ -71,6 +71,8 @@ func _play_death_effect() -> void:
 		_death_tween.tween_property(sprite, "modulate", Color(0.3, 0.3, 0.3), 0.3)
 		_death_tween.tween_property(sprite, "modulate:a", 0.0, 0.5)
 		await _death_tween.finished
+		if not is_instance_valid(self):
+			return
 		hide()
 	else:
 		hide()

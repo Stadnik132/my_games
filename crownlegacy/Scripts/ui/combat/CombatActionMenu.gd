@@ -78,6 +78,8 @@ func _populate_abilities() -> void:
 			btn.pressed.connect(func(): _on_ability_picked(idx, ability), CONNECT_ONE_SHOT)
 
 func _populate_persuasion() -> void:
+	for child in persuasion_container.get_children():
+		child.queue_free()
 	var actions = ["Convince", "Threaten", "Understand"]
 	for i in actions.size():
 		var btn = _get_or_create_button(persuasion_container, i)
@@ -92,6 +94,8 @@ func _populate_items() -> void:
 	var inv = player.get_node_or_null("InventoryComponent")
 	if not inv:
 		return
+	for child in item_container.get_children():
+		child.queue_free()
 	var slot = 0
 	for i in inv.max_slots:
 		var data = inv.get_item_at_slot(i)

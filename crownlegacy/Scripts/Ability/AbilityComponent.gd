@@ -170,13 +170,6 @@ func cast_ability(slot_index: int, target_position: Vector2 = Vector2.ZERO) -> b
 	
 	start_cooldown(slot_index)
 	
-	# Сигнал о начале каста
-	EventBus.Combat.ability.cast_started.emit(ability)
-	
-	# Анимация каста (если есть)
-	if ability.cast_animation != "" and entity:
-		EventBus.Animations.requested.emit(entity, ability.cast_animation, ability.cast_time)
-	
 	# Применение эффекта
 	_apply_ability_effect(ability, target_position)
 	
@@ -194,22 +187,19 @@ func spend_resources(slot_index: int) -> bool:
 	if entity and not entity.is_in_group("player"):
 		return true
 	
-	var success = true
+	if not has_resources(slot_index):
+		return false
 	
 	if ability.mana_cost > 0 and mana_component:
-		success = success and mana_component.use(ability.mana_cost)
+		mana_component.use(ability.mana_cost)
 	
 	if ability.stamina_cost > 0 and stamina_component:
-		success = success and stamina_component.use(ability.stamina_cost)
+		stamina_component.use(ability.stamina_cost)
 	
 	if ability.health_cost > 0 and health_component:
-		var current = health_component.get_current_health()
-		if current > ability.health_cost:
-			health_component.take_damage(ability.health_cost, 2, entity, false)
-		else:
-			success = false
+		health_component.take_damage(ability.health_cost, 2, entity, false)
 	
-	return success
+	return true
 
 func has_resources(slot_index: int) -> bool:
 	var ability = get_ability_in_slot(slot_index)
@@ -313,9 +303,9 @@ func _apply_buff(ability: AbilityResource):
 		var value = ability.buff_stats[stat_name]
 		entity.progression_component.add_modifier(stat_name, value, buff_id)
 	
-	# Удаляем через duration
 	await get_tree().create_timer(ability.buff_duration).timeout
-	_remove_buff(buff_id)
+	if is_instance_valid(entity):
+		_remove_buff(buff_id)
 
 func _spawn_buff_effect(ability: AbilityResource):
 	"""Спавнит визуальный эффект баффа"""

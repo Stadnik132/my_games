@@ -73,22 +73,6 @@ func _on_block_ended() -> void:
 func _on_hurtbox_damage(damage_data: DamageData, source: Node) -> void:
 	super._on_hurtbox_damage(damage_data, source)
 
-func _apply_defense(damage: int, damage_data: DamageData) -> int:
-	if damage_data.is_true_damage() or not entity_data:
-		return damage
-
-	var defense = 0
-	match damage_data.damage_type:
-		DamageData.DamageType.PHYSICAL:
-			defense = entity_data.get_physical_defense()
-		DamageData.DamageType.MAGICAL:
-			defense = entity_data.get_magical_defense()
-		_:
-			return damage
-
-	var effective_defense = defense * (1.0 - damage_data.penetration)
-	return max(1, damage - int(effective_defense))
-
 # ==================== МЕТОД ДЛЯ FSM ====================
 func get_move_vector() -> Vector2:
 	"""Возвращает вектор движения от игрока"""

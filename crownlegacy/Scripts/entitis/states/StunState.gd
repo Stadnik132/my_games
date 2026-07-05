@@ -5,9 +5,7 @@ class_name StunState extends CombatState
 # Стан: при получении урона (из любого состояния кроме Cast). Сущность не может ничего делать.
 # Выход в Idle по истечении длительности.
 
-@export var stun_duration: float = 0.5
 var stun_timer: float = 0.0
-var _stun_tween: Tween
 
 # Параметры отбрасывания
 var knockback_direction: Vector2 = Vector2.ZERO
@@ -27,8 +25,8 @@ func enter() -> void:
 	knockback_timer = 0.0
 	knockback_duration = combat_config.knockback_duration if combat_config else 0.25
 
-	# Эффект стана (белый цвет)
-	_apply_stun_effect()
+	if entity.has_method("apply_stun_effect"):
+		entity.apply_stun_effect()
 
 	# Запускаем таймер стана
 	stun_timer = combat_config.stun_duration
@@ -86,8 +84,8 @@ func handle_command(_command: String, _data: Dictionary = {}) -> void:
 	pass
 
 func exit() -> void:
-	# Возвращаем нормальный цвет
-	_clear_stun_effect()
+	if entity.has_method("clear_stun_effect"):
+		entity.clear_stun_effect()
 	EventBus.Combat.entity_stunned.emit(entity, false)
 	super.exit()
 
@@ -96,29 +94,3 @@ func can_exit() -> bool:
 
 func get_allowed_transitions() -> Array[String]:
 	return ["Idle"]
-
-# ==================== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ====================
-func _apply_stun_effect() -> void:
-	var sprite = entity.get_sprite()
-	
-	if not sprite:
-		return
-	
-	if _stun_tween and _stun_tween.is_running():
-		_stun_tween.kill()
-	
-	_stun_tween = create_tween()
-	_stun_tween.tween_property(sprite, "modulate", Color.WHITE, 0.1)
-
-func _clear_stun_effect() -> void:
-	var sprite = entity.get_sprite()
-	if not sprite:
-		return
-	
-	if _stun_tween:
-		_stun_tween.kill()
-	
-	if entity.has_method("get_modulate_override"):
-		sprite.modulate = entity.get_modulate_override()
-	else:
-		sprite.modulate = Color.WHITE

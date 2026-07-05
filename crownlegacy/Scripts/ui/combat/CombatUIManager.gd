@@ -65,7 +65,7 @@ func _on_reward_requested(experience: int, enemies: Array) -> void:
 		instance.queue_free()
 		EventBus.Game.world_requested.emit()
 		return
-	get_tree().current_scene.add_child(reward_screen)
+	add_child(reward_screen)
 	reward_screen.show_reward(experience, enemies)
 
 func _on_combat_ended(_victory: bool) -> void:

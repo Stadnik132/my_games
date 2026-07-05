@@ -86,8 +86,6 @@ func hide_all_panels() -> void:
 	stats_panel.hide()
 
 func _on_inventory_pressed() -> void:
-
-	print_tree_pretty()
 	menu_state = MenuState.INVENTORY
 	hide_all_panels()
 	inventory_panel.show()
@@ -126,6 +124,7 @@ func _on_quit_pressed() -> void:
 	var dialog = ConfirmationDialog.new()
 	dialog.dialog_text = "Выйти в главное меню?"
 	dialog.confirmed.connect(_quit_to_main_menu)
+	dialog.close_requested.connect(dialog.queue_free)
 	add_child(dialog)
 	dialog.popup_centered()
 

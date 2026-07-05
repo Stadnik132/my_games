@@ -16,7 +16,7 @@ class_name PlayerData
 # ==================== СОХРАНЕНИЕ ====================
 func get_save_data() -> Dictionary:
 	var data = super.get_save_data()
-		data.merge({
+	data.merge({
 		"character_name": character_name,
 		"min_block_stamina": min_block_stamina,
 		"block_damage_reduction": block_damage_reduction,

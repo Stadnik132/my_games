@@ -13,6 +13,7 @@ func _ready():
 	use_button.pressed.connect(_on_use_pressed)
 	drop_button.pressed.connect(_on_drop_pressed)
 	back_button.pressed.connect(_on_back_pressed)
+	back_button.pressed.connect(_on_close_pressed)
 	item_list.item_selected.connect(_on_item_selected)
 	
 	use_button.disabled = true

@@ -12,27 +12,25 @@ func _ready():
 	disable_mode = DISABLE_MODE_REMOVE
 
 func update_layer_from_owner() -> void:
-	
-	if not owner:
+	if not entity_owner:
 		collision_layer = 0
 		collision_mask = 0
 		return
 	
-	if owner.is_in_group("player"):
+	if entity_owner.is_in_group("player"):
 		collision_layer = 2
 		collision_mask = 4
 		
-	elif owner.is_in_group("enemies"):
+	elif entity_owner.is_in_group("enemies"):
 		collision_layer = 4
 		collision_mask = 2
 		
-	elif owner.is_in_group("friendlies"):
+	elif entity_owner.is_in_group("friendlies"):
 		collision_layer = 2
 		collision_mask = 2
 	else:
 		collision_layer = 0
 		collision_mask = 0
-		print_debug("  unknown: layer=0 mask=0")
 
 func _on_hitbox_entered(area: Area2D):
 

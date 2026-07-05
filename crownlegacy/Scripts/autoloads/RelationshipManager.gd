@@ -113,19 +113,10 @@ func save_data() -> Dictionary:
 	}
 
 func load_data(data: Dictionary) -> void:
-	"""Загружает данные из сохранения"""
 	if data.has("trust_level"):
-		var old_trust = relationship_data.trust_level
 		relationship_data.trust_level = data.trust_level
-		var delta = relationship_data.trust_level - old_trust
-		if delta != 0:
-			EventBus.Relationship.trust_changed.emit(relationship_data.trust_level, delta)
 	if data.has("will_power"):
-		var old_will = relationship_data.will_power
 		relationship_data.will_power = data.will_power
-		var delta = relationship_data.will_power - old_will
-		if delta != 0:
-			EventBus.Relationship.will_changed.emit(relationship_data.will_power, delta)
 	if data.has("character_flags"):
 		relationship_data.character_flags = data.character_flags.duplicate()
 

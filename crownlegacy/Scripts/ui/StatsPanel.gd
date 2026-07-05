@@ -29,13 +29,19 @@ func _ready() -> void:
 
 func _on_visibility_changed() -> void:
 	if visible:
-		# При показе панели обновляем данные
 		_find_player_components()
 		_connect_component_signals()
+		if not EventBus.Relationship.trust_changed.is_connected(_on_trust_changed):
+			EventBus.Relationship.trust_changed.connect(_on_trust_changed)
+		if not EventBus.Relationship.will_changed.is_connected(_on_will_changed):
+			EventBus.Relationship.will_changed.connect(_on_will_changed)
 		update_data()
 	else:
-		# При скрытии отписываемся
 		_disconnect_component_signals()
+		if EventBus.Relationship.trust_changed.is_connected(_on_trust_changed):
+			EventBus.Relationship.trust_changed.disconnect(_on_trust_changed)
+		if EventBus.Relationship.will_changed.is_connected(_on_will_changed):
+			EventBus.Relationship.will_changed.disconnect(_on_will_changed)
 
 func _find_player_components() -> void:
 	var player = get_tree().get_first_node_in_group("player")

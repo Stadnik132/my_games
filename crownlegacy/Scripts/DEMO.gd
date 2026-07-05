@@ -28,17 +28,25 @@ func _ready() -> void:
 	footsteps_audio.stop()
 
 	EventBus.Game.dialogue_requested.emit("Intro_dialogue")
-	await EventBus.Dialogue.ended
+	await _wait_for_dialogue()
 
 	if _fade_tween:
 		await _fade_tween.finished
 
 	EventBus.Game.dialogue_requested.emit("pip_intro")
-	await EventBus.Dialogue.ended
+	await _wait_for_dialogue()
 
 	_lock_player(false)
 	forest_audio.stop()
 
+
+func _wait_for_dialogue() -> void:
+	var ended := false
+	var end_handler := func(): ended = true
+	EventBus.Dialogue.ended.connect(end_handler, CONNECT_ONE_SHOT)
+	await get_tree().create_timer(30.0).timeout
+	if not ended:
+		push_warning("DEMO: диалог не завершился за 30с, продолжаем")
 
 func _show_text(text: String) -> void:
 	prologue_label.text = text

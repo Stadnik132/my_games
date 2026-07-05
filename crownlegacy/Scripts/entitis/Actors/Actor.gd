@@ -312,6 +312,8 @@ func _play_death_effect() -> void:
 		tween.tween_property(sprite, "modulate", Color(0.3, 0.3, 0.3), 0.3)
 		tween.tween_property(sprite, "modulate:a", 0.0, 0.5)
 		await tween.finished
+		if not is_instance_valid(self):
+			return
 		queue_free()
 	else:
 		queue_free()

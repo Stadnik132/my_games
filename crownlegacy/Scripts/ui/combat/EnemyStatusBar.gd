@@ -34,8 +34,6 @@ func setup(entity: Node) -> void:
 	else:
 		resolve_bar.hide()
 
-	visibility_changed.connect(_update_position)
-
 func _update_hp(new_val: int, _old: int, max_val: int) -> void:
 	hp_bar.max_value = max_val
 	hp_bar.value = new_val

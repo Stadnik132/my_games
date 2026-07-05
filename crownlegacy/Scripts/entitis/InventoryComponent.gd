@@ -6,7 +6,6 @@ class_name InventoryComponent
 signal item_added(item: ItemResource, quantity: int, slot_index: int)
 signal item_removed(slot_index: int, item: ItemResource, quantity: int)
 signal inventory_changed
-signal inventory_updated
 
 # Структура слота
 class SlotData:
@@ -72,7 +71,6 @@ func add_item(item: ItemResource, quantity: int = 1) -> bool:
 		item_added.emit(item, add_amount, empty_slot)
 	
 	inventory_changed.emit()
-	inventory_updated.emit()
 	return true
 
 # Удалить предмет
@@ -92,7 +90,6 @@ func remove_item(slot_index: int, quantity: int = 1) -> bool:
 		slots[slot_index] = null
 	
 	inventory_changed.emit()
-	inventory_updated.emit()
 	return true
 
 func get_item_at_slot(slot_index: int) -> SlotData:
@@ -134,4 +131,3 @@ func clear() -> void:
 	for i in range(max_slots):
 		slots[i] = null
 	inventory_changed.emit()
-	inventory_updated.emit()

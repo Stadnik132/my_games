@@ -10,26 +10,10 @@ func _ready():
 	_update_layers_from_source()
 	area_entered.connect(_on_area_entered)
 	
-	# ВАЖНО: ждём один кадр после добавления в дерево
-	await get_tree().process_frame
-	
-	# Теперь можно проверять пересечения
-	_apply_damage_to_overlapping()
-	
-	# Ждём оставшееся время жизни
 	await get_tree().create_timer(lifetime).timeout
-	queue_free()
-
-func _apply_damage_to_overlapping() -> void:
-	if _damage_applied:
+	if not is_instance_valid(self):
 		return
-	_damage_applied = true  # Сразу ставим флаг ДО нанесения урона
-	
-	var overlapping_areas = get_overlapping_areas()
-	for area in overlapping_areas:
-		if area is Hurtbox and area.entity_owner != damage_data.source:
-			area.damage_taken.emit(damage_data, damage_data.source)
-			break  # Только один раз
+	queue_free()
 
 
 func _update_layers_from_source():
