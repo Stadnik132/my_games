@@ -32,8 +32,6 @@ func setup(owner_entity: Entity) -> void:
 	
 	# Инициализируем слоты
 	_initialize_slots()
-	
-	print("AbilityComponent: инициализировано для ", entity.name)
 
 func _find_components() -> void:
 	if not entity:
@@ -79,13 +77,13 @@ func _initialize_slots() -> void:
 	
 	for i in range(slot_assignments.size()):
 		var ability_id = slot_assignments[i]
-		
-		if ability_id != "" and ability_manager.is_ability_unlocked(ability_id):
+
+		if ability_id != "":
 			var ability = ability_manager.get_ability(ability_id)
 			slots.append(ability)
 		else:
 			slots.append(null)
-		
+
 		cooldowns.append(0.0)
 
 func _process(delta: float):
@@ -108,7 +106,6 @@ func set_ability_in_slot(slot_index: int, ability_id: String) -> bool:
 	
 	# Проверяем что способность разблокирована
 	if ability_id != "" and not ability_manager.is_ability_unlocked(ability_id):
-		print("Способность не разблокирована: ", ability_id)
 		return false
 	
 	# Назначаем
@@ -118,9 +115,7 @@ func set_ability_in_slot(slot_index: int, ability_id: String) -> bool:
 		slots[slot_index] = ability_manager.get_ability(ability_id)
 	else:
 		slots[slot_index] = null
-	
-	print("Слот ", slot_index, " назначена способность: ", ability_id)
-	
+
 	# Сохраняем в данные, если есть метод
 	if entity_data and entity_data.has_method("set_ability_in_slot"):
 		entity_data.set_ability_in_slot(slot_index, ability_id)
@@ -237,7 +232,6 @@ func _spawn_effect_scene(ability: AbilityResource, target_position: Vector2):
 	"""Единый метод для спавна сцены эффекта (снаряд/область/удар)"""
 	
 	if not ability.effect_scene:
-		print("AbilityComponent: нет сцены эффекта для ", ability.ability_name)
 		return
 	
 	var effect = ability.effect_scene.instantiate()

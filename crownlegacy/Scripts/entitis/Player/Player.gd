@@ -35,9 +35,6 @@ var _blink_timer: float = 0.0
 var _blink_phase: int = 0
 var _blink_interval: float = 0.0
 
-# ==================== ОТЛАДКА ====================
-var _debug_timer: float = 0.0
-
 # ==================== ИНИЦИАЛИЗАЦИЯ ====================
 func _ready():
 	super._ready()
@@ -57,7 +54,19 @@ func _ready():
 	EventBus.Game.state_changed.connect(_on_game_state_changed)
 	EventBus.Animations.requested.connect(_on_animation_requested)
 	
-	# ИНИЦИАЛИЗАЦИЯ ИНВЕНТАРЯ (с ожиданием загрузки реестра)
+	# Детектор взаимодействия
+	if not get_node_or_null("PlayerInteractionDetector"):
+		var detector = PlayerInteractionDetector.new()
+		detector.name = "PlayerInteractionDetector"
+		detector.collision_layer = 0
+		detector.collision_mask = 4
+		var shape = CircleShape2D.new()
+		shape.radius = 50.0
+		var col = CollisionShape2D.new()
+		col.shape = shape
+		detector.add_child(col)
+		add_child(detector)
+	
 	_init_inventory()
 	
 	# Мигание — стартовый таймер
@@ -123,10 +132,6 @@ func _physics_process(delta: float) -> void:
 func _process(delta: float) -> void:
 	if Engine.is_editor_hint():
 		return
-	_debug_timer += delta
-	if _debug_timer >= 1.0:
-		_debug_timer = 0.0
-		print_debug("[DEBUG] anim='", _current_animation, "' | region_rect=", sprite.region_rect, " | blink_phase=", _blink_phase)
 
 func _update_blink(delta: float) -> void:
 	if _blink_phase > 0:
@@ -249,7 +254,6 @@ func _play_animation(anim_name: String) -> void:
 		animation_player.speed_scale = 1.0
 
 	animation_player.play(anim_name)
-	print_debug("Player ANIM: '", anim_name, "' | frame: ", sprite.region_rect)
 
 func _on_animation_requested(target: Node, animation_name: String, duration: float) -> void:
 	if target != self:

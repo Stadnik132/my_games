@@ -52,9 +52,6 @@ func add_experience(amount: int, source: String = "unknown") -> void:
 	while entity_data.experience >= entity_data.experience_to_next_level:
 		_level_up()
 		levels_gained += 1
-	
-	if levels_gained > 0:
-		print_debug("Progression: получено %d уровней от %s" % [levels_gained, source])
 
 func _level_up() -> void:
 	"""Внутренняя логика повышения уровня"""
@@ -76,8 +73,6 @@ func _level_up() -> void:
 	
 	# Эмитим сигнал
 	level_up.emit(entity_data.level, stat_increases)
-	
-	print_debug("Уровень повышен до %d!" % entity_data.level)
 
 func _calculate_next_level_exp() -> void:
 	"""Рассчитать опыт до следующего уровня (прогрессия)"""

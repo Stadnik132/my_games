@@ -10,8 +10,6 @@ func _ready() -> void:
 	continue_button.pressed.connect(_on_continue_pressed)
 
 func show_reward(experience: int, _enemies: Array) -> void:
-	print_debug("CombatRewardScreen: показать награду (exp=", experience, ")")
-
 	process_mode = PROCESS_MODE_WHEN_PAUSED
 
 	xp_label.text = "+%d XP" % experience
@@ -32,7 +30,6 @@ func show_reward(experience: int, _enemies: Array) -> void:
 	show()
 
 func _on_continue_pressed() -> void:
-	print_debug("CombatRewardScreen: Continue нажат")
 	_active = false
 
 	var player = get_tree().get_first_node_in_group("player")

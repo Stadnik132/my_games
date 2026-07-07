@@ -39,8 +39,13 @@ func set_active(active: bool) -> void:
 
 
 func _process(delta: float) -> void:
-	if not is_active or not brain or not combat_component or not _player:
+	if not is_active or not brain or not combat_component:
 		return
+	if not _player:
+		var players = get_tree().get_nodes_in_group("player")
+		if players.is_empty():
+			return
+		_player = players[0]
 
 	var fsm = combat_component.get_fsm()
 	if not fsm:

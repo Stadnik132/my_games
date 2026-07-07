@@ -19,7 +19,7 @@ func enter() -> void:
 	# Сигнал о начале блока
 	EventBus.Combat.block.started.emit()
 
-	print_debug("BlockState: блок активирован")
+
 
 func physics_process(_delta: float) -> void:
 	# Во время блока не двигаемся

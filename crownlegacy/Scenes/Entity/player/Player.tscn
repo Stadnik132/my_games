@@ -30,7 +30,7 @@
 script = ExtResource("17_r5m3b")
 base_stats = {
 "agility": 5,
-"attack": 25,
+"attack": 100,
 "defense": 5,
 "speed": 5
 }
@@ -364,7 +364,7 @@ tracks/0/keys = {
 }
 
 [sub_resource type="Animation" id="Animation_vax6t"]
-length = 0.4
+length = 0.6
 loop_mode = 1
 tracks/0/type = "value"
 tracks/0/imported = false
@@ -373,10 +373,10 @@ tracks/0/path = NodePath("Sprite2D:region_rect")
 tracks/0/interp = 0
 tracks/0/loop_wrap = true
 tracks/0/keys = {
-"times": PackedFloat32Array(0.1, 0.2, 0.3, 0.4),
-"transitions": PackedFloat32Array(0, 0, 0, 0),
+"times": PackedFloat32Array(0.1, 0.2, 0.3, 0.4, 0.5, 0.6),
+"transitions": PackedFloat32Array(0, 0, 0, 0, 0, 0),
 "update": 0,
-"values": [Rect2(112, 0, 56, 62), Rect2(168, 0, 56, 62), Rect2(224, 0, 56, 62), Rect2(280, 0, 56, 62)]
+"values": [Rect2(112, 0, 56, 62), Rect2(168, 0, 56, 62), Rect2(224, 0, 56, 62), Rect2(280, 0, 56, 62), Rect2(224, 0, 56, 62), Rect2(168, 0, 56, 62)]
 }
 
 [sub_resource type="Animation" id="Animation_nf4fe"]
@@ -457,8 +457,8 @@ _data = {
 }
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_gpg7s"]
-radius = 12.0
-height = 36.0
+radius = 4.0
+height = 12.0
 
 [sub_resource type="Resource" id="Resource_c1ec4"]
 script = ExtResource("6_iqiq2")
@@ -481,8 +481,6 @@ wall_min_slide_angle = 0.6806784
 script = ExtResource("1_sy2hw")
 move_speed = 100.0
 sprint_speed = 150.0
-acceleration = null
-friction = null
 player_data = SubResource("Resource_fc8im")
 
 [node name="PlayerController" type="Node" parent="." unique_id=1081099668]
@@ -504,7 +502,7 @@ script = ExtResource("5_fc8im")
 libraries/ = SubResource("AnimationLibrary_uorwm")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2009194619]
-position = Vector2(0, 7)
+position = Vector2(0, 17)
 shape = SubResource("CapsuleShape2D_gpg7s")
 
 [node name="PlayerCombatComponent" type="Node" parent="." unique_id=1755444022 node_paths=PackedStringArray("owner_entity", "stats_provider", "ability_component", "stamina_component")]
@@ -544,9 +542,9 @@ script = ExtResource("14_irnrt")
 
 [node name="AbilityComponent" type="Node" parent="PlayerCombatComponent" unique_id=289853833]
 script = ExtResource("16_iqiq2")
-initial_slot_assignments = null
 
 [node name="Hurtbox" type="Area2D" parent="." unique_id=123066687]
+visible = false
 collision_layer = 0
 collision_mask = 0
 script = ExtResource("16_r5m3b")

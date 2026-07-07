@@ -18,7 +18,6 @@ var movement_locked: bool = false
 var interaction_locked: bool = false
 
 var _flash_tween: Tween
-var _death_tween: Tween
 var _stun_tween: Tween
 var _modulate_override: Color = Color.WHITE
 var _flash_shader_mat: ShaderMaterial
@@ -66,17 +65,15 @@ func _on_died() -> void:
 func _play_death_effect() -> void:
 	var sprite = get_sprite()
 	if sprite:
-		_death_tween = create_tween()
-		_death_tween.set_parallel(true)
-		_death_tween.tween_property(sprite, "modulate", Color(0.3, 0.3, 0.3), 0.3)
-		_death_tween.tween_property(sprite, "modulate:a", 0.0, 0.5)
-		await _death_tween.finished
-		if not is_instance_valid(self):
-			return
-		hide()
-	else:
-		hide()
-	
+		var tween = create_tween()
+		tween.set_parallel(true)
+		tween.tween_property(sprite, "modulate", Color(0.3, 0.3, 0.3), 0.3)
+		tween.tween_property(sprite, "modulate:a", 0.0, 0.5)
+
+	await get_tree().create_timer(0.7).timeout
+	if not is_instance_valid(self):
+		return
+	hide()
 	set_physics_process(false)
 	set_process(false)
 

@@ -12,6 +12,8 @@ func _ready() -> void:
 	area_exited.connect(_on_area_exited)
 
 func _on_body_entered(body: Node) -> void:
+	if body == get_parent():
+		return
 	if body.is_in_group("interactable"):
 		_nearby.append(body)
 		_update_nearest()
@@ -22,6 +24,8 @@ func _on_body_exited(body: Node) -> void:
 		_update_nearest()
 
 func _on_area_entered(area: Area2D) -> void:
+	if area == get_parent():
+		return
 	if area.is_in_group("interactable"):
 		_nearby.append(area)
 		_update_nearest()

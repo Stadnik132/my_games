@@ -107,11 +107,6 @@ func _parse_json():
 				"direction": tag.get("direction", "forward")
 			}
 	_is_parsed = true
-	print_debug("=== AsepriteSprite2D: PARSE ===")
-	print_debug("Frames: ", parsed_frames.size())
-	for tag_name in parsed_tags:
-		var t = parsed_tags[tag_name]
-		print_debug("  Tag '", tag_name, "': ", t.from, "-", t.to, " (", t.direction, ")")
 
 func _generate_animations():
 	if not _is_parsed or parsed_frames.is_empty():
@@ -126,14 +121,11 @@ func _generate_animations():
 		lib = AnimationLibrary.new()
 		anim_player.add_animation_library("", lib)
 	var sprite_name = name
-	print_debug("=== AsepriteSprite2D: GENERATE ===")
 	for anim_name in _anim_defs:
 		var def = _anim_defs[anim_name]
 		var frames = _resolve_frames(def)
 		if frames.is_empty():
-			print_debug("  SKIP '", anim_name, "': no frames")
 			continue
-		print_debug("  Anim '", anim_name, "': frames ", frames, " (", def, ")")
 		var anim = _create_animation(frames, sprite_name)
 		if lib.has_animation(anim_name):
 			lib.remove_animation(anim_name)

@@ -17,7 +17,6 @@ var eb = EventBus
 
 func _ready() -> void:
 	_setup_event_bus_connections()
-	print_debug("GameStateManager загружен. Начальное состояние: ", _get_state_name(_current_state))
 
 
 func _setup_event_bus_connections() -> void:
@@ -30,8 +29,6 @@ func _setup_event_bus_connections() -> void:
 	eb.Game.game_over_requested.connect(_on_transition_to_game_over_requested)
 	eb.Entity.died.connect(_on_entity_died)
 	eb.Combat.decision.dialogue_decision.connect(_on_dialogic_decision_made)
-	
-	print_debug("GameStateManager подключён к EventBus")
 
 # === ОСНОВНЫЕ МЕТОДЫ ===
 func change_state(new_state: GameState, force: bool = false) -> void:
@@ -39,11 +36,7 @@ func change_state(new_state: GameState, force: bool = false) -> void:
 	
 	# Проверка перехода, если не принудительный
 	if not force and not _is_transition_allowed(_current_state, new_state):
-		print_debug("GameStateManager: Переход из ", _get_state_name(_current_state), 
-				   " в ", _get_state_name(new_state), " не разрешен")
 		return
-	
-	print_debug("GameStateManager: ", _get_state_name(_current_state), " -> ", _get_state_name(new_state))
 	
 	_previous_state = _current_state
 	_current_state = new_state
@@ -89,11 +82,6 @@ func _handle_state_change_effects(new_state: GameState, old_state: GameState) ->
 		GameState.WORLD, GameState.BATTLE:
 			# Нормальное время
 			EventBus.Game.paused.emit(false)
-			print_debug("WORLD/BATTLE. Time scale: ", Engine.time_scale)
-	
-	print_debug("Состояние: ", _get_state_name(new_state), 
-			   " (time_scale: ", Engine.time_scale, 
-			   ", paused: ", get_tree().paused, ")")
 
 # === ОБРАБОТЧИКИ EVENTBUS ===
 func _on_transition_to_world_requested() -> void:
@@ -101,13 +89,9 @@ func _on_transition_to_world_requested() -> void:
 	
 func _on_transition_to_dialogue_requested(timeline_name: String = "") -> void:
 	change_state(GameState.DIALOGUE)
-	if timeline_name:
-		print_debug("Запрошен диалог: ", timeline_name)
 
 func _on_transition_to_battle_requested(enemies: Array = []) -> void:
 	change_state(GameState.BATTLE)
-	if enemies.size() > 0:
-		print_debug("Начало боя с ", enemies.size(), " врагами")
 		
 func _on_transition_to_menu_requested() -> void:
 	# Если мы уже в MENU - возвращаемся в предыдущее состояние

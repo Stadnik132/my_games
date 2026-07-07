@@ -30,20 +30,17 @@ func _physics_process(delta: float) -> void:
 	# animated_sprite.rotation = direction.angle()
 
 func _on_hit() -> void:
-	# Проигрываем анимацию попадания
 	if animated_sprite and hit_animation:
 		animated_sprite.play(hit_animation)
-		animated_sprite.animation_finished.connect(_cleanup, CONNECT_ONE_SHOT)
-	else:
+	await get_tree().create_timer(0.3).timeout
+	if is_instance_valid(self):
 		_cleanup()
 
 func _cleanup() -> void:
-	# Воспроизводим звук попадания
 	if audio_player and audio_hit:
 		audio_player.stream = audio_hit
 		audio_player.play()
 
-	# Создаём отдельную сцену взрыва
 	if hit_scene:
 		var explosion = hit_scene.instantiate()
 		explosion.global_position = global_position

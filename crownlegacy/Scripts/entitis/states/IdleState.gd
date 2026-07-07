@@ -1,30 +1,27 @@
 class_name IdleState extends CombatState
-# Общий для Player и остальных NPC типа Actor/Enemy и т.д
 
 func enter() -> void:
 	super.enter()
 	set_battle_velocity(Vector2.ZERO)
-	
-	# Определяем направление только влево/вправо
+
 	var anim_direction = _get_horizontal_direction()
 	EventBus.Animations.requested.emit(entity, "idle_battle_" + anim_direction, 0)
 
 func _get_horizontal_direction() -> String:
-	"""Возвращает 'left' или 'right' на основе последнего направления"""
 	var dir = fsm.last_movement_direction
 	if dir.x < 0:
 		return "left"
-	return "right"  # по умолчанию вправо
+	return "right"
 
 func physics_process(_delta: float) -> void:
 	var move_vector = combat_component.get_move_vector()
-	
+
 	if move_vector != Vector2.ZERO:
 		fsm.last_movement_direction = move_vector
 		fsm.last_dodge_direction = move_vector
 		transition_requested.emit("Walk")
 		return
-	
+
 	apply_movement()
 
 func handle_command(command: String, data: Dictionary = {}) -> void:

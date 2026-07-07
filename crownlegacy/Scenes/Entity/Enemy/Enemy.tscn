@@ -20,8 +20,6 @@
 [ext_resource type="Script" uid="uid://bohemxes4bdbx" path="res://Scripts/entitis/Actors/Components/AI/AIBrain.gd" id="15_s0qij"]
 [ext_resource type="Script" uid="uid://dq6s1u3yaenn7" path="res://Scripts/entitis/Actors/Components/EnemyPatrolComponent.gd" id="16_tq3g3"]
 [ext_resource type="Script" uid="uid://todvfrjyk52p" path="res://Scripts/entitis/CombatConfig.gd" id="17_3einn"]
-[ext_resource type="Script" uid="uid://cprrclxegvl7f" path="res://Scripts/entitis/Actors/Components/ActorInteractionComponent.gd" id="18_interact"]
-
 [sub_resource type="Resource" id="Resource_41vwj"]
 script = ExtResource("4_vu3xg")
 metadata/_custom_type_script = "uid://cyktqi15eskhc"
@@ -139,5 +137,4 @@ metadata/_custom_type_script = "uid://bohemxes4bdbx"
 [node name="EnemyPatrolComponent" type="Node" parent="." unique_id=47706610]
 script = ExtResource("16_tq3g3")
 
-[node name="ActorInteractionComponent" type="Area2D" parent="."]
-script = ExtResource("18_interact")
+

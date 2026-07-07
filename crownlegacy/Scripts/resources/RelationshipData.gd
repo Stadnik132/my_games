@@ -32,7 +32,7 @@ signal will_changed(new_value: int, delta: int)
 
 func _init() -> void:
 	if Engine.is_editor_hint():
-		print("Ресурс RelationshipData создан в редакторе: ", character_name)
+		pass
 
 # Утилиты
 func get_trust_percentage() -> float:

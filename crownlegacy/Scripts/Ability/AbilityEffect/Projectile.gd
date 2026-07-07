@@ -35,15 +35,12 @@ func setup(params: Dictionary) -> void:
 	if caster and caster.is_in_group("player"):
 		collision_layer = 4
 		collision_mask = 4
-		print("Projectile: игрок, на слое 4, ищу слой 4")
 	elif caster and caster.is_in_group("enemies"):
 		collision_layer = 2
 		collision_mask = 2
-		print("Projectile: враг, на слое 2, ищу слой 2")
 	else:
 		collision_layer = 0
 		collision_mask = 0
-		print("Projectile: неизвестный стрелок")
 	
 	# Подключаем сигналы
 	body_entered.connect(_on_body_entered)
@@ -86,4 +83,3 @@ func _apply_damage(target: Node) -> void:
 
 func _apply_damage_to_hurtbox(hurtbox: Hurtbox) -> void:
 	hurtbox.damage_taken.emit(damage_data, caster)
-	print("Projectile: урон нанесён через hurtbox")

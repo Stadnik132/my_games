@@ -23,10 +23,8 @@ func _ready() -> void:
 	EventBus.Combat.started.connect(_on_combat_started)
 	EventBus.Combat.ended.connect(_on_combat_ended)
 	EventBus.UI.hud_update_required.connect(_on_hud_update)
-	print_debug("PlayerCombatHUD: _ready(), hidden")
 
 func _on_combat_started(_enemies: Array = []) -> void:
-	print_debug("PlayerCombatHUD: combat started signal received")
 	show()
 	_find_player()
 
@@ -38,7 +36,6 @@ func _find_player() -> void:
 	if not _player:
 		push_warning("PlayerCombatHUD: player not found in group 'player'")
 		return
-	print_debug("PlayerCombatHUD: player found, hp=", _player.health_component.get_current_health() if _player.health_component else "null")
 	_health = _player.health_component
 	_mana = _player.mana_component
 	_stamina = _player.stamina_component

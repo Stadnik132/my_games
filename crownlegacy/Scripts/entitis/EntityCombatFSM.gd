@@ -2,22 +2,18 @@ class_name EntityCombatFSM extends Node
 
 signal state_changed(old_state: String, new_state: String)
 
-# Состояния: Idle, Walk, Attack, Dodge, Block, Aim(Player), Cast(Player/Actor), Stun
 var states: Dictionary = {}
 var current_state: CombatState = null
 
-# Комбо атаки (сбрасывается при смене состояния)
 var attack_combo_step: int = 0
 var last_dodge_direction: Vector2 = Vector2.DOWN
 var last_movement_direction: Vector2 = Vector2.DOWN
 
-# Контекст
 var entity: Entity
 var stats_provider: ProgressionComponent
 var combat_component: CombatComponent
 var combat_config: CombatConfig
 
-# Aim/Cast
 var current_slot_index: int = -1
 var current_ability: AbilityResource = null
 var cast_target_position: Vector2 = Vector2.ZERO
@@ -39,8 +35,7 @@ func setup(p_entity: Entity, p_stats: ProgressionComponent, p_component: CombatC
 			child.combat_config = p_config
 			child.fsm = self
 			child.setup_params()
-			
-			# Отключаем сигнал, если уже подключен
+
 			if child.transition_requested.is_connected(_on_transition_requested):
 				child.transition_requested.disconnect(_on_transition_requested)
 			child.transition_requested.connect(_on_transition_requested)
@@ -55,7 +50,7 @@ func change_state(state_name: String) -> void:
 
 	if current_state and not current_state.can_exit():
 		return
-	
+
 	if current_state and not state_name in current_state.get_allowed_transitions():
 		return
 
@@ -69,20 +64,15 @@ func change_state(state_name: String) -> void:
 
 func send_command(command: String, data: Dictionary = {}) -> void:
 	match command:
-		# ========== НОВЫЕ КОМАНДЫ ДЛЯ AI ==========
 		"walk":
 			if data.has("direction"):
 				last_movement_direction = data["direction"]
-				# Если мы в Idle - переходим в Walk
 				if get_current_state_name() == "Idle":
 					change_state("Walk")
-				# Если уже в Walk - направление обновится в physics_process
-		
+
 		"attack":
-			# Команда будет обработана состоянием (Idle/Walk)
-			# Просто передаём её дальше, не меняя состояние здесь
 			pass
-		
+
 		"cast":
 			if data.has("slot_index"):
 				current_slot_index = data["slot_index"]
@@ -92,36 +82,31 @@ func send_command(command: String, data: Dictionary = {}) -> void:
 				cast_target_position = data["target_position"]
 			if data.has("target_data"):
 				cast_target_data = data["target_data"]
-			
-			# Если способность не передали, пробуем получить из компонента
+
 			if not current_ability and current_slot_index >= 0:
 				if combat_component and combat_component.ability_component:
 					current_ability = combat_component.ability_component.get_ability_in_slot(current_slot_index)
-			
-			# Переходим в Cast, если мы в подходящем состоянии
+
 			if get_current_state_name() in ["Idle", "Walk"]:
 				change_state("Cast")
-		
-		# ========== СУЩЕСТВУЮЩИЕ КОМАНДЫ ==========
+
 		"ability_selected":
 			if data.has("slot_index"):
 				current_slot_index = data.slot_index
 			if data.has("ability"):
 				current_ability = data.ability
-		
+
 		"aim_cancel":
 			cast_target_position = Vector2.ZERO
 			cast_target_data = {}
 			current_slot_index = -1
 			current_ability = null
-		
-	# Все команды передаём текущему состоянию
+
 	if current_state:
 		current_state.handle_command(command, data)
 
 func request_stun(knockback_direction: Vector2 = Vector2.ZERO, knockback_distance: float = 0.0) -> void:
 
-	# Уже в стане - не вызываем повторно
 	if get_current_state_name() == "Stun":
 		return
 
@@ -138,7 +123,6 @@ func request_stun(knockback_direction: Vector2 = Vector2.ZERO, knockback_distanc
 	current_state = states["Stun"]
 	current_state.enter()
 
-	# Устанавливаем отбрасывание, если есть данные
 	if current_state.has_method("set_knockback") and knockback_distance > 0.0:
 		current_state.set_knockback(knockback_direction, knockback_distance)
 
@@ -167,9 +151,7 @@ func get_state_object(state_name: String) -> CombatState:
 	return states.get(state_name)
 
 func update_facing_direction(direction: Vector2) -> void:
-	"""Обновляет направление взгляда для атак"""
 	if abs(direction.x) > 0:
 		last_movement_direction = direction
-		# Важно: сохраняем горизонтальное направление
 		if entity and entity.has_method("set_last_horizontal_direction"):
 			entity.set_last_horizontal_direction(Vector2(sign(direction.x), 0))

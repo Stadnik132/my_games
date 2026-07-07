@@ -2,7 +2,6 @@
 
 [ext_resource type="Script" uid="uid://giukr7p5o2e8" path="res://Scripts/entitis/Actors/Actor.gd" id="1_vpcky"]
 [ext_resource type="Script" uid="uid://b1braurhti7u8" path="res://Scripts/resources/ActorData.gd" id="2_is3bj"]
-[ext_resource type="Script" uid="uid://cprrclxegvl7f" path="res://Scripts/entitis/Actors/Components/ActorInteractionComponent.gd" id="2_tm1wl"]
 [ext_resource type="Script" uid="uid://bowg23nj8eakw" path="res://Scripts/entitis/HealthComponent.gd" id="4_625mo"]
 [ext_resource type="Texture2D" uid="uid://cyyi187xmb2y4" path="res://Assets/Klous/Возможно GG-Sheet.png" id="4_s7a7g"]
 [ext_resource type="Script" uid="uid://baarqgcghdftt" path="res://Scripts/entitis/Actors/Components/ActorCombatComponent.gd" id="5_okbp1"]
@@ -34,8 +33,8 @@ base_stats = {
 metadata/_custom_type_script = "uid://b1braurhti7u8"
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_8u4of"]
-radius = 7.0
-height = 36.0
+radius = 5.0
+height = 14.0
 
 [sub_resource type="Animation" id="Animation_gpg7s"]
 length = 0.23333333
@@ -340,13 +339,9 @@ _data = {
 radius = 13.0
 height = 50.0
 
-[sub_resource type="CircleShape2D" id="CircleShape2D_343dn"]
-radius = 34.525352
-
 [sub_resource type="Resource" id="Resource_2j8bb"]
 script = ExtResource("14_p25mq")
 attack_combo_damage = Array[float]([1.0, 1.2, 1.5])
-attack_lunge_distance = 30.0
 attack_hitbox_offset = 25.0
 metadata/_custom_type_script = "uid://todvfrjyk52p"
 
@@ -368,7 +363,7 @@ hframes = 55
 frame = 1
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=851551100]
-position = Vector2(0, 7)
+position = Vector2(0, 10)
 shape = SubResource("CapsuleShape2D_8u4of")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=549923163]
@@ -391,6 +386,7 @@ script = ExtResource("9_nfxev")
 hitbox_scene = ExtResource("10_oy37a")
 
 [node name="Hurtbox" type="Area2D" parent="." unique_id=1762253308]
+visible = false
 collision_layer = 0
 collision_mask = 0
 script = ExtResource("6_tsjs1")
@@ -399,15 +395,6 @@ script = ExtResource("6_tsjs1")
 visible = false
 shape = SubResource("CapsuleShape2D_hepnu")
 debug_color = Color(0, 0.6, 0.69803923, 0.19215687)
-
-[node name="ActorInteractionComponent" type="Area2D" parent="." unique_id=605281088]
-collision_layer = 0
-collision_mask = 0
-script = ExtResource("2_tm1wl")
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="ActorInteractionComponent" unique_id=1988268797]
-visible = false
-shape = SubResource("CircleShape2D_343dn")
 
 [node name="ActorCombatComponent" type="Node" parent="." unique_id=199198654 node_paths=PackedStringArray("owner_entity", "stats_provider", "ability_component", "stamina_component")]
 script = ExtResource("5_okbp1")
@@ -419,7 +406,6 @@ stamina_component = NodePath("../ManaComponent")
 
 [node name="AbilityComponent" type="Node" parent="." unique_id=1527726465]
 script = ExtResource("9_o07q7")
-
 metadata/_custom_type_script = "uid://bghkf61ukvvnf"
 
 [node name="EntityCombatFSM" type="Node" parent="." unique_id=733169550]

@@ -43,6 +43,7 @@ func _ready() -> void:
 		var new_data = actor_data.duplicate(true)
 		actor_data = new_data
 		_update_component_data(new_data)
+		_reconnect_signals_after_duplicate()
 
 	current_mode = initial_mode
 	add_to_group("actors")
@@ -101,10 +102,6 @@ func _physics_process(delta: float) -> void:
 			sprite.flip_h = velocity.x < 0
 			last_facing_direction = "right" if velocity.x >= 0 else "left"
 		return
-
-	if patrol_component:
-		patrol_component.update(delta)
-		move_and_slide()
 
 	_update_animation()
 
@@ -190,7 +187,6 @@ func stop_ai() -> void:
 	if ai_controller:
 		ai_controller.set_active(false)
 	velocity = Vector2.ZERO
-	move_and_slide()
 	_play_idle_animation()
 
 func _apply_mode() -> void:
@@ -240,7 +236,7 @@ func interact() -> void:
 		_is_in_dialogue = false
 
 # ==================== ДИАЛОГИ ====================
-func _on_dialogue_started(timeline_name: String) -> void:
+func _on_dialogue_started(timeline_name: String, _npc: Node = null) -> void:
 	if actor_data and timeline_name == actor_data.timeline_name:
 		_is_in_dialogue = true
 
@@ -311,12 +307,11 @@ func _play_death_effect() -> void:
 		tween.set_parallel(true)
 		tween.tween_property(sprite, "modulate", Color(0.3, 0.3, 0.3), 0.3)
 		tween.tween_property(sprite, "modulate:a", 0.0, 0.5)
-		await tween.finished
-		if not is_instance_valid(self):
-			return
-		queue_free()
-	else:
-		queue_free()
+
+	await get_tree().create_timer(0.7).timeout
+	if not is_instance_valid(self):
+		return
+	queue_free()
 
 # ==================== ПУБЛИЧНЫЕ МЕТОДЫ ====================
 func get_facing_direction() -> String:
@@ -372,6 +367,25 @@ func _update_component_data(new_data: ActorData) -> void:
 
 	if ability_component and ability_component.entity_data:
 		ability_component.entity_data = new_data
+
+func _reconnect_signals_after_duplicate() -> void:
+	if not actor_data:
+		return
+
+	if health_component:
+		if not actor_data.died.is_connected(health_component._on_data_died):
+			actor_data.died.connect(health_component._on_data_died)
+
+	for child in get_children():
+		if child is ResourceComponent:
+			var rc = child as ResourceComponent
+			match rc.resource_type:
+				ResourceComponent.ResourceType.MANA:
+					if not actor_data.mana_changed.is_connected(rc._on_resource_changed):
+						actor_data.mana_changed.connect(rc._on_resource_changed)
+				ResourceComponent.ResourceType.STAMINA:
+					if not actor_data.stamina_changed.is_connected(rc._on_resource_changed):
+						actor_data.stamina_changed.connect(rc._on_resource_changed)
 
 # ==================== СОХРАНЕНИЕ ====================
 func get_save_data() -> Dictionary:

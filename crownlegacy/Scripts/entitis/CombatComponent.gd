@@ -37,6 +37,8 @@ func _late_setup_ability_component() -> void:
 
 func _find_components() -> void:
 	fsm = get_node_or_null("EntityCombatFSM") as EntityCombatFSM
+	if not fsm and owner_entity:
+		fsm = owner_entity.get_node_or_null("EntityCombatFSM") as EntityCombatFSM
 	hitbox_component = get_node_or_null("HitboxComponent") as HitboxComponent
 	
 	if not stats_provider:

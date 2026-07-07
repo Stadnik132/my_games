@@ -18,15 +18,10 @@ func setup(p_owner: Node2D) -> void:
 	_find_markers_in_children()
 	
 	if patrol_points.is_empty():
-		if show_debug:
-			print_debug("EnemyPatrolComponent: маркеры не найдены у ", owner_node.name)
 		return
 	
 	_find_nearest_point()
 	
-	if show_debug:
-		print_debug("EnemyPatrolComponent: ", owner_node.name, " — ", patrol_points.size(), " точек, старт с ", current_index)
-
 
 func _find_markers_in_children() -> void:
 	patrol_points.clear()

@@ -10,8 +10,6 @@ extends Node2D
 var _fade_tween: Tween = null
 
 func _ready() -> void:
-	print("DEMO: _ready начался")
-
 	_lock_player(true)
 	prologue_label.hide()
 

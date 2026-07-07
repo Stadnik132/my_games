@@ -20,9 +20,6 @@ var _death_sequence_started: bool = false
 func _ready() -> void:
 	add_to_group("combat_manager")
 	_setup_connections()
-	
-	if debug_mode:
-		print_debug("CombatManager загружен")
 
 func _setup_connections() -> void:
 	# Слушаем запросы на начало боя
@@ -48,23 +45,13 @@ func _setup_connections() -> void:
 
 # ==================== УПРАВЛЕНИЕ БОЕМ ====================
 func start_combat(enemies: Array) -> void:
-	if debug_mode:
-		print_debug("CombatManager: начало боя с ", enemies.size(), " врагами")
-
 	# Если бой уже идет - добавляем врагов к существующему
 	if is_combat_active:
-		if debug_mode:
-			print_debug("CombatManager: добавляем врагов в текущий бой")
 		for enemy in enemies:
 			if enemy not in active_enemies:
-				if debug_mode:
-					print_debug("  добавляем: ", enemy.name)
 				active_enemies.append(enemy)
 				_initialize_enemy(enemy)
 				EventBus.Combat.enemy.joined.emit(enemy)
-			else:
-				if debug_mode:
-					print_debug("  уже в бою: ", enemy.name)
 		return
 
 	# Новый бой
@@ -77,10 +64,7 @@ func start_combat(enemies: Array) -> void:
 
 func end_combat(victory: bool, transition_to_dialogue: bool = false, dialogue_target: Node = null) -> void:
 	_death_sequence_started = false
-	
-	if debug_mode:
-		print_debug("CombatManager: конец боя. Победа: ", victory)
-	
+
 	var experience_gained = _calculate_experience(victory)
 	
 	active_enemies.clear()
@@ -112,10 +96,7 @@ func end_combat(victory: bool, transition_to_dialogue: bool = false, dialogue_ta
 func _initialize_enemy(enemy: Node) -> void:
 	if enemy.has_meta("in_combat"):
 		return
-	
-	if debug_mode:
-		print_debug("CombatManager: инициализация врага ", enemy.name)
-	
+
 	if enemy.has_method("enter_combat"):
 		enemy.enter_combat(self)
 	
@@ -127,9 +108,6 @@ func _initialize_enemy(enemy: Node) -> void:
 	_initialized_enemies.append(enemy)
 
 func _on_enemy_died(enemy: Node) -> void:
-	if debug_mode:
-		print_debug("CombatManager: враг умер: ", enemy.name)
-	
 	_initialized_enemies.erase(enemy)
 	active_enemies.erase(enemy)
 	
@@ -150,9 +128,7 @@ func _start_death_sequence() -> void:
 
 func _on_enemy_spared(enemy: Node) -> void:
 	"""Враг пощажён — удаляем из боя без смерти"""
-	if debug_mode:
-		print_debug("CombatManager: враг пощажён: ", enemy.name)
-	
+
 	# Удаляем из списков
 	_initialized_enemies.erase(enemy)
 	active_enemies.erase(enemy)
@@ -167,9 +143,7 @@ func _on_enemy_spared(enemy: Node) -> void:
 
 func _on_transition_to_dialogue(enemy: Node, timeline: String) -> void:
 	"""Переход в диалог из точки решения"""
-	if debug_mode:
-		print_debug("CombatManager: переход в диалог с ", enemy.name)
-	
+
 	end_combat(false, true, enemy)
 
 # ==================== РАСЧЁТ ОПЫТА ====================
@@ -187,11 +161,7 @@ func _on_combat_started(enemies: Array) -> void:
 func _on_start_combat_requested(enemies: Array) -> void:
 	"""Обработчик запроса на начало боя от врагов (без диалога)"""
 	if is_combat_active:
-		print_debug("CombatManager: бой уже идёт, пропускаю запрос")
 		return
-	if debug_mode:
-		print_debug("CombatManager: запрос на бой от врагов: ", enemies)
-	
 	for enemy in enemies:
 		if not enemy or not is_instance_valid(enemy):
 			push_warning("CombatManager: недействительный враг в запросе")
@@ -200,9 +170,6 @@ func _on_start_combat_requested(enemies: Array) -> void:
 	start_combat(enemies)
 
 func _on_dialogue_start_battle(npc_ids: Array) -> void:
-	if debug_mode:
-		print_debug("CombatManager: начало боя через диалог с NPC IDs: ", npc_ids)
-	
 	var actors = []
 	for npc_id in npc_ids:
 		var actor = _find_actor_by_id(npc_id.strip_edges())
@@ -228,9 +195,7 @@ func _find_actor_by_id(npc_id: String) -> Node:
 
 
 func start_combat_with_npc(npc: Node) -> void:
-	if debug_mode:
-		print_debug("CombatManager: начало боя с NPC ", npc.name)
-	
+
 	# Переводим NPC в боевой режим
 	if npc.has_method("become_enemy"):
 		npc.become_enemy(self)
@@ -252,8 +217,6 @@ func _find_npc_by_id(npc_id: String) -> Node:
 func _on_entity_died(entity: Node) -> void:
 	"""Обработчик смерти любой сущности"""
 	if entity.is_in_group("player"):
-		if debug_mode:
-			print_debug("CombatManager: игрок умер в бою")
 		end_combat(false)
 
 func _on_damage_taken(entity: Node, amount: int, _damage_type: int, _source: Node, is_critical: bool) -> void:
@@ -278,8 +241,6 @@ func _on_persuasion_requested(action_name: String) -> void:
 	var resolve_damage = _get_persuasion_damage(action_name)
 	resolve.take_resolve_damage(resolve_damage)
 	EventBus.Combat.persuasion.action_performed.emit(action_name, enemy)
-	if debug_mode:
-		print_debug("CombatManager: persuasion [", action_name, "] на ", enemy.name, " -> resolve dmg ", resolve_damage)
 
 func _get_nearest_enemy_with_resolve() -> Node:
 	var player = get_tree().get_first_node_in_group("player")
@@ -308,8 +269,7 @@ func _get_persuasion_damage(action: String) -> int:
 
 # ==================== ITEMS ====================
 func _on_use_item_requested(slot_index: int) -> void:
-	if debug_mode:
-		print_debug("CombatManager: use item slot ", slot_index, " (stub)")
+	pass
 
 # ==================== ПУБЛИЧНЫЕ МЕТОДЫ ====================
 func is_in_combat() -> bool:
@@ -320,8 +280,6 @@ func get_active_enemies() -> Array:
 
 func _finalize_combat_start(enemies: Array) -> void:
 	"""Завершает начало боя — инициализирует врагов и эммитит сигналы"""
-	if debug_mode:
-		print_debug("CombatManager: финализация старта боя для ", enemies.size(), " врагов")
 	for enemy in enemies:
 		_initialize_enemy(enemy)
 	

@@ -233,7 +233,7 @@
   "frameTags": [
    { "name": "blincing_down", "from": 0, "to": 1, "direction": "forward", "color": "#000000ff" },
    { "name": "Idle_down", "from": 0, "to": 0, "direction": "forward", "color": "#000000ff" },
-   { "name": "walk_down", "from": 2, "to": 5, "direction": "forward", "color": "#000000ff" },
+   { "name": "walk_down", "from": 2, "to": 5, "direction": "pingpong", "color": "#000000ff" },
    { "name": "blinking_right", "from": 6, "to": 7, "direction": "forward", "color": "#000000ff" },
    { "name": "Idle_right", "from": 6, "to": 6, "direction": "forward", "color": "#000000ff" },
    { "name": "Walk_right", "from": 8, "to": 11, "direction": "pingpong", "color": "#000000ff" },

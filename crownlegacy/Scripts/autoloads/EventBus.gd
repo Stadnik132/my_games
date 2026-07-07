@@ -193,9 +193,6 @@ var System: SystemSignals = SystemSignals.new()
 
 func _ready() -> void:
 	_clear_all_connections()
-	print("EventBus: инициализирован")
-	if OS.is_debug_build():
-		_print_debug_info()
 
 
 func _clear_all_connections() -> void:
@@ -218,15 +215,6 @@ func _clear_all_connections() -> void:
 				var callable_obj = conn["callable"]
 				if group.is_connected(signal_name, callable_obj):
 					group.disconnect(signal_name, callable_obj)
-	
-	print("EventBus: все старые подключения очищены")
-
-
-func _print_debug_info() -> void:
-	print("=== EventBus [Активен] ===")
-	print("Основные группы: Game, Entity, Player, Relationship, Dialogue, Combat, Animations, UI, Actors, Flags, System")
-	print("Подгруппы Combat: enemy, decision, attack, dodge, block, ability, persuasion, inventory")
-	print("===========================")
 
 
 # ==================== МИГРАЦИЯ (совместимость со старым кодом) ====================

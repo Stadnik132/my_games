@@ -13,7 +13,6 @@ var unlocked_abilities: Array[String] = []
 # ==================== ИНИЦИАЛИЗАЦИЯ ====================
 func _ready():
 	load_abilities_from_json("res://Scripts/Ability/abilities.json")
-	print("AbilityManager: загружено ", abilities_by_id.size(), " способностей, разблокировано ", unlocked_abilities.size())
 
 func load_abilities_from_json(json_path: String):
 	if not FileAccess.file_exists(json_path):
@@ -60,7 +59,6 @@ func unlock_ability(ability_id: String):
 	
 	unlocked_abilities.append(ability_id)
 	ability_unlocked.emit(ability_id)
-	print("AbilityManager: разблокирована способность: ", ability_id)
 
 func get_unlocked_abilities() -> Array[AbilityResource]:
 	var result: Array[AbilityResource] = []
@@ -79,4 +77,3 @@ func save_data() -> Dictionary:
 func load_data(data: Dictionary) -> void:
 	if data.has("unlocked_abilities"):
 		unlocked_abilities = data["unlocked_abilities"].duplicate()
-		print("AbilityManager: загружено ", unlocked_abilities.size(), " разблокированных способностей")

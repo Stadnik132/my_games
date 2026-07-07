@@ -8,7 +8,6 @@ var enemy_bar_layer: CanvasLayer
 var enemy_bars: Array[EnemyStatusBar] = []
 
 func _ready() -> void:
-	print_debug("CombatUIManager: _ready()")
 	process_mode = PROCESS_MODE_WHEN_PAUSED
 	enemy_bar_layer = CanvasLayer.new()
 	enemy_bar_layer.layer = 1
@@ -28,7 +27,6 @@ func _create_hud() -> void:
 		return
 	hud = scene.instantiate()
 	add_child(hud)
-	print_debug("CombatUIManager: HUD created, hidden=", hud.is_visible())
 
 func _create_menu() -> void:
 	var scene = load("res://Scenes/UI/combat/CombatActionMenu.tscn")
@@ -38,7 +36,6 @@ func _create_menu() -> void:
 	menu = scene.instantiate()
 	add_child(menu)
 	menu.action_selected.connect(_on_action_selected)
-	print_debug("CombatUIManager: Menu created")
 
 func _on_combat_started(enemies: Array) -> void:
 	for enemy in enemies:
@@ -48,7 +45,6 @@ func _on_enemy_joined(enemy: Node) -> void:
 	_add_enemy_bar(enemy)
 
 func _on_reward_requested(experience: int, enemies: Array) -> void:
-	print_debug("CombatUIManager: reward requested (exp=", experience, ")")
 	var scene = load("res://Scenes/UI/combat/CombatRewardScreen.tscn")
 	if not scene:
 		push_error("CombatUIManager: Reward screen scene not found!")

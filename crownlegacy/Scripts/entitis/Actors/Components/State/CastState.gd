@@ -16,14 +16,11 @@ func enter() -> void:
 	target_position = fsm.cast_target_position
 	
 	if not ability or slot_index < 0:
-		print_debug("CastState: нет способности или индекса слота")
 		transition_requested.emit("Idle")
 		return
 	
-	# Проверяем возможность каста
 	var ability_comp = combat_component.ability_component
 	if not ability_comp or not ability_comp.can_cast_ability(slot_index):
-		print_debug("CastState: нельзя использовать способность")
 		transition_requested.emit("Idle")
 		return
 	
@@ -38,8 +35,6 @@ func enter() -> void:
 	# Если каст мгновенный, сразу применяем эффект
 	if ability.cast_time <= 0:
 		_finish_cast()
-	else:
-		print_debug("CastState: начат каст ", ability.ability_name, " на ", ability.cast_time, " сек")
 
 func process(delta: float) -> void:
 	super.process(delta)
@@ -63,7 +58,7 @@ func _finish_cast() -> void:
 		# Используем существующий метод cast_ability
 		ability_comp.cast_ability(slot_index, target_position)
 	
-	print_debug("CastState: каст завершён")
+
 	transition_requested.emit("Idle")
 
 func handle_command(command: String, data: Dictionary = {}) -> void:

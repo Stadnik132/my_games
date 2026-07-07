@@ -100,8 +100,6 @@ func _on_inventory_pressed() -> void:
 			var inv = player.get_node("InventoryComponent")
 
 			inventory_panel.setup(inv)
-		else:
-			print("❌ InventoryComponent НЕ найден!")
 
 func _on_settings_pressed() -> void:
 	menu_state = MenuState.SETTINGS

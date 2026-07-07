@@ -26,9 +26,6 @@ func _ready() -> void:
 	# Отправляем начальные значения через EventBus
 	EventBus.Relationship.trust_changed.emit(get_trust_level(), 0)
 	EventBus.Relationship.will_changed.emit(get_will_power(), 0)
-	
-	print_debug("RelationshipManager загружен! Доверие: ", get_trust_level(), 
-		  " Воля Героя: ", get_will_power())
 
 # === ОСНОВНЫЕ МЕТОДЫ ===
 func can_force_action() -> bool:
@@ -45,7 +42,6 @@ func use_will(amount: int = 1) -> bool:
 func force_action() -> bool:
 	"""Принудить действие Волей"""
 	if use_will():
-		print_debug("Принуждение Волей!")
 		return true
 	return false
 
@@ -56,7 +52,6 @@ func add_will(amount: int) -> void:
 func change_trust(amount: int, source: String = "unknown") -> void:
 	"""Изменить уровень доверия"""
 	relationship_data.trust_level += amount
-	print_debug("Доверие изменено на ", amount, " (источник: ", source, ")")
 
 # === ГЕТТЕРЫ ===
 func get_trust_level() -> int:

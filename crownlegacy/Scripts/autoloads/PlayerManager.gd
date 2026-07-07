@@ -16,8 +16,6 @@ func _ready() -> void:
 	await get_tree().process_frame
 	_find_components()
 	_bind_player_data()
-	
-	print_debug("PlayerManager загружен")
 
 func _find_components() -> void:
 	var player = get_tree().get_first_node_in_group("player")
@@ -124,5 +122,3 @@ func load_player_data(data: Dictionary) -> void:
 	if health_component and health_component.has_method("refresh_from_data"):
 		health_component.refresh_from_data()
 	_restore_inventory_from_save(data.get("inventory", []))
-	
-	print_debug("PlayerManager: данные загружены")

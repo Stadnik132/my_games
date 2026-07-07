@@ -37,18 +37,14 @@ func refresh() -> void:
 	if not inventory_component:
 		return
 	
-	print("🟢 refresh: проверяем слоты...")
 	for i in range(inventory_component.max_slots):
 		var slot = inventory_component.get_item_at_slot(i)
 		if slot:
-			print("  Слот ", i, ": ", slot.item.name, " x", slot.quantity)
 			var text = "%s x%d" % [slot.item.name, slot.quantity]
 			var idx = item_list.add_item(text)
 			item_list.set_item_metadata(idx, i)
 			if slot.item.icon:
 				item_list.set_item_icon(idx, slot.item.icon)
-	
-	print("🟢 refresh: добавлено в ItemList: ", item_list.item_count)
 	
 	selected_slot = -1
 	use_button.disabled = true

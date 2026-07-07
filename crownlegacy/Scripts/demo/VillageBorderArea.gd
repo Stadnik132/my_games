@@ -53,8 +53,6 @@ func _handle_player_entered(player: Node) -> void:
 	
 	# Показываем сообщение
 	_show_border_message()
-	
-	print_debug("VillageBorderArea: игрок попытался уйти, оттолкнут назад")
 
 func _push_player_back(player: Node) -> void:
 	"""Отталкивает игрока обратно к центру деревни"""
@@ -74,9 +72,6 @@ func _show_border_message() -> void:
 		return
 	
 	var message = border_phrases[randi() % border_phrases.size()]
-	
-	# Пока выводим в консоль, потом можно заменить на UI
-	print_debug("VillageBorderArea: ", message)
 	
 	# TODO: Если есть система уведомлений, вызвать её:
 	# EventBus.UI.notification.emit(message, 3.0)
