@@ -4,7 +4,7 @@ extends Panel
 @onready var item_list: ItemList = $VBoxContainer/ItemList
 @onready var use_button: Button = $VBoxContainer/HBoxContainer/UseButton
 @onready var drop_button: Button = $VBoxContainer/HBoxContainer/DropButton
-@onready var back_button: Button = $BackButton
+@onready var back_button: Button = $VBoxContainer/BackButton
 
 var inventory_component: InventoryComponent
 var selected_slot: int = -1

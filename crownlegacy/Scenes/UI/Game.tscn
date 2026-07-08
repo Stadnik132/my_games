@@ -2,29 +2,85 @@
 
 [ext_resource type="Script" uid="uid://bhto6gm5h7sft" path="res://Scripts/ui/PauseMenu.gd" id="1_tba2g"]
 
+[sub_resource type="StyleBoxFlat" id="pause_overlay"]
+bg_color = Color(0, 0, 0, 0.5)
+
+[sub_resource type="StyleBoxFlat" id="pause_panel"]
+bg_color = Color(0.06, 0.06, 0.09, 0.94)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.22, 0.24, 0.32, 0.85)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 20
+content_margin_top = 20
+content_margin_right = 20
+content_margin_bottom = 20
+
 [node name="Game" type="CanvasLayer" unique_id=1017187244]
 script = ExtResource("1_tba2g")
 
 [node name="PauseMenu" type="Panel" parent="." unique_id=1392857400]
-offset_right = 40.0
-offset_bottom = 40.0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -120.0
+offset_top = -140.0
+offset_right = 120.0
+offset_bottom = 140.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("pause_panel")
 
 [node name="VBoxContainer" type="VBoxContainer" parent="PauseMenu" unique_id=675014259]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/separation = 6
 
-[node name="Button" type="Button" parent="PauseMenu/VBoxContainer" unique_id=38242922]
+[node name="Title" type="Label" parent="PauseMenu/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.88, 0.9, 0.95, 1)
+theme_override_font_sizes/font_size = 18
+text = "Пауза"
+horizontal_alignment = 1
+
+[node name="HSep" type="HSeparator" parent="PauseMenu/VBoxContainer"]
 layout_mode = 2
 
-[node name="Button2" type="Button" parent="PauseMenu/VBoxContainer" unique_id=1889135410]
+[node name="ResumeButton" type="Button" parent="PauseMenu/VBoxContainer" unique_id=38242922]
 layout_mode = 2
+custom_minimum_size = Vector2(180, 0)
+size_flags_horizontal = 4
+text = "Продолжить"
 
-[node name="Button3" type="Button" parent="PauseMenu/VBoxContainer" unique_id=1412777498]
+[node name="SaveButton" type="Button" parent="PauseMenu/VBoxContainer" unique_id=1889135410]
 layout_mode = 2
+custom_minimum_size = Vector2(180, 0)
+size_flags_horizontal = 4
+text = "Сохранить"
 
-[node name="Button4" type="Button" parent="PauseMenu/VBoxContainer" unique_id=41717945]
+[node name="LoadButton" type="Button" parent="PauseMenu/VBoxContainer" unique_id=1412777498]
 layout_mode = 2
+custom_minimum_size = Vector2(180, 0)
+size_flags_horizontal = 4
+text = "Загрузить"
 
-[node name="Button5" type="Button" parent="PauseMenu/VBoxContainer" unique_id=900368716]
+[node name="SettingsButton" type="Button" parent="PauseMenu/VBoxContainer" unique_id=41717945]
 layout_mode = 2
+custom_minimum_size = Vector2(180, 0)
+size_flags_horizontal = 4
+text = "Настройки"
+
+[node name="QuitButton" type="Button" parent="PauseMenu/VBoxContainer" unique_id=900368716]
+layout_mode = 2
+custom_minimum_size = Vector2(180, 0)
+size_flags_horizontal = 4
+text = "Выйти в меню"

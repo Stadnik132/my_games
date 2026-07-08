@@ -3,27 +3,17 @@ extends CanvasLayer
 var is_paused: bool = false
 
 @onready var pause_panel: Panel = $PauseMenu
-@onready var resume_button: Button = $PauseMenu/VBoxContainer/Button
-@onready var save_button: Button = $PauseMenu/VBoxContainer/Button2
-@onready var load_button: Button = $PauseMenu/VBoxContainer/Button3
-@onready var settings_button: Button = $PauseMenu/VBoxContainer/Button4
-@onready var quit_button: Button = $PauseMenu/VBoxContainer/Button5
-
+@onready var resume_button: Button = $PauseMenu/VBoxContainer/ResumeButton
+@onready var save_button: Button = $PauseMenu/VBoxContainer/SaveButton
+@onready var load_button: Button = $PauseMenu/VBoxContainer/LoadButton
+@onready var settings_button: Button = $PauseMenu/VBoxContainer/SettingsButton
+@onready var quit_button: Button = $PauseMenu/VBoxContainer/QuitButton
 
 func _ready() -> void:
 	hide()
 	if pause_panel:
 		pause_panel.hide()
-		_center_panel()
 	
-	# Подписи на кнопках
-	resume_button.text = "Продолжить"
-	save_button.text = "Сохранить"
-	load_button.text = "Загрузить"
-	settings_button.text = "Настройки"
-	quit_button.text = "Выйти в меню"
-	
-	# Сигналы
 	resume_button.pressed.connect(_on_resume_pressed)
 	save_button.pressed.connect(_on_save_pressed)
 	load_button.pressed.connect(_on_load_pressed)
@@ -58,18 +48,11 @@ func hide_menu() -> void:
 	hide()
 
 
-func _center_panel() -> void:
-	await get_tree().process_frame
-	var screen_size := DisplayServer.window_get_size()
-	pause_panel.position = (Vector2(screen_size) - pause_panel.size) / 2
-
-
 func _on_resume_pressed() -> void:
 	toggle_pause()
 
 
 func _on_settings_pressed() -> void:
-	# Здесь позже можно открыть отдельное меню настроек
 	pass
 
 

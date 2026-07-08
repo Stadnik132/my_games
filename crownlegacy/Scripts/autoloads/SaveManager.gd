@@ -86,7 +86,7 @@ func reset_game() -> void:
 	if PlayerManager.has_method("load_player_data"):
 		PlayerManager.load_player_data({})
 	if RelationshipManager.has_method("load_data"):
-		RelationshipManager.load_data({ "trust_level": 0, "will_power": 3, "character_flags": [] })
+		RelationshipManager.load_data({ "trust_level": 0, "will_power": 3 })
 	if AbilityManager.has_method("load_data"):
 		AbilityManager.load_data({})
 	if GameFlags.has_method("reset_all_flags"):

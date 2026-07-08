@@ -1,16 +1,16 @@
 class_name PlayerCombatHUD extends CanvasLayer
 
-@onready var hp_bar: ProgressBar = $MarginContainer/VBoxContainer/HP/ProgressBar
-@onready var hp_label: Label = $MarginContainer/VBoxContainer/HP/Label
-@onready var mp_bar: ProgressBar = $MarginContainer/VBoxContainer/MP/ProgressBar
-@onready var mp_label: Label = $MarginContainer/VBoxContainer/MP/Label
-@onready var st_bar: ProgressBar = $MarginContainer/VBoxContainer/Stamina/ProgressBar
-@onready var st_label: Label = $MarginContainer/VBoxContainer/Stamina/Label
+@onready var hp_bar: ProgressBar = $Panel/VBoxContainer/HP/ProgressBar
+@onready var hp_label: Label = $Panel/VBoxContainer/HP/Label
+@onready var mp_bar: ProgressBar = $Panel/VBoxContainer/MP/ProgressBar
+@onready var mp_label: Label = $Panel/VBoxContainer/MP/Label
+@onready var st_bar: ProgressBar = $Panel/VBoxContainer/Stamina/ProgressBar
+@onready var st_label: Label = $Panel/VBoxContainer/Stamina/Label
 @onready var ability_slots: Array = [
-	$MarginContainer/VBoxContainer/Abilities/Slot0,
-	$MarginContainer/VBoxContainer/Abilities/Slot1,
-	$MarginContainer/VBoxContainer/Abilities/Slot2,
-	$MarginContainer/VBoxContainer/Abilities/Slot3
+	$Panel/VBoxContainer/Abilities/Slot0,
+	$Panel/VBoxContainer/Abilities/Slot1,
+	$Panel/VBoxContainer/Abilities/Slot2,
+	$Panel/VBoxContainer/Abilities/Slot3
 ]
 
 var _player: Entity

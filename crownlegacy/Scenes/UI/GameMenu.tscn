@@ -16,6 +16,57 @@ _data = {
 &"fade_out": SubResource("Animation_ac63f")
 }
 
+[sub_resource type="StyleBoxFlat" id="menu_overlay"]
+bg_color = Color(0, 0, 0, 0.5)
+
+[sub_resource type="StyleBoxFlat" id="menu_panel"]
+bg_color = Color(0.06, 0.06, 0.09, 0.92)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.22, 0.24, 0.32, 0.85)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 20
+content_margin_top = 20
+content_margin_right = 20
+content_margin_bottom = 20
+
+[sub_resource type="StyleBoxFlat" id="inventory_panel"]
+bg_color = Color(0.06, 0.06, 0.09, 0.94)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.22, 0.24, 0.32, 0.85)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 16
+content_margin_top = 16
+content_margin_right = 16
+content_margin_bottom = 16
+
+[sub_resource type="StyleBoxFlat" id="stats_panel"]
+bg_color = Color(0.06, 0.06, 0.09, 0.94)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.22, 0.24, 0.32, 0.85)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 24
+content_margin_top = 20
+content_margin_right = 24
+content_margin_bottom = 20
+
 [node name="GameMenu" type="CanvasLayer" unique_id=1500747619]
 process_mode = 2
 script = ExtResource("1_dt8tu")
@@ -30,144 +81,234 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_styles/panel = SubResource("menu_overlay")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MainPanel" unique_id=476582814]
+[node name="CenterContainer" type="CenterContainer" parent="MainPanel"]
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -49.0
-offset_top = -50.5
-offset_right = 49.0
-offset_bottom = 50.5
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="InventoryButton" type="Button" parent="MainPanel/VBoxContainer" unique_id=951217357]
-layout_mode = 2
-text = "Инвентарь"
-
-[node name="SettingsButton" type="Button" parent="MainPanel/VBoxContainer" unique_id=2023350085]
-layout_mode = 2
-text = "Настройки"
-
-[node name="StatsButton" type="Button" parent="MainPanel/VBoxContainer" unique_id=1603705904]
-layout_mode = 2
-text = "Характериситики "
-
-[node name="QuitButton" type="Button" parent="MainPanel/VBoxContainer" unique_id=1847783888]
-layout_mode = 2
-text = "Выход"
-
-[node name="InventoryPanel" type="Panel" parent="." unique_id=1699880506]
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-grow_horizontal = 2
-grow_vertical = 2
-script = ExtResource("2_no6tp")
-
-[node name="BackButton" type="Button" parent="InventoryPanel" unique_id=262765076]
-layout_mode = 0
-offset_left = 1.0
-offset_top = 72.0
-offset_right = 58.0
-offset_bottom = 103.0
-text = "Назад"
-
-[node name="VBoxContainer" type="VBoxContainer" parent="InventoryPanel" unique_id=276260837]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
-
-[node name="Label" type="Label" parent="InventoryPanel/VBoxContainer" unique_id=1111012313]
-layout_mode = 2
-text = "Инвентарь"
-
-[node name="ItemList" type="ItemList" parent="InventoryPanel/VBoxContainer" unique_id=79378307]
-layout_mode = 2
-auto_width = true
-auto_height = true
-item_count = 1
-
-[node name="HBoxContainer" type="HBoxContainer" parent="InventoryPanel/VBoxContainer" unique_id=1874092444]
-layout_mode = 2
-
-[node name="UseButton" type="Button" parent="InventoryPanel/VBoxContainer/HBoxContainer" unique_id=712861620]
-layout_mode = 2
-text = "Use"
-
-[node name="DropButton" type="Button" parent="InventoryPanel/VBoxContainer/HBoxContainer" unique_id=1797805302]
-layout_mode = 2
-text = "Drop"
-
-[node name="SettingsPanel" type="Panel" parent="." unique_id=646190714]
-visible = false
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="BackButton" type="Button" parent="SettingsPanel" unique_id=2049927172]
-layout_mode = 0
-offset_right = 8.0
-offset_bottom = 8.0
+[node name="Panel" type="Panel" parent="MainPanel/CenterContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("menu_panel")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MainPanel/CenterContainer/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="MenuTitle" type="Label" parent="MainPanel/CenterContainer/Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.88, 0.9, 0.95, 1)
+theme_override_font_sizes/font_size = 18
+text = "Меню"
+horizontal_alignment = 1
+
+[node name="HSep" type="HSeparator" parent="MainPanel/CenterContainer/Panel/VBoxContainer"]
+layout_mode = 2
+
+[node name="InventoryButton" type="Button" parent="MainPanel/CenterContainer/Panel/VBoxContainer" unique_id=951217357]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 0)
+size_flags_horizontal = 4
+text = "Инвентарь"
+
+[node name="SettingsButton" type="Button" parent="MainPanel/CenterContainer/Panel/VBoxContainer" unique_id=2023350085]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 0)
+size_flags_horizontal = 4
+text = "Настройки"
+
+[node name="StatsButton" type="Button" parent="MainPanel/CenterContainer/Panel/VBoxContainer" unique_id=1603705904]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 0)
+size_flags_horizontal = 4
+text = "Характеристики"
+
+[node name="QuitButton" type="Button" parent="MainPanel/CenterContainer/Panel/VBoxContainer" unique_id=1847783888]
+layout_mode = 2
+custom_minimum_size = Vector2(200, 0)
+size_flags_horizontal = 4
+text = "Выход"
+
+[node name="InventoryPanel" type="Panel" parent="." unique_id=1699880506]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -180.0
+offset_right = 200.0
+offset_bottom = 180.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("inventory_panel")
+script = ExtResource("2_no6tp")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="InventoryPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="InventoryPanel/VBoxContainer" unique_id=1111012313]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.88, 0.9, 0.95, 1)
+theme_override_font_sizes/font_size = 16
+text = "Инвентарь"
+horizontal_alignment = 1
+
+[node name="ItemList" type="ItemList" parent="InventoryPanel/VBoxContainer" unique_id=79378307]
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+size_flags_vertical = 3
+auto_width = false
+auto_height = false
+item_count = 1
+allow_reselect = true
+
+[node name="HBoxContainer" type="HBoxContainer" parent="InventoryPanel/VBoxContainer" unique_id=1874092444]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="UseButton" type="Button" parent="InventoryPanel/VBoxContainer/HBoxContainer" unique_id=712861620]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Использовать"
+
+[node name="DropButton" type="Button" parent="InventoryPanel/VBoxContainer/HBoxContainer" unique_id=1797805302]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Выбросить"
+
+[node name="BackButton" type="Button" parent="InventoryPanel/VBoxContainer" unique_id=262765076]
+layout_mode = 2
+text = "Назад"
+
+[node name="SettingsPanel" type="Panel" parent="." unique_id=646190714]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -180.0
+offset_right = 200.0
+offset_bottom = 180.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("inventory_panel")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="SettingsPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="SettingsPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.88, 0.9, 0.95, 1)
+theme_override_font_sizes/font_size = 16
+text = "Настройки"
+horizontal_alignment = 1
+
+[node name="Placeholder" type="Label" parent="SettingsPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.52, 0.6, 1)
+theme_override_font_sizes/font_size = 13
+text = "Настройки доступны из главного меню"
+horizontal_alignment = 1
+
+[node name="BackButton" type="Button" parent="SettingsPanel/VBoxContainer" unique_id=2049927172]
+layout_mode = 2
 text = "Назад"
 
 [node name="StatsPanel" type="Panel" parent="." unique_id=2139245832]
 visible = false
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-script = ExtResource("2_ac63f")
-
-[node name="VBoxContainer" type="VBoxContainer" parent="StatsPanel" unique_id=1464604452]
-layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -50.0
-offset_top = -75.0
-offset_right = 50.0
-offset_bottom = 75.0
+offset_left = -180.0
+offset_top = -200.0
+offset_right = 180.0
+offset_bottom = 200.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_styles/panel = SubResource("stats_panel")
+script = ExtResource("2_ac63f")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="StatsPanel" unique_id=1464604452]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/separation = 6
+
+[node name="Title" type="Label" parent="StatsPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.88, 0.9, 0.95, 1)
+theme_override_font_sizes/font_size = 16
+text = "Характеристики"
+horizontal_alignment = 1
+
+[node name="HSep" type="HSeparator" parent="StatsPanel/VBoxContainer"]
+layout_mode = 2
 
 [node name="HealthLabel" type="Label" parent="StatsPanel/VBoxContainer" unique_id=932262151]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.35, 0.35, 1)
+theme_override_font_sizes/font_size = 14
 text = "Здоровье: 100/100"
 
 [node name="ManaLabel" type="Label" parent="StatsPanel/VBoxContainer" unique_id=1732857864]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.6, 1, 1)
+theme_override_font_sizes/font_size = 14
 text = "Мана: 50/50"
 
 [node name="StaminaLabel" type="Label" parent="StatsPanel/VBoxContainer" unique_id=943292980]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 14
 text = "Выносливость: 100/100"
+
+[node name="HSep2" type="HSeparator" parent="StatsPanel/VBoxContainer"]
+layout_mode = 2
 
 [node name="LevelLabel" type="Label" parent="StatsPanel/VBoxContainer" unique_id=2024002441]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.88, 0.95, 1)
+theme_override_font_sizes/font_size = 14
 text = "Уровень: 1"
 
 [node name="ExpLabel" type="Label" parent="StatsPanel/VBoxContainer" unique_id=1096901688]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.73, 0.82, 1)
+theme_override_font_sizes/font_size = 14
 text = "Опыт: 0/100"
+
+[node name="HSep3" type="HSeparator" parent="StatsPanel/VBoxContainer"]
+layout_mode = 2
 
 [node name="TrustStatusLabel" type="Label" parent="StatsPanel/VBoxContainer" unique_id=1332176223]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.85, 0.6, 1)
+theme_override_font_sizes/font_size = 14
 text = "Доверие: 50"
 
 [node name="WillLabel" type="Label" parent="StatsPanel/VBoxContainer" unique_id=1068427265]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.6, 1, 1)
+theme_override_font_sizes/font_size = 14
 text = "Воля: 3"
 
 [node name="BackButton" type="Button" parent="StatsPanel/VBoxContainer" unique_id=1907491755]

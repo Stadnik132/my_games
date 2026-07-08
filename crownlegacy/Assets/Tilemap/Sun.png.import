@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cimyh382r4sd0"
-path="res://.godot/imported/Bich.png-49fc1dfbb564d473f1ed528e86adef7d.ctex"
+uid="uid://be728jy8fsqqj"
+path="res://.godot/imported/Sun.png-db73a16a154019ad0fb3f23da04bedaf.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://Assets/Tilemap/Bich.png"
-dest_files=["res://.godot/imported/Bich.png-49fc1dfbb564d473f1ed528e86adef7d.ctex"]
+source_file="res://Assets/Tilemap/Sun.png"
+dest_files=["res://.godot/imported/Sun.png-db73a16a154019ad0fb3f23da04bedaf.ctex"]
 
 [params]
 

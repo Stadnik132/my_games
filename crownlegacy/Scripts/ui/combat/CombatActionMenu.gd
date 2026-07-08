@@ -7,9 +7,9 @@ var is_in_combat: bool = false
 var _saved_time_scale: float = 1.0
 
 @onready var panel: Panel = $Panel
-@onready var ability_container: VBoxContainer = $Panel/MarginContainer/VBoxContainer/AbilityContainer
-@onready var persuasion_container: HBoxContainer = $Panel/MarginContainer/VBoxContainer/PersuasionContainer
-@onready var item_container: HBoxContainer = $Panel/MarginContainer/VBoxContainer/ItemContainer
+@onready var ability_container: VBoxContainer = $Panel/VBoxContainer/AbilityContainer
+@onready var persuasion_container: HBoxContainer = $Panel/VBoxContainer/PersuasionContainer
+@onready var item_container: HBoxContainer = $Panel/VBoxContainer/ItemContainer
 
 const SLOWMO_SCALE: float = 0.15
 
@@ -64,7 +64,7 @@ func _populate_abilities() -> void:
 	var abilities = ability_comp.get_unlocked_abilities()
 	for i in abilities.size():
 		var btn = Button.new()
-		btn.custom_minimum_size = Vector2(140, 36)
+		btn.custom_minimum_size = Vector2(140, 32)
 		ability_container.add_child(btn)
 		
 		var ability = abilities[i]
@@ -126,7 +126,7 @@ func _get_or_create_button(container: Container, index: int) -> Button:
 	if index < container.get_child_count():
 		return container.get_child(index) as Button
 	var btn = Button.new()
-	btn.custom_minimum_size = Vector2(100, 40)
+	btn.custom_minimum_size = Vector2(100, 32)
 	container.add_child(btn)
 	return btn
 

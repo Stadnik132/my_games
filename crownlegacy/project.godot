@@ -52,6 +52,10 @@ version_control/autoload_on_startup=true
 player=""
 npc_dialogue_active=""
 
+[gui]
+
+theme/custom="res://Assets/UI/theme.tres"
+
 [input]
 
 ui_select={

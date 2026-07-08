@@ -113,7 +113,13 @@ func load_data(data: Dictionary) -> void:
 	if data.has("will_power"):
 		relationship_data.will_power = data.will_power
 	if data.has("character_flags"):
-		relationship_data.character_flags = data.character_flags.duplicate()
+		var flags = data.character_flags
+		if flags is Array[String]:
+			relationship_data.character_flags = flags.duplicate()
+		elif flags is Array:
+			relationship_data.character_flags.clear()
+			for v in flags:
+				relationship_data.character_flags.append(str(v))
 
 # === УТИЛИТЫ ===
 func get_relationship_summary() -> Dictionary:

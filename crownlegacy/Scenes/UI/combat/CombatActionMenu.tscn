@@ -2,6 +2,22 @@
 
 [ext_resource type="Script" path="res://Scripts/ui/combat/CombatActionMenu.gd" id="1"]
 
+[sub_resource type="StyleBoxFlat" id="menu_bg"]
+bg_color = Color(0.06, 0.06, 0.09, 0.92)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.22, 0.24, 0.32, 0.85)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+content_margin_left = 16
+content_margin_top = 16
+content_margin_right = 16
+content_margin_bottom = 16
+
 [node name="CombatActionMenu" type="CanvasLayer"]
 script = ExtResource("1")
 
@@ -11,50 +27,52 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -200.0
-offset_top = -200.0
-offset_right = 200.0
-offset_bottom = 200.0
+offset_left = -170.0
+offset_top = -180.0
+offset_right = 170.0
+offset_bottom = 180.0
+theme_override_styles/panel = SubResource("menu_bg")
 
-[node name="MarginContainer" type="MarginContainer" parent="Panel"]
+[node name="VBoxContainer" type="VBoxContainer" parent="Panel"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-theme_override_constants/margin_left = 16
-theme_override_constants/margin_top = 16
-theme_override_constants/margin_right = 16
-theme_override_constants/margin_bottom = 16
+theme_override_constants/separation = 6
 
-[node name="VBoxContainer" type="VBoxContainer" parent="Panel/MarginContainer"]
+[node name="AbilitiesLabel" type="Label" parent="Panel/VBoxContainer"]
 layout_mode = 2
-
-[node name="AbilitiesLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer"]
-layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.7, 1, 1)
+theme_override_font_sizes/font_size = 13
 text = "Способности"
-theme_override_colors/font_color = Color(0.3, 0.6, 1, 1)
-theme_override_font_sizes/font_size = 14
 
-[node name="AbilityContainer" type="VBoxContainer" parent="Panel/MarginContainer/VBoxContainer"]
+[node name="AbilityContainer" type="VBoxContainer" parent="Panel/VBoxContainer"]
 layout_mode = 2
 size_flags_vertical = 3
+theme_override_constants/separation = 4
 
-[node name="PersuasionLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer"]
+[node name="Sep1" type="HSeparator" parent="Panel/VBoxContainer"]
 layout_mode = 2
+
+[node name="PersuasionLabel" type="Label" parent="Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.85, 0.5, 1)
+theme_override_font_sizes/font_size = 13
 text = "Убеждение"
-theme_override_colors/font_color = Color(0.3, 1, 0.3, 1)
-theme_override_font_sizes/font_size = 14
 
-[node name="PersuasionContainer" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer"]
+[node name="PersuasionContainer" type="HBoxContainer" parent="Panel/VBoxContainer"]
 layout_mode = 2
-alignment = 0
+theme_override_constants/separation = 6
 
-[node name="ItemsLabel" type="Label" parent="Panel/MarginContainer/VBoxContainer"]
+[node name="Sep2" type="HSeparator" parent="Panel/VBoxContainer"]
 layout_mode = 2
+
+[node name="ItemsLabel" type="Label" parent="Panel/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.8, 0.35, 1)
+theme_override_font_sizes/font_size = 13
 text = "Предметы"
-theme_override_colors/font_color = Color(1, 0.8, 0.3, 1)
-theme_override_font_sizes/font_size = 14
 
-[node name="ItemContainer" type="HBoxContainer" parent="Panel/MarginContainer/VBoxContainer"]
+[node name="ItemContainer" type="HBoxContainer" parent="Panel/VBoxContainer"]
 layout_mode = 2
-alignment = 0
+theme_override_constants/separation = 6
